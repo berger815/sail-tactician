@@ -8,440 +8,116 @@
 <title>TACTICIAN</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700&display=swap');
-
 :root {
-  --ink:    #060e1c;
-  --deep:   #091524;
-  --hull:   #0e2038;
-  --glass:  rgba(14,32,56,0.92);
-  --teal:   #00d4aa;
-  --teal2:  #00a888;
-  --tealfade: rgba(0,212,170,0.12);
-  --amber:  #f5a623;
-  --red:    #e84040;
-  --green:  #4cde80;
-  --white:  #ddeeff;
-  --muted:  #4a6880;
-  --mono:   'Space Mono', monospace;
-  --cond:   'Barlow Condensed', sans-serif;
+  --ink:#060e1c; --deep:#091524; --hull:#0e2038;
+  --glass:rgba(14,32,56,0.92); --teal:#00d4aa; --teal2:#00a888;
+  --tealfade:rgba(0,212,170,0.12); --amber:#f5a623; --red:#e84040;
+  --green:#4cde80; --white:#ddeeff; --muted:#4a6880;
+  --mono:'Space Mono',monospace; --cond:'Barlow Condensed',sans-serif;
 }
-
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-
-html, body {
-  height: 100%;
-  height: 100dvh;
-  overflow: hidden;
-  background: var(--ink);
-  color: var(--white);
-  font-family: var(--cond);
-  touch-action: none;
-}
-
-.app {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
-}
-
-/* ── HEADER ── */
-.hdr {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
-  background: var(--ink);
-  border-bottom: 1px solid rgba(0,212,170,0.18);
-  gap: 8px;
-}
-.logo {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  color: var(--teal);
-  flex-shrink: 0;
-}
-.pills { display:flex; gap:5px; flex-shrink:0; }
-.pill {
-  font-family: var(--mono);
-  font-size: 9px;
-  padding: 2px 7px;
-  border-radius: 20px;
-  border: 1px solid var(--muted);
-  color: var(--muted);
-  display: flex; align-items: center; gap: 3px;
-  transition: all 0.3s;
-}
-.pill.ok  { border-color: var(--green); color: var(--green); }
-.pill.warn { border-color: var(--amber); color: var(--amber); }
-.pdot { width:5px; height:5px; border-radius:50%; background:currentColor; }
-.pill.ok .pdot { animation: blink 1.4s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
-
-/* ── COUNTDOWN BANNER ── */
-.countdown-bar {
-  flex-shrink: 0;
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 14px;
-  height: 44px;
-  background: var(--hull);
-  border-bottom: 1px solid rgba(0,212,170,0.15);
-}
-.countdown-bar.visible { display: flex; }
-.countdown-bar.seq-5 { background: rgba(245,166,35,0.15); border-bottom-color: var(--amber); }
-.countdown-bar.seq-4 { background: rgba(245,166,35,0.15); border-bottom-color: var(--amber); }
-.countdown-bar.seq-1 { background: rgba(232,64,64,0.15); border-bottom-color: var(--red); }
-.countdown-bar.seq-go { background: rgba(76,222,128,0.2); border-bottom-color: var(--green); }
-
-.cd-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  letter-spacing: 0.15em;
-  color: var(--muted);
-}
-.cd-time {
-  font-family: var(--mono);
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--teal);
-  letter-spacing: 0.05em;
-  font-variant-numeric: tabular-nums;
-  transition: color 0.3s;
-}
-.countdown-bar.seq-5 .cd-time,
-.countdown-bar.seq-4 .cd-time { color: var(--amber); }
-.countdown-bar.seq-1 .cd-time { color: var(--red); }
-.countdown-bar.seq-go .cd-time { color: var(--green); font-size: 22px; }
-.cd-phase {
-  font-family: var(--cond);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  text-align: right;
-}
-.cd-btn {
-  font-family: var(--mono);
-  font-size: 9px;
-  padding: 4px 10px;
-  border-radius: 3px;
-  border: 1px solid var(--teal);
-  color: var(--teal);
-  background: transparent;
-  cursor: pointer;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
-.cd-btn:active { background: var(--tealfade); }
-
-/* ── CHART ── */
-.chart-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  background: var(--deep);
-  min-height: 0;
-}
-#tc { display: block; width: 100%; height: 100%; touch-action: none; }
-
-.wind-badge {
-  position: absolute;
-  top: 10px; right: 10px;
-  background: var(--glass);
-  border: 1px solid rgba(0,212,170,0.2);
-  border-radius: 6px;
-  padding: 6px 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  pointer-events: none;
-}
-.wind-badge canvas { display: block; }
-.wind-badge-vals {
-  display: flex; gap: 8px;
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--amber);
-  font-weight: 700;
-}
-
-/* ── INSTRUMENT STRIP ── */
-.inst-strip {
-  flex-shrink: 0;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  border-top: 1px solid rgba(0,212,170,0.18);
-  background: var(--ink);
-}
-.inst {
-  padding: 8px 6px 6px;
-  border-right: 1px solid rgba(0,212,170,0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-.inst:last-child { border-right: none; }
-.inst-val {
-  font-family: var(--mono);
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--white);
-  font-variant-numeric: tabular-nums;
-}
-.inst-val.hi { color: var(--teal); }
-.inst-val.warn { color: var(--amber); }
-.inst-lbl {
-  font-family: var(--cond);
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-/* ── TACK RECOMMENDATION ── */
-.tack-strip {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 14px;
-  background: var(--hull);
-  border-top: 1px solid rgba(0,212,170,0.12);
-  gap: 8px;
-}
-.tack-rec {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  padding: 5px 12px;
-  border-radius: 3px;
-  border: 1px solid;
-  flex: 1;
-  text-align: center;
-  transition: all 0.3s;
-}
-.tack-rec.stbd { background: rgba(76,222,128,0.1); border-color: rgba(76,222,128,0.5); color: var(--green); }
-.tack-rec.port { background: rgba(232,64,64,0.1); border-color: rgba(232,64,64,0.5); color: var(--red); }
-.tack-rec.none { background: var(--tealfade); border-color: rgba(0,212,170,0.25); color: var(--muted); }
-
-.vmg-block { display: flex; flex-direction: column; align-items: center; gap: 3px; flex-shrink: 0; }
-.vmg-num { font-family: var(--mono); font-size: 14px; font-weight:700; color: var(--amber); }
-.vmg-lbl { font-family: var(--cond); font-size: 9px; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
-.vmg-arc { flex-shrink:0; }
-
-/* ── BOTTOM TOOLBAR ── */
-.toolbar {
-  flex-shrink: 0;
-  display: flex;
-  gap: 0;
-  border-top: 1px solid rgba(0,212,170,0.18);
-  background: var(--ink);
-}
-.tbtn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 4px;
-  gap: 3px;
-  border-right: 1px solid rgba(0,212,170,0.1);
-  cursor: pointer;
-  touch-action: manipulation;
-  background: transparent;
-  border-top: none; border-bottom: none; border-left: none;
-  color: var(--muted);
-  transition: all 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-.tbtn:last-child { border-right: none; }
-.tbtn:active, .tbtn.on { background: var(--tealfade); color: var(--teal); }
-.tbtn.danger:active { background: rgba(232,64,64,0.12); color: var(--red); }
-.tbtn svg { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-.tbtn-lbl { font-family: var(--cond); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
-
-/* ── MODALS ── */
-.modal-bg {
-  display: none;
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.75);
-  z-index: 200;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: env(safe-area-inset-bottom, 0);
-}
-.modal-bg.open { display: flex; }
-.modal {
-  background: var(--hull);
-  border: 1px solid rgba(0,212,170,0.25);
-  border-radius: 12px 12px 0 0;
-  padding: 20px 18px 28px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 88dvh;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-.modal-handle {
-  width: 36px; height: 4px; border-radius: 2px;
-  background: var(--muted);
-  margin: 0 auto 16px;
-}
-.modal h3 {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  color: var(--teal);
-  text-transform: uppercase;
-  margin-bottom: 16px;
-}
-
-.mtabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid rgba(0,212,170,0.15); }
-.mtab {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
-  padding: 7px 14px; border: none; background: transparent;
-  color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
-  text-transform: uppercase;
-  transition: all 0.15s;
-}
-.mtab.active { color: var(--teal); border-bottom-color: var(--teal); }
-
-.tab-panel { display: none; }
-.tab-panel.active { display: block; }
-
-.frow { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-.frow label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; }
-.frow input, .frow select {
-  background: var(--deep);
-  border: 1px solid rgba(0,212,170,0.18);
-  border-radius: 4px;
-  color: var(--white);
-  padding: 10px 12px;
-  font-family: var(--mono);
-  font-size: 13px;
-  width: 100%;
-  -webkit-appearance: none;
-}
-.frow input:focus, .frow select:focus { outline: none; border-color: var(--teal); }
-.frow-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-.polar-table { width: 100%; border-collapse: collapse; }
-.polar-table th {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
-  color: var(--muted); padding: 4px 6px; text-align: center;
-  border-bottom: 1px solid rgba(0,212,170,0.15);
-}
-.polar-table td { padding: 4px 4px; text-align: center; }
-.polar-table input {
-  width: 100%;
-  background: var(--deep);
-  border: 1px solid rgba(0,212,170,0.12);
-  border-radius: 3px;
-  color: var(--white);
-  padding: 6px 4px;
-  font-family: var(--mono);
-  font-size: 12px;
-  text-align: center;
-  -webkit-appearance: none;
-}
-.polar-table input:focus { outline: none; border-color: var(--teal); }
-.polar-note {
-  font-family: var(--cond);
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 12px;
-  line-height: 1.4;
-}
-.polar-preset { margin-bottom: 10px; }
-
-.mbtns { display: flex; gap: 8px; margin-top: 16px; }
-.mbtn {
-  flex: 1;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  padding: 12px 8px;
-  border-radius: 4px;
-  border: 1px solid;
-  cursor: pointer;
-  text-transform: uppercase;
-  touch-action: manipulation;
-  text-align: center;
-}
-.mbtn.pri { background: var(--teal); color: var(--ink); border-color: var(--teal); font-weight: 700; }
-.mbtn.sec { background: transparent; color: var(--teal); border-color: rgba(0,212,170,0.35); }
-.mbtn.dem { background: transparent; color: var(--amber); border-color: rgba(245,166,35,0.35); }
-.mbtn.can { background: transparent; color: var(--muted); border-color: rgba(74,104,128,0.35); }
-
-.timer-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-.seq-btn {
-  padding: 14px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(0,212,170,0.2);
-  background: var(--deep);
-  color: var(--teal);
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  font-weight: 700;
-  cursor: pointer;
-  text-align: center;
-  touch-action: manipulation;
-}
-.seq-btn.selected { background: var(--tealfade); border-color: var(--teal); }
-.seq-btn:active { transform: scale(0.96); }
-.custom-time-row {
-  display: flex; gap: 8px; align-items: center; margin-bottom: 14px;
-}
-.custom-time-row label { font-family: var(--mono); font-size: 9px; color: var(--muted); white-space: nowrap; letter-spacing: 0.1em; }
-.custom-time-row input {
-  flex: 1;
-  background: var(--deep); border: 1px solid rgba(0,212,170,0.18);
-  border-radius: 4px; color: var(--white);
-  padding: 9px 10px; font-family: var(--mono); font-size: 13px;
-  text-align: center;
-}
-
-.toast {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
-  background: var(--hull);
-  border: 1px solid rgba(0,212,170,0.3);
-  border-radius: 6px;
-  padding: 8px 18px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--teal);
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.25s;
-  z-index: 300;
-  white-space: nowrap;
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:var(--white);font-family:var(--cond);touch-action:none}
+.app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+.hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:var(--ink);border-bottom:1px solid rgba(0,212,170,0.18);gap:8px}
+.logo{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.22em;color:var(--teal);flex-shrink:0}
+.pills{display:flex;gap:5px;flex-shrink:0}
+.pill{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:20px;border:1px solid var(--muted);color:var(--muted);display:flex;align-items:center;gap:3px;transition:all 0.3s}
+.pill.ok{border-color:var(--green);color:var(--green)}.pill.warn{border-color:var(--amber);color:var(--amber)}
+.pdot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.pill.ok .pdot{animation:blink 1.4s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.25}}
+.countdown-bar{flex-shrink:0;display:none;align-items:center;justify-content:space-between;padding:0 14px;height:44px;background:var(--hull);border-bottom:1px solid rgba(0,212,170,0.15)}
+.countdown-bar.visible{display:flex}
+.countdown-bar.seq-prep{background:rgba(245,166,35,0.15);border-bottom-color:var(--amber)}
+.countdown-bar.seq-1{background:rgba(232,64,64,0.15);border-bottom-color:var(--red)}
+.countdown-bar.seq-go{background:rgba(76,222,128,0.2);border-bottom-color:var(--green)}
+.cd-label{font-family:var(--mono);font-size:9px;letter-spacing:0.15em;color:var(--muted)}
+.cd-time{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--teal);letter-spacing:0.05em;font-variant-numeric:tabular-nums;transition:color 0.3s;min-width:70px;text-align:center}
+.countdown-bar.seq-prep .cd-time{color:var(--amber)}.countdown-bar.seq-1 .cd-time{color:var(--red)}.countdown-bar.seq-go .cd-time{color:var(--green);font-size:22px}
+.cd-phase{font-family:var(--cond);font-size:13px;font-weight:600;letter-spacing:0.12em;color:var(--muted);min-width:60px}
+.cd-btn{font-family:var(--mono);font-size:9px;padding:4px 10px;border-radius:3px;border:1px solid var(--teal);color:var(--teal);background:transparent;cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;touch-action:manipulation}
+.cd-btn:active{background:var(--tealfade)}
+.chart-wrap{flex:1;position:relative;overflow:hidden;background:var(--deep);min-height:0}
+#tcTiles,#tcMain{display:block;position:absolute;top:0;left:0;width:100%;height:100%;touch-action:none}
+#tcTiles{z-index:1}#tcMain{z-index:2;background:transparent}
+.wind-badge{position:absolute;top:10px;right:10px;background:var(--glass);border:1px solid rgba(0,212,170,0.2);border-radius:6px;padding:6px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;z-index:10}
+.wind-badge canvas{display:block}
+.wind-badge-vals{display:flex;gap:8px;font-family:var(--mono);font-size:10px;color:var(--amber);font-weight:700}
+.wind-trend{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;letter-spacing:0.05em}
+.wind-trend.lift{color:var(--green)}.wind-trend.hdr-shift{color:var(--red)}
+.map-toggle{position:absolute;top:10px;left:10px;background:var(--glass);border:1px solid rgba(0,212,170,0.2);border-radius:4px;padding:4px 8px;font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;z-index:10;touch-action:manipulation;letter-spacing:0.08em}
+.map-toggle.on{color:var(--teal);border-color:rgba(0,212,170,0.5)}.map-toggle:active{background:var(--tealfade)}
+.start-schematic{flex-shrink:0;display:none;background:var(--hull);border-top:1px solid rgba(0,212,170,0.15);padding:6px 14px;gap:10px;align-items:center}
+.start-schematic.visible{display:flex}
+.start-line-bar{flex:1;position:relative;height:32px}
+.start-line-bar canvas{display:block;width:100%;height:100%}
+.start-data{display:flex;flex-direction:column;gap:2px;flex-shrink:0;min-width:100px}
+.sdr{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.06em;display:flex;justify-content:space-between;gap:6px}
+.sdr span{color:var(--white)}.sdr.hi span{color:var(--teal)}.sdr.warn span{color:var(--amber)}.sdr.crit span{color:var(--red)}
+.commit-banner{flex-shrink:0;display:none;align-items:center;justify-content:space-between;padding:4px 14px;background:rgba(0,212,170,0.08);border-top:1px solid rgba(0,212,170,0.2)}
+.commit-banner.visible{display:flex}
+.commit-banner.go{background:rgba(76,222,128,0.15);border-top-color:var(--green)}
+.commit-banner.late{background:rgba(232,64,64,0.15);border-top-color:var(--red)}
+.commit-label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--muted)}
+.commit-time{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums}
+.commit-banner.go .commit-time{color:var(--green)}.commit-banner.late .commit-time{color:var(--red)}
+.commit-desc{font-family:var(--cond);font-size:11px;color:var(--muted);text-align:right;max-width:160px;line-height:1.3}
+.inst-strip{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid rgba(0,212,170,0.18);background:var(--ink)}
+.inst{padding:8px 6px 6px;border-right:1px solid rgba(0,212,170,0.1);display:flex;flex-direction:column;align-items:center;gap:1px}
+.inst:last-child{border-right:none}
+.inst-val{font-family:var(--mono);font-size:22px;font-weight:700;line-height:1;color:var(--white);font-variant-numeric:tabular-nums}
+.inst-val.hi{color:var(--teal)}.inst-val.warn{color:var(--amber)}.inst-val.crit{color:var(--red)}
+.inst-lbl{font-family:var(--cond);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.tack-strip{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:6px 14px;background:var(--hull);border-top:1px solid rgba(0,212,170,0.12);gap:8px}
+.tack-rec{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.08em;padding:5px 12px;border-radius:3px;border:1px solid;flex:1;text-align:center;transition:all 0.3s}
+.tack-rec.stbd{background:rgba(76,222,128,0.1);border-color:rgba(76,222,128,0.5);color:var(--green)}
+.tack-rec.port{background:rgba(232,64,64,0.1);border-color:rgba(232,64,64,0.5);color:var(--red)}
+.tack-rec.none{background:var(--tealfade);border-color:rgba(0,212,170,0.25);color:var(--muted)}
+.vmg-block{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
+.vmg-lbl{font-family:var(--cond);font-size:9px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase}
+.toolbar{flex-shrink:0;display:flex;gap:0;border-top:1px solid rgba(0,212,170,0.18);background:var(--ink)}
+.tbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;gap:3px;border-right:1px solid rgba(0,212,170,0.1);cursor:pointer;touch-action:manipulation;background:transparent;border-top:none;border-bottom:none;border-left:none;color:var(--muted);transition:all 0.15s}
+.tbtn:last-child{border-right:none}.tbtn:active,.tbtn.on{background:var(--tealfade);color:var(--teal)}
+.tbtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tbtn-lbl{font-family:var(--cond);font-size:10px;letter-spacing:0.08em;text-transform:uppercase}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:flex-end;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0)}
+.modal-bg.open{display:flex}
+.modal{background:var(--hull);border:1px solid rgba(0,212,170,0.25);border-radius:12px 12px 0 0;padding:20px 18px 28px;width:100%;max-width:480px;max-height:88dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--muted);margin:0 auto 16px}
+.modal h3{font-family:var(--mono);font-size:11px;letter-spacing:0.18em;color:var(--teal);text-transform:uppercase;margin-bottom:16px}
+.mtabs{display:flex;gap:0;margin-bottom:16px;border-bottom:1px solid rgba(0,212,170,0.15)}
+.mtab{font-family:var(--mono);font-size:10px;letter-spacing:0.1em;padding:7px 14px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase;transition:all 0.15s}
+.mtab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.frow{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.frow label{font-family:var(--mono);font-size:9px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.frow input,.frow select{background:var(--deep);border:1px solid rgba(0,212,170,0.18);border-radius:4px;color:var(--white);padding:10px 12px;font-family:var(--mono);font-size:13px;width:100%;-webkit-appearance:none}
+.frow input:focus,.frow select:focus{outline:none;border-color:var(--teal)}
+.frow-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.polar-table{width:100%;border-collapse:collapse}
+.polar-table th{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;color:var(--muted);padding:4px 6px;text-align:center;border-bottom:1px solid rgba(0,212,170,0.15)}
+.polar-table td{padding:4px 4px;text-align:center}
+.polar-table input{width:100%;background:var(--deep);border:1px solid rgba(0,212,170,0.12);border-radius:3px;color:var(--white);padding:6px 4px;font-family:var(--mono);font-size:12px;text-align:center;-webkit-appearance:none}
+.polar-table input:focus{outline:none;border-color:var(--teal)}
+.polar-note{font-family:var(--cond);font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.4}
+.mbtns{display:flex;gap:8px;margin-top:16px}
+.mbtn{flex:1;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;padding:12px 8px;border-radius:4px;border:1px solid;cursor:pointer;text-transform:uppercase;touch-action:manipulation;text-align:center}
+.mbtn.pri{background:var(--teal);color:var(--ink);border-color:var(--teal);font-weight:700}
+.mbtn.sec{background:transparent;color:var(--teal);border-color:rgba(0,212,170,0.35)}
+.mbtn.dem{background:transparent;color:var(--amber);border-color:rgba(245,166,35,0.35)}
+.mbtn.can{background:transparent;color:var(--muted);border-color:rgba(74,104,128,0.35)}
+.timer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.seq-btn{padding:14px 8px;border-radius:6px;border:1px solid rgba(0,212,170,0.2);background:var(--deep);color:var(--teal);font-family:var(--mono);font-size:12px;letter-spacing:0.08em;font-weight:700;cursor:pointer;text-align:center;touch-action:manipulation}
+.seq-btn.selected{background:var(--tealfade);border-color:var(--teal)}.seq-btn:active{transform:scale(0.96)}
+.custom-time-row{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.custom-time-row label{font-family:var(--mono);font-size:9px;color:var(--muted);white-space:nowrap;letter-spacing:0.1em}
+.custom-time-row input{flex:1;background:var(--deep);border:1px solid rgba(0,212,170,0.18);border-radius:4px;color:var(--white);padding:9px 10px;font-family:var(--mono);font-size:13px;text-align:center}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--hull);border:1px solid rgba(0,212,170,0.3);border-radius:6px;padding:8px 18px;font-family:var(--mono);font-size:11px;color:var(--teal);opacity:0;pointer-events:none;transition:all 0.25s;z-index:300;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 <div class="app">
-
   <div class="hdr">
     <div class="logo">TACTICIAN</div>
     <div class="pills">
@@ -450,54 +126,50 @@ html, body {
       <div class="pill" id="windPill"><div class="pdot"></div>WIND</div>
     </div>
   </div>
-
   <div class="countdown-bar" id="cdBar">
-    <div>
-      <div class="cd-label" id="cdPhase">PREP</div>
-    </div>
+    <div class="cd-phase" id="cdPhase">PREP</div>
     <div class="cd-time" id="cdTime">5:00</div>
     <button class="cd-btn" id="cdSync">SYNC</button>
-    <button class="cd-btn" id="cdStop">✕</button>
+    <button class="cd-btn" id="cdStop">&#x2715;</button>
   </div>
-
   <div class="chart-wrap" id="chartWrap">
-    <canvas id="tc"></canvas>
-    <div class="wind-badge" id="windBadge">
+    <canvas id="tcTiles"></canvas>
+    <canvas id="tcMain"></canvas>
+    <button class="map-toggle" id="mapToggle" onclick="toggleMap()">CHART OFF</button>
+    <div class="wind-badge">
       <canvas id="wrCanvas" width="64" height="64"></canvas>
-      <div class="wind-badge-vals">
-        <span id="wbSpd">--kt</span>
-        <span id="wbDir">---°</span>
-      </div>
+      <div class="wind-badge-vals"><span id="wbSpd">--kt</span><span id="wbDir">---&#176;</span></div>
+      <div class="wind-trend" id="windTrend">NO DATA</div>
     </div>
   </div>
-
+  <div class="start-schematic" id="startSchematic">
+    <div class="start-line-bar"><canvas id="lineCanvas"></canvas></div>
+    <div class="start-data">
+      <div class="sdr hi"><span>DIST</span><span id="sdDist">--m</span></div>
+      <div class="sdr" id="sdBurnRow"><span>BURN</span><span id="sdBurn">--:--</span></div>
+      <div class="sdr"><span>FAV</span><span id="sdFav">--</span></div>
+    </div>
+  </div>
+  <div class="commit-banner" id="commitBanner">
+    <div>
+      <div class="commit-label">COMMIT IN</div>
+      <div class="commit-time" id="commitTime">--:--</div>
+    </div>
+    <div class="commit-desc" id="commitDesc">SET TIMER &amp; COURSE</div>
+  </div>
   <div class="inst-strip">
-    <div class="inst">
-      <div class="inst-val hi" id="iHdg">---</div>
-      <div class="inst-lbl">HDG °</div>
-    </div>
-    <div class="inst">
-      <div class="inst-val" id="iSog">0.0</div>
-      <div class="inst-lbl">SOG kt</div>
-    </div>
-    <div class="inst">
-      <div class="inst-val" id="iTwa">---</div>
-      <div class="inst-lbl">TWA °</div>
-    </div>
-    <div class="inst">
-      <div class="inst-val warn" id="iVmg">--</div>
-      <div class="inst-lbl">VMG kt</div>
-    </div>
+    <div class="inst"><div class="inst-val hi" id="iHdg">---</div><div class="inst-lbl">HDG &#176;</div></div>
+    <div class="inst"><div class="inst-val" id="iSog">0.0</div><div class="inst-lbl">SOG kt</div></div>
+    <div class="inst"><div class="inst-val" id="iTwa">---</div><div class="inst-lbl">TWA &#176;</div></div>
+    <div class="inst"><div class="inst-val warn" id="iVmg">--</div><div class="inst-lbl">VMG kt</div></div>
   </div>
-
   <div class="tack-strip">
     <div class="tack-rec none" id="tackRec">SET COURSE TO COMPUTE TACK</div>
     <div class="vmg-block">
-      <canvas id="vmgArc" width="44" height="44" class="vmg-arc"></canvas>
+      <canvas id="vmgArc" width="44" height="44"></canvas>
       <div class="vmg-lbl">EFF%</div>
     </div>
   </div>
-
   <div class="toolbar">
     <button class="tbtn" id="btnSensors" onclick="toggleSensors()">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4"/><path d="M17.7 6.3a8 8 0 0 1 0 11.4"/><path d="M3.5 3.5a14 14 0 0 0 0 17"/><path d="M20.5 3.5a14 14 0 0 1 0 17"/></svg>
@@ -520,8 +192,7 @@ html, body {
       <span class="tbtn-lbl">Start</span>
     </button>
   </div>
-
-</div><!-- .app -->
+</div>
 
 <!-- COURSE MODAL -->
 <div class="modal-bg" id="courseModal">
@@ -534,27 +205,27 @@ html, body {
     </div>
     <div class="tab-panel active" id="course-marks">
       <div class="frow-2">
-        <div class="frow"><label>Pin A Lat</label><input type="number" id="cPinALat" placeholder="17.1285" step="0.0001"></div>
-        <div class="frow"><label>Pin A Lon</label><input type="number" id="cPinALon" placeholder="-61.8478" step="0.0001"></div>
+        <div class="frow"><label>Pin A Lat</label><input type="number" id="cPinALat" placeholder="28.0380" step="0.0001"></div>
+        <div class="frow"><label>Pin A Lon</label><input type="number" id="cPinALon" placeholder="-80.5878" step="0.0001"></div>
       </div>
       <div class="frow-2">
-        <div class="frow"><label>Pin B Lat</label><input type="number" id="cPinBLat" placeholder="17.1285" step="0.0001"></div>
-        <div class="frow"><label>Pin B Lon</label><input type="number" id="cPinBLon" placeholder="-61.8455" step="0.0001"></div>
+        <div class="frow"><label>Pin B Lat</label><input type="number" id="cPinBLat" placeholder="28.0380" step="0.0001"></div>
+        <div class="frow"><label>Pin B Lon</label><input type="number" id="cPinBLon" placeholder="-80.5840" step="0.0001"></div>
       </div>
       <div class="frow-2">
-        <div class="frow"><label>Mark Lat</label><input type="number" id="cMarkLat" placeholder="17.1365" step="0.0001"></div>
-        <div class="frow"><label>Mark Lon</label><input type="number" id="cMarkLon" placeholder="-61.8466" step="0.0001"></div>
+        <div class="frow"><label>Mark Lat</label><input type="number" id="cMarkLat" placeholder="28.0460" step="0.0001"></div>
+        <div class="frow"><label>Mark Lon</label><input type="number" id="cMarkLon" placeholder="-80.5860" step="0.0001"></div>
       </div>
       <div class="frow-2">
         <div class="frow"><label>Leeward Lat</label><input type="number" id="cLwLat" placeholder="(optional)" step="0.0001"></div>
         <div class="frow"><label>Leeward Lon</label><input type="number" id="cLwLon" placeholder="(optional)" step="0.0001"></div>
       </div>
       <div class="mbtns">
-        <button class="mbtn sec" onclick="setCoursePointFromGPS('A')">Use GPS → Pin A</button>
-        <button class="mbtn sec" onclick="setCoursePointFromGPS('B')">Use GPS → Pin B</button>
+        <button class="mbtn sec" onclick="setCoursePointFromGPS('A')">GPS to Pin A</button>
+        <button class="mbtn sec" onclick="setCoursePointFromGPS('B')">GPS to Pin B</button>
       </div>
       <div class="mbtns" style="margin-top:8px">
-        <button class="mbtn dem" onclick="setCoursePointFromGPS('M')">Use GPS → Mark</button>
+        <button class="mbtn dem" onclick="setCoursePointFromGPS('M')">GPS to Mark</button>
         <button class="mbtn can" onclick="clearStartLine()">Clear Pins</button>
       </div>
     </div>
@@ -562,10 +233,14 @@ html, body {
       <div class="frow">
         <label>Active Leg</label>
         <select id="cLeg">
+          <option value="start">Pre-start</option>
           <option value="upwind">Upwind (to mark)</option>
           <option value="downwind">Downwind (to leeward)</option>
-          <option value="start">Pre-start</option>
         </select>
+      </div>
+      <div class="frow">
+        <label>Tack Duration (seconds)</label>
+        <input type="number" id="cTackDur" value="20" min="5" max="60" step="1">
       </div>
     </div>
     <div class="mbtns">
@@ -581,28 +256,19 @@ html, body {
   <div class="modal">
     <div class="modal-handle"></div>
     <h3>Boat Polar</h3>
-    <div class="frow polar-preset">
+    <div class="frow" style="margin-bottom:10px">
       <label>Load Preset</label>
       <select id="polarPreset" onchange="loadPolarPreset()">
-        <option value="">— custom —</option>
-        <option value="hobie18">Hobie 18 (cat)</option>
+        <option value="">custom</option>
+        <option value="compac35">Com-Pac 35 (default)</option>
         <option value="j24">J/24</option>
         <option value="laser">Laser / ILCA</option>
-        <option value="420">420 / dinghy</option>
-        <option value="cruiser">Cruiser-Racer 35ft</option>
+        <option value="cruiser40">Cruiser 40ft</option>
       </select>
     </div>
-    <div class="polar-note">Enter boat speed (knots) for each wind speed + angle combination. TWA = true wind angle from bow.</div>
-    <table class="polar-table" id="polarTable">
-      <thead>
-        <tr>
-          <th>TWA °</th>
-          <th>6 kt</th>
-          <th>10 kt</th>
-          <th>14 kt</th>
-          <th>20 kt</th>
-        </tr>
-      </thead>
+    <div class="polar-note">Boat speed (knots) at each TWA / TWS. TWA = true wind angle from bow.</div>
+    <table class="polar-table">
+      <thead><tr><th>TWA</th><th>6kt</th><th>10kt</th><th>14kt</th><th>18kt</th><th>22kt</th></tr></thead>
       <tbody id="polarBody"></tbody>
     </table>
     <div class="mbtns">
@@ -617,11 +283,10 @@ html, body {
   <div class="modal">
     <div class="modal-handle"></div>
     <h3>Race Start Sequence</h3>
-    <div class="frow"><label>Sequence</label></div>
     <div class="timer-grid">
-      <button class="seq-btn selected" id="seq5" onclick="selectSeq(5)">5 — 4 — 1 — GO<br><small style="font-size:9px;font-weight:400;color:var(--muted)">ISAF Standard</small></button>
-      <button class="seq-btn" id="seq3" onclick="selectSeq(3)">3 — 1 — GO<br><small style="font-size:9px;font-weight:400;color:var(--muted)">Short course</small></button>
-      <button class="seq-btn" id="seq10" onclick="selectSeq(10)">10 — 5 — 1 — GO<br><small style="font-size:9px;font-weight:400;color:var(--muted)">Fleet race</small></button>
+      <button class="seq-btn selected" id="seq5" onclick="selectSeq(5)">5-4-1-GO<br><small style="font-size:9px;font-weight:400;color:var(--muted)">ISAF Standard</small></button>
+      <button class="seq-btn" id="seq3" onclick="selectSeq(3)">3-1-GO<br><small style="font-size:9px;font-weight:400;color:var(--muted)">Short course</small></button>
+      <button class="seq-btn" id="seq10" onclick="selectSeq(10)">10-5-1-GO<br><small style="font-size:9px;font-weight:400;color:var(--muted)">Fleet race</small></button>
       <button class="seq-btn" id="seqC" onclick="selectSeq(0)">Custom<br><small style="font-size:9px;font-weight:400;color:var(--muted)">Set minutes</small></button>
     </div>
     <div class="custom-time-row" id="customRow" style="display:none">
@@ -639,1091 +304,672 @@ html, body {
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════
-const S = {
-  heading: null, lat: null, lon: null,
-  sog: 0, cog: null,
-  twd: null, tws: null,
-  waveHt: null, wavePer: null,
-  pinA: null, pinB: null,
-  mark: null, lwMark: null,
-  activeLeg: 'upwind',
-  track: [],
-  prevLat: null, prevLon: null, prevGpsT: null,
-  polar: null,
-  polarAngles: [],
-  demoInterval: null,
-  demoT: 0,
-  // FIX: SOG smoothing buffer
-  sogBuffer: [],
+// ===== KALMAN FILTERS =====
+class Kalman1D {
+  constructor(Q=0.5,R=3,P=10){this.Q=Q;this.R=R;this.P=P;this.x=null;}
+  update(z){
+    if(this.x===null){this.x=z;return z;}
+    this.P+=this.Q;
+    const K=this.P/(this.P+this.R);
+    let inn=z-this.x;
+    if(inn>180)inn-=360; if(inn<-180)inn+=360;
+    this.x=((this.x+K*inn)%360+360)%360;
+    this.P*=(1-K); return this.x;
+  }
+  reset(){this.x=null;this.P=10;}
+}
+class KalmanLin {
+  constructor(Q=0.1,R=0.4,P=5){this.Q=Q;this.R=R;this.P=P;this.x=null;}
+  update(z){
+    if(this.x===null){this.x=z;return z;}
+    this.P+=this.Q; const K=this.P/(this.P+this.R);
+    this.x+=K*(z-this.x); this.P*=(1-K); return this.x;
+  }
+  reset(){this.x=null;this.P=5;}
+}
+const kfHdg=new Kalman1D(0.5,3);
+const kfSog=new KalmanLin(0.1,0.4);
+const kfTwd=new Kalman1D(0.3,5);
+
+// ===== STATE =====
+const NAV={heading:null,lat:null,lon:null,sog:0,cog:null,prevLat:null,prevLon:null,prevT:null,track:[]};
+const WIND={twd:null,tws:null,history:[],autoTimer:null};
+const COURSE={pinA:null,pinB:null,mark:null,lwMark:null,activeLeg:'start',tackDur:20};
+const RACE={active:false,startEpoch:null,seq:5};
+const VIEW={scale:1,offX:0,offY:0,showMap:true,dragging:false,lastX:0,lastY:0,pinchDist:null,baseScale:1,baseOffX:0,baseOffY:0};
+const POLAR_TWS=[6,10,14,18,22];
+const DEF_ANGLES=[42,52,70,90,110,135,150];
+let polarTable={}, polarAngles=[];
+let _dirty=true, tileCache={};
+let demoInterval=null, demoT=0;
+let orientAbsActive=false, sensorsOn=false, gpsWatcher=null;
+let selectedSeq=5, cdInterval=null;
+
+// ===== POLARS =====
+// Com-Pac 35: LWL 29ft, hull speed 7.22kt, SA/D 16.99, PHRF 147-167
+// Calibrated: 5-5.5kt in 6-8kt TWS, 35-36deg AWA in 16kt TWS
+const PRESETS={
+  compac35:{name:'Com-Pac 35',rows:[
+    [42,3.8,5.2,5.8,6.0,5.8],[52,4.2,5.7,6.3,6.6,6.4],[70,4.5,5.9,6.6,7.0,7.0],
+    [90,4.3,5.7,6.5,7.1,7.2],[110,4.1,5.8,6.8,7.2,7.2],[135,3.8,5.4,6.6,7.1,7.1],[150,3.4,4.9,6.2,6.8,7.0]]},
+  j24:{name:'J/24',rows:[
+    [40,3.8,5.4,6.1,6.3,6.2],[52,4.1,5.8,6.5,6.7,6.6],[70,4.4,5.6,6.3,6.5,6.4],
+    [90,4.2,5.4,6.1,6.3,6.2],[110,4.0,5.6,6.8,7.0,6.9],[135,3.6,5.2,6.5,6.7,6.6],[150,3.2,4.8,6.0,6.2,6.1]]},
+  laser:{name:'Laser',rows:[
+    [40,3.0,4.2,4.8,4.6,4.4],[52,3.3,4.6,5.1,4.9,4.7],[70,3.5,4.4,4.9,4.7,4.5],
+    [90,3.3,4.2,4.7,4.5,4.3],[110,3.1,4.4,5.2,5.0,4.8],[135,2.8,4.0,4.9,4.7,4.5],[150,2.5,3.7,4.5,4.3,4.1]]},
+  cruiser40:{name:'Cruiser 40ft',rows:[
+    [42,4.5,6.2,7.0,7.3,7.2],[52,4.9,6.6,7.4,7.7,7.6],[70,5.1,6.5,7.3,7.8,7.8],
+    [90,4.9,6.4,7.2,7.8,7.9],[110,4.6,6.5,7.7,8.1,8.1],[135,4.2,6.0,7.5,8.0,8.0],[150,3.8,5.5,7.0,7.6,7.7]]}
 };
 
-const CD = {
-  active: false,
-  startEpoch: null,
-  totalMs: 5 * 60000,
-  seq: 5,
-  phase: '',
-};
-
-const PRESETS = {
-  hobie18:  { name:'Hobie 18', rows: [[40,5.2,7.8,9.1,9.4],[52,5.8,8.4,9.8,10.2],[70,6.2,8.0,9.0,9.3],[90,5.9,7.5,8.4,8.7],[110,5.6,7.8,9.2,9.6],[135,5.0,7.0,8.5,9.0],[150,4.5,6.5,7.8,8.3]] },
-  j24:      { name:'J/24',     rows: [[40,3.8,5.4,6.1,6.3],[52,4.1,5.8,6.5,6.7],[70,4.4,5.6,6.3,6.5],[90,4.2,5.4,6.1,6.3],[110,4.0,5.6,6.8,7.0],[135,3.6,5.2,6.5,6.7],[150,3.2,4.8,6.0,6.2]] },
-  laser:    { name:'Laser',    rows: [[40,3.0,4.2,4.8,4.6],[52,3.3,4.6,5.1,4.9],[70,3.5,4.4,4.9,4.7],[90,3.3,4.2,4.7,4.5],[110,3.1,4.4,5.2,5.0],[135,2.8,4.0,4.9,4.7],[150,2.5,3.7,4.5,4.3]] },
-  '420':    { name:'420',      rows: [[40,3.2,4.6,5.3,5.1],[52,3.5,5.0,5.7,5.5],[70,3.7,4.8,5.5,5.3],[90,3.5,4.6,5.2,5.0],[110,3.3,4.8,5.8,5.6],[135,3.0,4.4,5.4,5.2],[150,2.7,4.0,5.0,4.8]] },
-  cruiser:  { name:'Cruiser 35',rows: [[42,4.2,5.8,6.4,6.5],[52,4.5,6.1,6.7,6.8],[70,4.7,6.0,6.6,6.7],[90,4.5,5.9,6.6,6.7],[110,4.3,6.0,7.0,7.2],[135,3.9,5.6,6.8,7.0],[150,3.5,5.1,6.3,6.5]] },
-};
-
-const POLAR_TWS = [6, 10, 14, 20];
-const DEFAULT_ANGLES = [40, 52, 70, 90, 110, 135, 150];
-
-// FIX: dirty flag — only redraw when state actually changes
-let _dirty = true;
-function markDirty() { _dirty = true; }
-
-// ═══════════════════════════════════════════════════════
-// LOCALSTORAGE PERSISTENCE
-// ═══════════════════════════════════════════════════════
-const LS_KEY = 'tactician_v1';
-
-function saveState() {
-  try {
-    const payload = {
-      pinA: S.pinA, pinB: S.pinB,
-      mark: S.mark, lwMark: S.lwMark,
-      activeLeg: S.activeLeg,
-      twd: S.twd, tws: S.tws,
-      polar: S.polar, polarAngles: S.polarAngles,
-    };
-    localStorage.setItem(LS_KEY, JSON.stringify(payload));
-  } catch(e) { /* storage full or private mode */ }
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return;
-    const p = JSON.parse(raw);
-    if (p.pinA)   S.pinA   = p.pinA;
-    if (p.pinB)   S.pinB   = p.pinB;
-    if (p.mark)   S.mark   = p.mark;
-    if (p.lwMark) S.lwMark = p.lwMark;
-    if (p.activeLeg) S.activeLeg = p.activeLeg;
-    if (p.twd !== null && p.twd !== undefined) S.twd = p.twd;
-    if (p.tws !== null && p.tws !== undefined) S.tws = p.tws;
-    if (p.polar)        S.polar = p.polar;
-    if (p.polarAngles)  S.polarAngles = p.polarAngles;
-    // Restore leg selector
-    if (p.activeLeg) {
-      const sel = document.getElementById('cLeg');
-      if (sel) sel.value = p.activeLeg;
-    }
-    // Restore polar preset display
-    if (p.polar) {
-      // Repopulate form from saved data
-      const angles = Object.keys(p.polar).map(Number).sort((a,b)=>a-b);
-      const rows = angles.map(a => [a, ...p.polar[a]]);
-      buildPolarTable(rows);
-    }
-    markDirty();
-    toast('Session restored');
-  } catch(e) { /* corrupt data — ignore */ }
-}
-
-// ═══════════════════════════════════════════════════════
-// CANVAS SETUP
-// ═══════════════════════════════════════════════════════
-const tc = document.getElementById('tc');
-const ctx = tc.getContext('2d');
-
-// FIX: single resize handler via ResizeObserver only; window.resize as fallback only if RO absent
-let _roAttached = false;
-function resizeTC() {
-  const w = tc.parentElement.clientWidth;
-  const h = tc.parentElement.clientHeight;
-  if (tc.width === w * devicePixelRatio && tc.height === h * devicePixelRatio) return;
-  tc.width = w * devicePixelRatio;
-  tc.height = h * devicePixelRatio;
-  tc.style.width = w + 'px';
-  tc.style.height = h + 'px';
-  markDirty();
-  render();
-}
-
-if (window.ResizeObserver) {
-  new ResizeObserver(resizeTC).observe(document.getElementById('chartWrap'));
-  _roAttached = true;
-} else {
-  window.addEventListener('resize', resizeTC);
-}
-resizeTC();
-
-// ═══════════════════════════════════════════════════════
-// SENSOR MANAGEMENT
-// ═══════════════════════════════════════════════════════
-let sensorsOn = false;
-let gpsWatcher = null;
-// FIX: track which orientation event is providing good data to avoid double-fire
-let _orientAbsoluteActive = false;
-
-async function toggleSensors() {
-  if (sensorsOn) { stopSensors(); return; }
-  await startSensors();
-}
-
-async function startSensors() {
-  const btn = document.getElementById('btnSensors');
-  btn.classList.add('on');
-
-  if ('geolocation' in navigator) {
-    gpsWatcher = navigator.geolocation.watchPosition(onGPS, onGPSErr, {
-      enableHighAccuracy: true, maximumAge: 1000, timeout: 15000
-    });
-  } else {
-    setPill('gpsPill','warn');
-  }
-
-  if (window.DeviceOrientationEvent) {
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
-        const r = await DeviceOrientationEvent.requestPermission();
-        if (r === 'granted') listenOrientation();
-        else setPill('imuPill','warn');
-      } catch(e) { setPill('imuPill','warn'); }
-    } else {
-      listenOrientation();
-    }
-  } else {
-    setPill('imuPill','warn');
-  }
-
-  sensorsOn = true;
-  toast('Sensors started');
-}
-
-function stopSensors() {
-  if (gpsWatcher !== null) navigator.geolocation.clearWatch(gpsWatcher);
-  window.removeEventListener('deviceorientationabsolute', onOrientationAbsolute, true);
-  window.removeEventListener('deviceorientation', onOrientationRelative, true);
-  _orientAbsoluteActive = false;
-  sensorsOn = false;
-  document.getElementById('btnSensors').classList.remove('on');
-  setPill('gpsPill','off'); setPill('imuPill','off');
-  toast('Sensors stopped');
-}
-
-function listenOrientation() {
-  // FIX: separate handlers so absolute takes priority; relative only fires if absolute isn't working
-  window.addEventListener('deviceorientationabsolute', onOrientationAbsolute, true);
-  window.addEventListener('deviceorientation', onOrientationRelative, true);
-}
-
-function onOrientationAbsolute(e) {
-  if (e.alpha === null) return;
-  _orientAbsoluteActive = true;
-  const h = (360 - e.alpha + 360) % 360;
-  S.heading = h;
-  setPill('imuPill','ok');
-  markDirty();
-  updateInstruments();
-}
-
-// FIX: only use deviceorientation fallback if absolute hasn't fired
-function onOrientationRelative(e) {
-  if (_orientAbsoluteActive) return;
-  let h = null;
-  if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
-  else if (e.alpha !== null) h = (360 - e.alpha + 360) % 360;
-  if (h !== null) {
-    S.heading = h;
-    setPill('imuPill','ok');
-    markDirty();
-    updateInstruments();
-  }
-}
-
-function onGPS(pos) {
-  const t = Date.now();
-  const lat = pos.coords.latitude;
-  const lon = pos.coords.longitude;
-
-  if (S.prevLat !== null && S.prevGpsT !== null) {
-    const dt = (t - S.prevGpsT) / 1000;
-    if (dt > 0.5) {
-      const d = haversine(S.prevLat, S.prevLon, lat, lon);
-      const rawSog = (d / dt) * 3600 * 0.539957;
-
-      // FIX: 3-sample rolling average to kill GPS SOG spikes
-      S.sogBuffer.push(rawSog);
-      if (S.sogBuffer.length > 3) S.sogBuffer.shift();
-      S.sog = S.sogBuffer.reduce((a,b) => a+b, 0) / S.sogBuffer.length;
-
-      S.cog = bearing(S.prevLat, S.prevLon, lat, lon);
-      if (!S.heading) S.heading = S.cog;
-    }
-  }
-
-  S.lat = lat; S.lon = lon;
-  S.prevLat = lat; S.prevLon = lon; S.prevGpsT = t;
-  S.track.push({lat, lon});
-  if (S.track.length > 150) S.track.shift();
-  setPill('gpsPill','ok');
-  markDirty();
-  updateInstruments();
-  render();
-}
-
-function onGPSErr() { setPill('gpsPill','warn'); }
-
-// ═══════════════════════════════════════════════════════
-// WIND FETCH
-// ═══════════════════════════════════════════════════════
-async function fetchWind() {
-  const btn = document.getElementById('btnWind');
-  btn.classList.add('on');
-  const lat = S.lat || 17.1285;
-  const lon = S.lon || -61.8466;
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wind_speed_10m,wind_direction_10m&hourly=wave_height,wave_period&wind_speed_unit=kn&forecast_days=1`;
-    const r = await fetch(url);
-    const d = await r.json();
-    if (d.current) { S.tws = d.current.wind_speed_10m; S.twd = d.current.wind_direction_10m; }
-    if (d.hourly?.wave_height) { S.waveHt = d.hourly.wave_height[0]; S.wavePer = d.hourly.wave_period?.[0] ?? null; }
-    setPill('windPill','ok');
-    toast('Wind data updated');
-    btn.classList.remove('on');
-    markDirty();
-    saveState();
-    updateInstruments(); render(); renderWindRose();
-  } catch(e) {
-    setPill('windPill','warn');
-    toast('Wind fetch failed — check connection');
-    btn.classList.remove('on');
-  }
-}
-
-// ═══════════════════════════════════════════════════════
-// COURSE
-// ═══════════════════════════════════════════════════════
-function saveCourse() {
-  const v = (id) => { const n = parseFloat(document.getElementById(id).value); return isNaN(n) ? null : n; };
-  const aLat = v('cPinALat'), aLon = v('cPinALon');
-  const bLat = v('cPinBLat'), bLon = v('cPinBLon');
-  const mLat = v('cMarkLat'), mLon = v('cMarkLon');
-  const lLat = v('cLwLat'),   lLon = v('cLwLon');
-
-  if (!aLat || !bLat || !mLat) { toast('Enter at least both pins and mark'); return; }
-
-  S.pinA = {lat:aLat, lon:aLon};
-  S.pinB = {lat:bLat, lon:bLon};
-  S.mark = {lat:mLat, lon:mLon};
-  S.lwMark = (lLat && lLon) ? {lat:lLat, lon:lLon} : null;
-  S.activeLeg = document.getElementById('cLeg').value;
-
-  if (!S.lat) {
-    const mid = midpoint(S.pinA, S.pinB);
-    S.lat = mid.lat - 0.0015; S.lon = mid.lon;
-  }
-  closeModal('courseModal');
-  toast('Course set');
-  markDirty();
-  saveState();
-  updateInstruments(); render();
-}
-
-function setCoursePointFromGPS(which) {
-  if (S.lat === null || S.lon === null) { toast('Start Sensors and wait for GPS first'); return; }
-  const lat = S.lat.toFixed(6), lon = S.lon.toFixed(6);
-  if (which === 'A') { document.getElementById('cPinALat').value = lat; document.getElementById('cPinALon').value = lon; toast('Pin A captured from GPS'); }
-  if (which === 'B') { document.getElementById('cPinBLat').value = lat; document.getElementById('cPinBLon').value = lon; toast('Pin B captured from GPS'); }
-  if (which === 'M') { document.getElementById('cMarkLat').value = lat; document.getElementById('cMarkLon').value = lon; toast('Mark captured from GPS'); }
-}
-
-function clearStartLine() {
-  ['cPinALat','cPinALon','cPinBLat','cPinBLon'].forEach(id => document.getElementById(id).value = '');
-  S.pinA = null; S.pinB = null;
-  toast('Start pins cleared');
-  markDirty();
-  saveState();
-  updateInstruments(); render();
-}
-
-function loadDemo() {
-  S.pinA = {lat:17.1285, lon:-61.8478}; S.pinB = {lat:17.1285, lon:-61.8455};
-  S.mark = {lat:17.1365, lon:-61.8466}; S.lwMark = null;
-  S.lat = 17.1270; S.lon = -61.8466;
-  S.heading = 345; S.cog = 345; S.sog = 6.1;
-  S.twd = 70; S.tws = 14; S.waveHt = 0.8; S.wavePer = 7;
-  S.activeLeg = 'upwind';
-  S.track = [];
-  setPill('gpsPill','ok'); setPill('imuPill','ok'); setPill('windPill','ok');
-  closeModal('courseModal');
-  toast('Demo course loaded');
-
-  // FIX: load polar without triggering closeModal on polarModal (it's not open)
-  if (!S.polar) {
-    document.getElementById('polarPreset').value = 'hobie18';
-    loadPolarPreset();
-    savePolarSilent(); // saves polar without closing the polar modal
-  }
-
-  if (S.demoInterval) clearInterval(S.demoInterval);
-  S.demoT = 0;
-  S.demoInterval = setInterval(() => {
-    S.demoT += 0.02;
-    S.heading = 345 + Math.sin(S.demoT) * 12;
-    S.lat += 0.000012;
-    S.lon += Math.sin(S.demoT * 0.5) * 0.000003;
-    S.sog = 5.8 + Math.sin(S.demoT * 0.7) * 0.8;
-    S.tws = 14 + Math.sin(S.demoT * 0.3) * 1.5;
-    S.twd = 70 + Math.sin(S.demoT * 0.2) * 4;
-    S.track.push({lat:S.lat, lon:S.lon});
-    if (S.track.length > 100) S.track.shift();
-    markDirty();
-    updateInstruments(); render(); renderWindRose();
-  }, 250);
-
-  markDirty();
-  updateInstruments(); render(); renderWindRose();
-}
-
-// ═══════════════════════════════════════════════════════
-// POLAR TABLE
-// ═══════════════════════════════════════════════════════
-function buildPolarTable(rows) {
-  const tbody = document.getElementById('polarBody');
-  tbody.innerHTML = '';
-  rows.forEach(row => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 2px">${row[0]}°</td>`;
-    for (let i = 1; i <= 4; i++) {
-      tr.innerHTML += `<td><input type="number" step="0.1" min="0" max="20" data-twa="${row[0]}" data-twsi="${i-1}" value="${row[i] || ''}"></td>`;
-    }
-    tbody.appendChild(tr);
+function buildPolarTable(rows){
+  const tb=document.getElementById('polarBody'); tb.innerHTML='';
+  rows.forEach(row=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 2px">${row[0]}&deg;</td>`;
+    for(let i=1;i<=5;i++) tr.innerHTML+=`<td><input type="number" step="0.1" min="0" max="20" data-twa="${row[0]}" data-twsi="${i-1}" value="${row[i]||''}"></td>`;
+    tb.appendChild(tr);
   });
 }
-
-function initPolarTable() {
-  buildPolarTable(DEFAULT_ANGLES.map(a => [a, '', '', '', '']));
-}
-
-function loadPolarPreset() {
-  const key = document.getElementById('polarPreset').value;
-  if (!key || !PRESETS[key]) { initPolarTable(); return; }
-  buildPolarTable(PRESETS[key].rows);
-}
-
-// FIX: internal polar save that doesn't close a modal — used by loadDemo
-function savePolarSilent() {
-  const inputs = document.querySelectorAll('#polarBody input');
-  const table = {};
-  inputs.forEach(inp => {
-    const twa = parseInt(inp.dataset.twa);
-    const twsi = parseInt(inp.dataset.twsi);
-    if (!table[twa]) table[twa] = [0,0,0,0];
-    table[twa][twsi] = parseFloat(inp.value) || 0;
-  });
-  S.polar = table;
-  S.polarAngles = computePolarAngles(table);
+function initPolarTable(){buildPolarTable(DEF_ANGLES.map(a=>[a,'','','','','']));}
+function loadPolarPreset(){const k=document.getElementById('polarPreset').value;if(!k||!PRESETS[k]){initPolarTable();return;}buildPolarTable(PRESETS[k].rows);}
+function savePolarSilent(){
+  const inputs=document.querySelectorAll('#polarBody input'); const tbl={};
+  inputs.forEach(i=>{const twa=parseInt(i.dataset.twa),twsi=parseInt(i.dataset.twsi);if(!tbl[twa])tbl[twa]=[0,0,0,0,0];tbl[twa][twsi]=parseFloat(i.value)||0;});
+  polarTable=tbl;
+  polarAngles=POLAR_TWS.map((_,ti)=>{let best=-Infinity,ang=45;Object.entries(tbl).forEach(([twa,s])=>{const a=parseInt(twa);if(a>90)return;const v=s[ti]*Math.cos(a*Math.PI/180);if(v>best){best=v;ang=a;}});return ang;});
   saveState();
 }
-
-function savePolar() {
-  savePolarSilent();
-  closeModal('polarModal');
-  toast('Polar saved — ' + Object.keys(S.polar).length + ' angles loaded');
-}
-
-function computePolarAngles(table) {
-  return POLAR_TWS.map((_, ti) => {
-    let bestVMG = -Infinity, bestAngle = 45;
-    Object.entries(table).forEach(([twa, speeds]) => {
-      const a = parseInt(twa);
-      if (a > 90) return;
-      const spd = speeds[ti];
-      const vmg = spd * Math.cos(a * Math.PI / 180);
-      if (vmg > bestVMG) { bestVMG = vmg; bestAngle = a; }
-    });
-    return bestAngle;
-  });
-}
-
-function getOptimalAngle() {
-  if (!S.polarAngles.length || !S.tws) return 45;
-  const tws = S.tws;
-  if (tws <= POLAR_TWS[0]) return S.polarAngles[0];
-  if (tws >= POLAR_TWS[POLAR_TWS.length-1]) return S.polarAngles[S.polarAngles.length-1];
-  for (let i = 0; i < POLAR_TWS.length-1; i++) {
-    if (tws >= POLAR_TWS[i] && tws <= POLAR_TWS[i+1]) {
-      const t = (tws - POLAR_TWS[i]) / (POLAR_TWS[i+1] - POLAR_TWS[i]);
-      return S.polarAngles[i] * (1-t) + S.polarAngles[i+1] * t;
-    }
-  }
+function savePolar(){savePolarSilent();closeModal('polarModal');toast('Polar saved');}
+function getOptimalAngle(){
+  if(!polarAngles.length||!WIND.tws)return 45;
+  const tws=WIND.tws;
+  if(tws<=POLAR_TWS[0])return polarAngles[0];
+  if(tws>=POLAR_TWS[POLAR_TWS.length-1])return polarAngles[polarAngles.length-1];
+  for(let i=0;i<POLAR_TWS.length-1;i++){if(tws>=POLAR_TWS[i]&&tws<=POLAR_TWS[i+1]){const t=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);return polarAngles[i]*(1-t)+polarAngles[i+1]*t;}}
   return 45;
 }
+function getPolarSpeed(twa,tws){
+  if(!polarTable||!Object.keys(polarTable).length)return NAV.sog||4;
+  const angles=Object.keys(polarTable).map(Number).sort((a,b)=>a-b);
+  const absTwa=Math.abs(twa);
+  let ti0,ti1,tFrac;
+  if(tws<=POLAR_TWS[0]){ti0=0;ti1=0;tFrac=0;}
+  else if(tws>=POLAR_TWS[POLAR_TWS.length-1]){ti0=POLAR_TWS.length-1;ti1=POLAR_TWS.length-1;tFrac=0;}
+  else{ti0=0;for(let i=0;i<POLAR_TWS.length-1;i++){if(tws>=POLAR_TWS[i]&&tws<=POLAR_TWS[i+1]){ti0=i;break;}}ti1=ti0+1;tFrac=(tws-POLAR_TWS[ti0])/(POLAR_TWS[ti1]-POLAR_TWS[ti0]);}
+  let lo=angles[0],hi=angles[angles.length-1];
+  for(let i=0;i<angles.length-1;i++){if(absTwa>=angles[i]&&absTwa<=angles[i+1]){lo=angles[i];hi=angles[i+1];break;}}
+  const aFrac=lo===hi?0:(absTwa-lo)/(hi-lo);
+  const spd=(a,ti)=>(polarTable[a]&&polarTable[a][ti]!=null)?polarTable[a][ti]:0;
+  const sLo=spd(lo,ti0)*(1-tFrac)+spd(lo,ti1)*tFrac;
+  const sHi=spd(hi,ti0)*(1-tFrac)+spd(hi,ti1)*tFrac;
+  return sLo*(1-aFrac)+sHi*aFrac;
+}
 
-// FIX: corrected TWS bracket interpolation — was always returning index 0
-function getPolarSpeed(twa, tws) {
-  if (!S.polar || !Object.keys(S.polar).length) return S.sog || 5;
-  const angles = Object.keys(S.polar).map(Number).sort((a,b) => a-b);
-  const absTwa = Math.abs(twa);
+// ===== LOCALSTORAGE =====
+const LS='tactician_v2';
+function saveState(){try{localStorage.setItem(LS,JSON.stringify({pinA:COURSE.pinA,pinB:COURSE.pinB,mark:COURSE.mark,lwMark:COURSE.lwMark,activeLeg:COURSE.activeLeg,tackDur:COURSE.tackDur,twd:WIND.twd,tws:WIND.tws,polar:polarTable,polarAngles}));}catch(e){}}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS); if(!raw)return;
+    const p=JSON.parse(raw);
+    if(p.pinA)COURSE.pinA=p.pinA; if(p.pinB)COURSE.pinB=p.pinB;
+    if(p.mark)COURSE.mark=p.mark; if(p.lwMark)COURSE.lwMark=p.lwMark;
+    if(p.activeLeg){COURSE.activeLeg=p.activeLeg;const s=document.getElementById('cLeg');if(s)s.value=p.activeLeg;}
+    if(p.tackDur){COURSE.tackDur=p.tackDur;const t=document.getElementById('cTackDur');if(t)t.value=p.tackDur;}
+    if(p.twd!=null)WIND.twd=p.twd; if(p.tws!=null)WIND.tws=p.tws;
+    if(p.polar){polarTable=p.polar;const angles=Object.keys(p.polar).map(Number).sort((a,b)=>a-b);buildPolarTable(angles.map(a=>[a,...p.polar[a]]));}
+    if(p.polarAngles)polarAngles=p.polarAngles;
+    markDirty(); toast('Session restored');
+  }catch(e){}
+}
 
-  // Find TWS bracket
-  let ti0, ti1, tFrac;
-  if (tws <= POLAR_TWS[0]) {
-    ti0 = 0; ti1 = 0; tFrac = 0;
-  } else if (tws >= POLAR_TWS[POLAR_TWS.length-1]) {
-    ti0 = POLAR_TWS.length-1; ti1 = POLAR_TWS.length-1; tFrac = 0;
-  } else {
-    ti0 = 0;
-    for (let i = 0; i < POLAR_TWS.length-1; i++) {
-      if (tws >= POLAR_TWS[i] && tws <= POLAR_TWS[i+1]) { ti0 = i; break; }
-    }
-    ti1 = ti0 + 1;
-    tFrac = (tws - POLAR_TWS[ti0]) / (POLAR_TWS[ti1] - POLAR_TWS[ti0]);
+// ===== CANVAS =====
+const tcTiles=document.getElementById('tcTiles'), ctxT=tcTiles.getContext('2d');
+const tcMain=document.getElementById('tcMain'), ctxM=tcMain.getContext('2d');
+function markDirty(){_dirty=true;}
+function resizeCanvases(){
+  const w=tcMain.parentElement.clientWidth, h=tcMain.parentElement.clientHeight;
+  [tcTiles,tcMain].forEach(c=>{c.width=w*devicePixelRatio;c.height=h*devicePixelRatio;c.style.width=w+'px';c.style.height=h+'px';});
+  markDirty();
+}
+if(window.ResizeObserver){new ResizeObserver(resizeCanvases).observe(document.getElementById('chartWrap'));}
+else{window.addEventListener('resize',resizeCanvases);}
+resizeCanvases();
+
+// ===== TOUCH: pan + pinch zoom =====
+function touchDist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);}
+function touchMid(t){return{x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2};}
+tcMain.addEventListener('touchstart',e=>{
+  e.preventDefault();
+  if(e.touches.length===2){VIEW.pinchDist=touchDist(e.touches);VIEW.baseScale=VIEW.scale;VIEW.baseOffX=VIEW.offX;VIEW.baseOffY=VIEW.offY;}
+  else if(e.touches.length===1){VIEW.dragging=true;VIEW.lastX=e.touches[0].clientX;VIEW.lastY=e.touches[0].clientY;}
+},{passive:false});
+tcMain.addEventListener('touchmove',e=>{
+  e.preventDefault();
+  if(e.touches.length===2&&VIEW.pinchDist!==null){
+    const nd=touchDist(e.touches), mid=touchMid(e.touches), sf=nd/VIEW.pinchDist;
+    const ns=Math.max(0.5,Math.min(20,VIEW.baseScale*sf));
+    const rect=tcMain.getBoundingClientRect(), px=(mid.x-rect.left)/rect.width, py=(mid.y-rect.top)/rect.height;
+    VIEW.offX=px-(px-VIEW.baseOffX)*(ns/VIEW.baseScale);
+    VIEW.offY=py-(py-VIEW.baseOffY)*(ns/VIEW.baseScale);
+    VIEW.scale=ns; markDirty();
+  }else if(e.touches.length===1&&VIEW.dragging){
+    VIEW.offX+=(e.touches[0].clientX-VIEW.lastX)/tcMain.clientWidth;
+    VIEW.offY+=(e.touches[0].clientY-VIEW.lastY)/tcMain.clientHeight;
+    VIEW.lastX=e.touches[0].clientX; VIEW.lastY=e.touches[0].clientY; markDirty();
   }
+},{passive:false});
+tcMain.addEventListener('touchend',e=>{if(e.touches.length<2)VIEW.pinchDist=null;if(e.touches.length===0)VIEW.dragging=false;},{passive:true});
+let lastTap=0;
+tcMain.addEventListener('touchend',e=>{const now=Date.now();if(now-lastTap<300){VIEW.scale=1;VIEW.offX=0;VIEW.offY=0;markDirty();}lastTap=now;},{passive:true});
 
-  // Find TWA bracket
-  let lo = angles[0], hi = angles[angles.length-1];
-  for (let i = 0; i < angles.length-1; i++) {
-    if (absTwa >= angles[i] && absTwa <= angles[i+1]) { lo = angles[i]; hi = angles[i+1]; break; }
-  }
-  const aFrac = lo === hi ? 0 : (absTwa - lo) / (hi - lo);
-
-  // Bilinear interpolation across both TWA and TWS
-  const spd = (a, ti) => (S.polar[a] && S.polar[a][ti] != null) ? S.polar[a][ti] : 0;
-  const spdLo = spd(lo, ti0) * (1-tFrac) + spd(lo, ti1) * tFrac;
-  const spdHi = spd(hi, ti0) * (1-tFrac) + spd(hi, ti1) * tFrac;
-  return spdLo * (1-aFrac) + spdHi * aFrac;
+// ===== NOAA TILE MAP =====
+const TILE_URL='https://tileservice.charts.noaa.gov/tiles/50000_1/{z}/{x}/{y}.png';
+function latLonToTile(lat,lon,z){
+  const n=Math.pow(2,z), x=Math.floor((lon+180)/360*n);
+  const latR=lat*Math.PI/180, y=Math.floor((1-Math.log(Math.tan(latR)+1/Math.cos(latR))/Math.PI)/2*n);
+  return{x,y,z};
 }
-
-// ═══════════════════════════════════════════════════════
-// COUNTDOWN TIMER
-// ═══════════════════════════════════════════════════════
-let cdInterval = null;
-let selectedSeq = 5;
-
-function selectSeq(n) {
-  selectedSeq = n;
-  ['seq5','seq3','seq10','seqC'].forEach(id => document.getElementById(id).classList.remove('selected'));
-  const map = {5:'seq5',3:'seq3',10:'seq10',0:'seqC'};
-  document.getElementById(map[n] || 'seqC').classList.add('selected');
-  document.getElementById('customRow').style.display = n === 0 ? 'flex' : 'none';
+function tileToLatLon(x,y,z){
+  const n=Math.pow(2,z), lon=x/n*360-180, latR=Math.atan(Math.sinh(Math.PI*(1-2*y/n)));
+  return{lat:latR*180/Math.PI,lon};
 }
-
-function startCountdown() {
-  let mins = selectedSeq;
-  if (selectedSeq === 0) mins = parseInt(document.getElementById('customMins').value) || 5;
-  CD.totalMs = mins * 60000;
-  CD.startEpoch = Date.now() + CD.totalMs;
-  CD.active = true;
-  CD.seq = mins;
-  closeModal('timerModal');
-  document.getElementById('cdBar').classList.add('visible');
-  if (cdInterval) clearInterval(cdInterval);
-  cdInterval = setInterval(tickCountdown, 250);
-  tickCountdown();
-  document.getElementById('btnTimer').classList.add('on');
+function getTile(z,x,y){
+  const key=`${z}/${x}/${y}`;
+  if(tileCache[key])return tileCache[key];
+  const img=new Image(); img.crossOrigin='anonymous';
+  img.onload=()=>{tileCache[key].loaded=true;markDirty();};
+  img.onerror=()=>{tileCache[key].err=true;};
+  img.src=TILE_URL.replace('{z}',z).replace('{x}',x).replace('{y}',y);
+  tileCache[key]={img,loaded:false,err:false}; return tileCache[key];
 }
-
-// FIX: guard against null startEpoch before operating on it
-function syncGun() {
-  if (!CD.active || !CD.startEpoch) {
-    toast('Start a sequence first');
-    closeModal('timerModal');
-    return;
-  }
-  const now = Date.now();
-  const rem = CD.startEpoch - now;
-  const rounded = Math.round(rem / 60000) * 60000;
-  CD.startEpoch = now + rounded;
-  closeModal('timerModal');
-  toast('Synced ±0');
-}
-
-function stopCountdown() {
-  if (cdInterval) clearInterval(cdInterval);
-  CD.active = false;
-  CD.startEpoch = null;
-  document.getElementById('cdBar').classList.remove('visible','seq-5','seq-4','seq-1','seq-go');
-  document.getElementById('btnTimer').classList.remove('on');
-}
-
-function tickCountdown() {
-  if (!CD.active || !CD.startEpoch) return;
-  const now = Date.now();
-  const rem = CD.startEpoch - now;
-
-  if (rem <= 0) {
-    document.getElementById('cdTime').textContent = 'GO';
-    document.getElementById('cdPhase').textContent = 'RACING';
-    document.getElementById('cdBar').className = 'countdown-bar visible seq-go';
-    if (rem < -3000) stopCountdown();
-    return;
-  }
-
-  const totalSec = Math.ceil(rem / 1000);
-  const mins = Math.floor(totalSec / 60);
-  const secs = totalSec % 60;
-  document.getElementById('cdTime').textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
-
-  const bar = document.getElementById('cdBar');
-  bar.className = 'countdown-bar visible';
-  const seqMins = CD.seq;
-
-  if (totalSec > (seqMins-1)*60) {
-    document.getElementById('cdPhase').textContent = `${seqMins} MIN`;
-    bar.classList.add('seq-5');
-  } else if (totalSec > 60 && seqMins >= 4) {
-    document.getElementById('cdPhase').textContent = `${Math.ceil(totalSec/60)} MIN`;
-    bar.classList.add('seq-4');
-  } else if (totalSec > 60) {
-    document.getElementById('cdPhase').textContent = 'PREP';
-    bar.classList.add('seq-4');
-  } else if (totalSec <= 60 && totalSec > 10) {
-    document.getElementById('cdPhase').textContent = '1 MIN';
-    bar.classList.add('seq-1');
-  } else {
-    document.getElementById('cdPhase').textContent = 'FINAL';
-    bar.classList.add('seq-1');
-  }
-}
-
-document.getElementById('cdSync').addEventListener('click', () => {
-  // FIX: guard null startEpoch on inline sync button too
-  if (!CD.active || !CD.startEpoch) return;
-  const now = Date.now();
-  const rem = CD.startEpoch - now;
-  const rounded = Math.round(rem / 60000) * 60000;
-  CD.startEpoch = now + rounded;
-  toast('Synced ±0');
-});
-
-document.getElementById('cdStop').addEventListener('click', stopCountdown);
-
-// ═══════════════════════════════════════════════════════
-// TACTICS COMPUTATION
-// ═══════════════════════════════════════════════════════
-function normAngle(a) { return ((a % 360) + 360) % 360; }
-function angDiff(a, b) { let d = normAngle(b-a); return d > 180 ? d-360 : d; }
-
-function fmtTime(sec) {
-  if (!isFinite(sec)) return '--:--';
-  const sign = sec < 0 ? '-' : '';
-  sec = Math.abs(Math.round(sec));
-  const m = Math.floor(sec / 60), s = sec % 60;
-  return `${sign}${m}:${s.toString().padStart(2,'0')}`;
-}
-
-function llToXY(ref, pt) {
-  const R = 6371000;
-  const lat0 = ref.lat * Math.PI/180;
-  return {
-    x: (pt.lon - ref.lon) * Math.PI/180 * R * Math.cos(lat0),
-    y: (pt.lat - ref.lat) * Math.PI/180 * R
-  };
-}
-
-function computeStartMetrics() {
-  if (!S.pinA || !S.pinB || S.lat === null || S.lon === null) return null;
-  const A = {x:0, y:0};
-  const B = llToXY(S.pinA, S.pinB);
-  const P = llToXY(S.pinA, {lat:S.lat, lon:S.lon});
-  const AB = {x:B.x-A.x, y:B.y-A.y};
-  const len = Math.hypot(AB.x, AB.y);
-  if (len < 3) return null;
-
-  const AP = {x:P.x-A.x, y:P.y-A.y};
-  const tRaw = (AP.x*AB.x + AP.y*AB.y) / (len*len);
-  const t = Math.max(0, Math.min(1, tRaw));
-  const C = {x:A.x + AB.x*t, y:A.y + AB.y*t};
-  const toLine = {x:C.x-P.x, y:C.y-P.y};
-  const distM = Math.hypot(toLine.x, toLine.y);
-  const side = Math.sign(AB.x*AP.y - AB.y*AP.x) || 1;
-
-  const course = S.cog ?? S.heading;
-  const sogMS = (S.sog || 0) * 0.514444;
-  let closingMS = 0;
-  if (distM > 0.5 && course !== null) {
-    const v = {x: Math.sin(course*Math.PI/180)*sogMS, y: Math.cos(course*Math.PI/180)*sogMS};
-    const u = {x: toLine.x/distM, y: toLine.y/distM};
-    closingMS = v.x*u.x + v.y*u.y;
-  }
-  const ttl = closingMS > 0.25 ? distM / closingMS : Infinity;
-  const rem = CD.active && CD.startEpoch ? Math.max(0, (CD.startEpoch - Date.now())/1000) : Infinity;
-  const burn = isFinite(rem) && isFinite(ttl) ? rem - ttl : Infinity;
-
-  let favored = null, biasM = null;
-  if (S.twd !== null) {
-    const up = {x: Math.sin(S.twd*Math.PI/180), y: Math.cos(S.twd*Math.PI/180)};
-    const mid = {x:B.x/2, y:B.y/2};
-    const aProj = (A.x-mid.x)*up.x + (A.y-mid.y)*up.y;
-    const bProj = (B.x-mid.x)*up.x + (B.y-mid.y)*up.y;
-    favored = aProj >= bProj ? 'A' : 'B';
-    biasM = Math.abs(aProj - bProj);
-  }
-
-  return {distM, ttl, burn, rem, closingMS, favored, biasM, lineLenM: len, pctAlong: tRaw*100, side};
-}
-
-function updateStartDisplay() {
-  const rec = document.getElementById('tackRec');
-  const m = computeStartMetrics();
-  if (!m) {
-    document.getElementById('iVmg').textContent = '--';
-    rec.textContent = 'START MODE: SET PIN A + PIN B';
-    rec.className = 'tack-rec none';
-    drawVMGArc(0);
-    return true;
-  }
-  document.getElementById('iVmg').textContent = isFinite(m.burn) ? fmtTime(m.burn) : '--';
-  const burnTxt = isFinite(m.burn) ? (m.burn >= 0 ? `BURN +${fmtTime(m.burn)}` : `LATE ${fmtTime(m.burn)}`) : 'NO TIMER';
-  const favTxt = m.favored ? `FAV ${m.favored} +${Math.round(m.biasM)}m` : 'NO WIND';
-  rec.textContent = `LINE ${Math.round(m.distM)}m  TTL ${fmtTime(m.ttl)}  ${burnTxt}  ${favTxt}`;
-  rec.className = m.burn < 0 ? 'tack-rec port' : m.burn < 15 ? 'tack-rec stbd' : 'tack-rec none';
-  drawVMGArc(Math.max(0, Math.min(100, m.closingMS / 3 * 100)));
-  return true;
-}
-
-function computeTactics() {
-  if (!S.twd || !S.mark || !S.lat) return null;
-  const polar = getOptimalAngle();
-  const stbdHdg = normAngle(S.twd - polar);
-  const portHdg  = normAngle(S.twd + polar);
-  const markBrng = bearing(S.lat, S.lon, S.mark.lat, S.mark.lon);
-
-  const twa_stbd = angDiff(S.twd, stbdHdg);
-  const twa_port  = angDiff(S.twd, portHdg);
-  const spd_stbd = getPolarSpeed(twa_stbd, S.tws || 10);
-  const spd_port  = getPolarSpeed(twa_port,  S.tws || 10);
-  const ang_stbd  = Math.abs(angDiff(stbdHdg, markBrng)) * Math.PI/180;
-  const ang_port   = Math.abs(angDiff(portHdg,  markBrng)) * Math.PI/180;
-  const vmg_stbd  = spd_stbd * Math.cos(ang_stbd);
-  const vmg_port   = spd_port  * Math.cos(ang_port);
-
-  const best = vmg_stbd >= vmg_port ? 'stbd' : 'port';
-  const bestHdg = best === 'stbd' ? stbdHdg : portHdg;
-  const bestVMG = best === 'stbd' ? vmg_stbd : vmg_port;
-  const maxPossible = Math.max(spd_stbd, spd_port);
-  const eff = maxPossible > 0 ? Math.min(100, Math.max(0, bestVMG / maxPossible * 100)) : 0;
-
-  return {
-    stbdHdg, portHdg, best, bestHdg, bestVMG,
-    vmg_stbd, vmg_port, eff,
-    markBrng,
-    layPort: normAngle(S.twd + polar + 180),
-    laySttbd: normAngle(S.twd - polar + 180),
-  };
-}
-
-// ═══════════════════════════════════════════════════════
-// INSTRUMENT UPDATE
-// ═══════════════════════════════════════════════════════
-function updateInstruments() {
-  const h = S.heading;
-  document.getElementById('iHdg').textContent = h !== null ? Math.round(h) : '---';
-  document.getElementById('iSog').textContent = S.sog.toFixed(1);
-  document.getElementById('iTwa').textContent = (S.twd !== null && h !== null) ? Math.round(angDiff(S.twd, h)) + '°' : '---';
-
-  if (S.activeLeg === 'start') {
-    updateStartDisplay();
-  } else {
-    const tac = computeTactics();
-    if (tac) {
-      document.getElementById('iVmg').textContent = tac.bestVMG.toFixed(1);
-      const rec = document.getElementById('tackRec');
-      if (tac.best === 'stbd') {
-        rec.textContent = `▶ STBD TACK  ${Math.round(tac.stbdHdg)}°  VMG ${tac.vmg_stbd.toFixed(1)}kt`;
-        rec.className = 'tack-rec stbd';
-      } else {
-        rec.textContent = `◀ PORT TACK  ${Math.round(tac.portHdg)}°  VMG ${tac.vmg_port.toFixed(1)}kt`;
-        rec.className = 'tack-rec port';
-      }
-      drawVMGArc(tac.eff);
-    } else {
-      document.getElementById('iVmg').textContent = '--';
-      document.getElementById('tackRec').textContent = 'SET COURSE TO COMPUTE TACK';
-      document.getElementById('tackRec').className = 'tack-rec none';
-      drawVMGArc(0);
+function renderTiles(bounds,W,H){
+  if(!VIEW.showMap)return;
+  ctxT.save(); ctxT.scale(devicePixelRatio,devicePixelRatio); ctxT.clearRect(0,0,W,H);
+  const latMid=(bounds.minLat+bounds.maxLat)/2, lonMid=(bounds.minLon+bounds.maxLon)/2;
+  const baseZ=Math.min(16,Math.max(6,14-Math.round(Math.log2(VIEW.scale))));
+  const z=Math.min(16,Math.max(6,baseZ+Math.round(Math.log2(VIEW.scale))));
+  const refT=latLonToTile(latMid,lonMid,z);
+  const degPerTileX=360/Math.pow(2,z);
+  const tileOriginLat=tileToLatLon(refT.x,refT.y,z).lat;
+  const tileBottomLat=tileToLatLon(refT.x,refT.y+1,z).lat;
+  const degPerTileY=tileOriginLat-tileBottomLat;
+  const pxPerDegX=W/(bounds.maxLon-bounds.minLon)*VIEW.scale;
+  const pxPerDegY=H/(bounds.maxLat-bounds.minLat)*VIEW.scale;
+  const tilePxW=degPerTileX*pxPerDegX, tilePxH=degPerTileY*pxPerDegY;
+  for(let tx=refT.x-3;tx<=refT.x+3;tx++){
+    for(let ty=refT.y-3;ty<=refT.y+3;ty++){
+      const orig=tileToLatLon(tx,ty,z);
+      const sx=(orig.lon-bounds.minLon)/(bounds.maxLon-bounds.minLon)*W*VIEW.scale+VIEW.offX*W*VIEW.scale;
+      const sy=(1-(orig.lat-bounds.minLat)/(bounds.maxLat-bounds.minLat))*H*VIEW.scale+VIEW.offY*H*VIEW.scale;
+      const t=getTile(z,tx,ty);
+      if(t.loaded){ctxT.globalAlpha=0.5;ctxT.drawImage(t.img,sx,sy,tilePxW+1,tilePxH+1);ctxT.globalAlpha=1;}
     }
   }
+  ctxT.restore();
+}
+function toggleMap(){VIEW.showMap=!VIEW.showMap;const b=document.getElementById('mapToggle');b.textContent=VIEW.showMap?'CHART ON':'CHART OFF';b.classList.toggle('on',VIEW.showMap);markDirty();}
 
-  document.getElementById('wbSpd').textContent = S.tws !== null ? Math.round(S.tws)+'kt' : '--kt';
-  document.getElementById('wbDir').textContent = S.twd !== null ? Math.round(S.twd)+'°' : '---°';
+// ===== SENSORS =====
+async function toggleSensors(){if(sensorsOn){stopSensors();return;}await startSensors();}
+async function startSensors(){
+  document.getElementById('btnSensors').classList.add('on');
+  if('geolocation'in navigator){gpsWatcher=navigator.geolocation.watchPosition(onGPS,onGPSErr,{enableHighAccuracy:true,maximumAge:1000,timeout:15000});}else setPill('gpsPill','warn');
+  if(window.DeviceOrientationEvent){
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){try{const r=await DeviceOrientationEvent.requestPermission();if(r==='granted')listenOrientation();else setPill('imuPill','warn');}catch(e){setPill('imuPill','warn');}}
+    else listenOrientation();
+  }else setPill('imuPill','warn');
+  sensorsOn=true; toast('Sensors started');
+}
+function stopSensors(){
+  if(gpsWatcher!==null)navigator.geolocation.clearWatch(gpsWatcher);
+  window.removeEventListener('deviceorientationabsolute',onOrientAbs,true);
+  window.removeEventListener('deviceorientation',onOrientRel,true);
+  orientAbsActive=false; sensorsOn=false;
+  document.getElementById('btnSensors').classList.remove('on');
+  setPill('gpsPill','off'); setPill('imuPill','off');
+  kfHdg.reset(); kfSog.reset(); toast('Sensors stopped');
+}
+function listenOrientation(){window.addEventListener('deviceorientationabsolute',onOrientAbs,true);window.addEventListener('deviceorientation',onOrientRel,true);}
+function onOrientAbs(e){if(e.alpha===null)return;orientAbsActive=true;NAV.heading=kfHdg.update((360-e.alpha+360)%360);setPill('imuPill','ok');markDirty();updateInstruments();}
+function onOrientRel(e){if(orientAbsActive)return;let raw=null;if(e.webkitCompassHeading!=null)raw=e.webkitCompassHeading;else if(e.alpha!==null)raw=(360-e.alpha+360)%360;if(raw!==null){NAV.heading=kfHdg.update(raw);setPill('imuPill','ok');markDirty();updateInstruments();}}
+function onGPS(pos){
+  const t=Date.now(), lat=pos.coords.latitude, lon=pos.coords.longitude;
+  if(NAV.prevLat!==null&&NAV.prevT!==null){
+    const dt=(t-NAV.prevT)/1000;
+    if(dt>0.5){const d=haversine(NAV.prevLat,NAV.prevLon,lat,lon);NAV.sog=kfSog.update((d/dt)*3600*0.539957);NAV.cog=bearing(NAV.prevLat,NAV.prevLon,lat,lon);if(!NAV.heading)NAV.heading=NAV.cog;}
+  }
+  NAV.lat=lat;NAV.lon=lon;NAV.prevLat=lat;NAV.prevLon=lon;NAV.prevT=t;
+  NAV.track.push({lat,lon}); if(NAV.track.length>150)NAV.track.shift();
+  setPill('gpsPill','ok'); markDirty(); updateInstruments();
+}
+function onGPSErr(){setPill('gpsPill','warn');}
+
+// ===== WIND =====
+async function fetchWind(){
+  const btn=document.getElementById('btnWind'); btn.classList.add('on');
+  const lat=NAV.lat||28.0, lon=NAV.lon||-80.6;
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=wind_speed_10m,wind_direction_10m&minutely_15=wind_speed_10m,wind_direction_10m&wind_speed_unit=kn&forecast_days=1`;
+    const r=await fetch(url), d=await r.json();
+    if(d.current){WIND.twd=kfTwd.update(d.current.wind_direction_10m);WIND.tws=d.current.wind_speed_10m;WIND.history.push({t:Date.now(),twd:d.current.wind_direction_10m,tws:d.current.wind_speed_10m});if(WIND.history.length>12)WIND.history.shift();}
+    setPill('windPill','ok'); toast('Wind updated');
+    btn.classList.remove('on'); markDirty(); saveState(); updateInstruments(); renderWindRose();
+  }catch(e){setPill('windPill','warn');toast('Wind fetch failed');btn.classList.remove('on');}
+}
+function startWindAutoRefresh(){if(WIND.autoTimer)clearInterval(WIND.autoTimer);WIND.autoTimer=setInterval(fetchWind,5*60*1000);}
+function getWindTrend(){
+  if(WIND.history.length<3)return{trend:'NO DATA',deg:0};
+  const n=WIND.history.length; let sx=0,sy=0,sxy=0,sx2=0;
+  for(let i=0;i<n;i++){sx+=i;sy+=WIND.history[i].twd;sxy+=i*WIND.history[i].twd;sx2+=i*i;}
+  const slope=(n*sxy-sx*sy)/(n*sx2-sx*sx);
+  const degChange=slope*n;
+  if(Math.abs(degChange)<2)return{trend:'STEADY',deg:0};
+  return{trend:degChange<0?'LEFT':'RIGHT',deg:Math.abs(degChange).toFixed(1)};
 }
 
-function drawVMGArc(eff) {
-  const c = document.getElementById('vmgArc');
-  const x = c.getContext('2d');
-  const W = 44, cx = 22, cy = 22, r = 18;
-  x.clearRect(0,0,W,W);
-  x.strokeStyle = 'rgba(0,212,170,0.12)'; x.lineWidth = 4;
-  x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.stroke();
-  if (eff > 0) {
-    const col = eff > 75 ? '#4cde80' : eff > 40 ? '#00d4aa' : '#f5a623';
-    x.strokeStyle = col; x.lineWidth = 4;
-    x.beginPath();
-    x.arc(cx,cy,r,-Math.PI/2, -Math.PI/2 + (eff/100)*2*Math.PI);
-    x.stroke();
-  }
-  x.fillStyle = eff > 0 ? 'rgba(0,212,170,0.9)' : 'rgba(74,104,128,0.6)';
-  x.font = 'bold 9px Space Mono, monospace';
-  x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.fillText(eff > 0 ? Math.round(eff) : '--', cx, cy);
+// ===== COURSE =====
+function saveCourse(){
+  const v=id=>{const n=parseFloat(document.getElementById(id).value);return isNaN(n)?null:n;};
+  const aLat=v('cPinALat'),aLon=v('cPinALon'),bLat=v('cPinBLat'),bLon=v('cPinBLon'),mLat=v('cMarkLat'),mLon=v('cMarkLon'),lLat=v('cLwLat'),lLon=v('cLwLon');
+  if(!aLat||!bLat||!mLat){toast('Enter both pins and mark');return;}
+  COURSE.pinA={lat:aLat,lon:aLon}; COURSE.pinB={lat:bLat,lon:bLon}; COURSE.mark={lat:mLat,lon:mLon};
+  COURSE.lwMark=(lLat&&lLon)?{lat:lLat,lon:lLon}:null;
+  COURSE.activeLeg=document.getElementById('cLeg').value;
+  COURSE.tackDur=parseInt(document.getElementById('cTackDur').value)||20;
+  if(!NAV.lat){const mid=midpoint(COURSE.pinA,COURSE.pinB);NAV.lat=mid.lat-0.005;NAV.lon=mid.lon;}
+  closeModal('courseModal'); toast('Course set'); markDirty(); saveState(); updateInstruments(); updateStartUI();
+}
+function setCoursePointFromGPS(which){
+  if(NAV.lat===null){toast('GPS not ready');return;}
+  const lat=NAV.lat.toFixed(6),lon=NAV.lon.toFixed(6);
+  if(which==='A'){document.getElementById('cPinALat').value=lat;document.getElementById('cPinALon').value=lon;toast('Pin A set');}
+  if(which==='B'){document.getElementById('cPinBLat').value=lat;document.getElementById('cPinBLon').value=lon;toast('Pin B set');}
+  if(which==='M'){document.getElementById('cMarkLat').value=lat;document.getElementById('cMarkLon').value=lon;toast('Mark set');}
+}
+function clearStartLine(){['cPinALat','cPinALon','cPinBLat','cPinBLon'].forEach(id=>document.getElementById(id).value='');COURSE.pinA=null;COURSE.pinB=null;toast('Pins cleared');markDirty();saveState();}
+function loadDemo(){
+  COURSE.pinA={lat:28.0380,lon:-80.5878}; COURSE.pinB={lat:28.0380,lon:-80.5840};
+  COURSE.mark={lat:28.0460,lon:-80.5860}; COURSE.lwMark=null;
+  NAV.lat=28.0360; NAV.lon=-80.5860; NAV.heading=345; NAV.cog=345; NAV.sog=4.8;
+  WIND.twd=65; WIND.tws=12; WIND.history=[];
+  COURSE.activeLeg='start'; COURSE.tackDur=20;
+  setPill('gpsPill','ok'); setPill('imuPill','ok'); setPill('windPill','ok');
+  kfHdg.x=345; kfSog.x=4.8;
+  document.getElementById('cLeg').value='start';
+  closeModal('courseModal'); toast('Demo loaded — Florida coast');
+  if(!Object.keys(polarTable).length){document.getElementById('polarPreset').value='compac35';loadPolarPreset();savePolarSilent();}
+  if(demoInterval)clearInterval(demoInterval);
+  demoT=0;
+  demoInterval=setInterval(()=>{
+    demoT+=0.025;
+    NAV.heading=kfHdg.update(345+Math.sin(demoT)*10);
+    NAV.lat+=0.000010; NAV.lon+=Math.sin(demoT*0.4)*0.000004;
+    NAV.sog=kfSog.update(4.6+Math.sin(demoT*0.8)*0.6);
+    WIND.tws=12+Math.sin(demoT*0.25)*1.5;
+    const rTwd=65+Math.sin(demoT*0.18)*5; WIND.twd=kfTwd.update(rTwd);
+    WIND.history.push({t:Date.now(),twd:rTwd,tws:WIND.tws}); if(WIND.history.length>12)WIND.history.shift();
+    NAV.track.push({lat:NAV.lat,lon:NAV.lon}); if(NAV.track.length>100)NAV.track.shift();
+    markDirty(); updateInstruments(); updateStartUI();
+  },250);
+  markDirty(); updateInstruments(); updateStartUI(); renderWindRose();
 }
 
-// ═══════════════════════════════════════════════════════
-// WIND ROSE
-// ═══════════════════════════════════════════════════════
-function renderWindRose() {
-  const c = document.getElementById('wrCanvas');
-  const x = c.getContext('2d');
-  const W=64, cx=32, cy=32, r=28;
-  x.clearRect(0,0,W,W);
-  x.fillStyle='rgba(6,16,32,0.6)';
-  x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.fill();
-  x.strokeStyle='rgba(0,212,170,0.15)'; x.lineWidth=1;
-  x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.stroke();
-
-  if (S.twd !== null) {
-    const tws = S.tws || 0;
-    const rad = (S.twd - 90)*Math.PI/180;
-    x.strokeStyle='#f5a623'; x.lineWidth=2;
-    x.beginPath();
-    x.moveTo(cx,cy);
-    x.lineTo(cx+Math.cos(rad)*r*0.82, cy+Math.sin(rad)*r*0.82);
-    x.stroke();
-    const ex=cx+Math.cos(rad)*r*0.82, ey=cy+Math.sin(rad)*r*0.82;
-    x.save(); x.translate(ex,ey); x.rotate(rad+Math.PI/2);
-    x.fillStyle='#f5a623';
-    x.beginPath(); x.moveTo(0,0); x.lineTo(-4,10); x.lineTo(4,10); x.closePath(); x.fill();
-    x.restore();
-    const barbs = Math.min(Math.round(tws/5), 5);
-    for (let b=0; b<barbs; b++) {
-      const t=0.25+b*0.14;
-      const bx=cx+Math.cos(rad)*r*0.82*t, by=cy+Math.sin(rad)*r*0.82*t;
-      const p=rad-Math.PI/2;
-      x.strokeStyle='rgba(245,166,35,0.7)'; x.lineWidth=1.5;
-      x.beginPath(); x.moveTo(bx,by); x.lineTo(bx+Math.cos(p)*7,by+Math.sin(p)*7); x.stroke();
-    }
-  } else {
-    x.fillStyle='rgba(74,104,128,0.6)';
-    x.font='bold 8px Space Mono, monospace';
-    x.textAlign='center'; x.textBaseline='middle';
-    x.fillText('NO',cx,cy-5); x.fillText('WIND',cx,cy+6);
-  }
+// ===== COUNTDOWN =====
+function selectSeq(n){selectedSeq=n;['seq5','seq3','seq10','seqC'].forEach(id=>document.getElementById(id).classList.remove('selected'));const map={5:'seq5',3:'seq3',10:'seq10',0:'seqC'};document.getElementById(map[n]||'seqC').classList.add('selected');document.getElementById('customRow').style.display=n===0?'flex':'none';}
+function startCountdown(){
+  let mins=selectedSeq; if(selectedSeq===0)mins=parseInt(document.getElementById('customMins').value)||5;
+  RACE.seq=mins; RACE.startEpoch=Date.now()+mins*60000; RACE.active=true;
+  closeModal('timerModal'); document.getElementById('cdBar').classList.add('visible');
+  if(cdInterval)clearInterval(cdInterval); cdInterval=setInterval(tickCountdown,250);
+  tickCountdown(); document.getElementById('btnTimer').classList.add('on'); updateStartUI();
 }
-
-// ═══════════════════════════════════════════════════════
-// TACTICAL CHART RENDER
-// ═══════════════════════════════════════════════════════
-function getBounds() {
-  const pts = [];
-  if (S.pinA) pts.push(S.pinA); if (S.pinB) pts.push(S.pinB);
-  if (S.mark) pts.push(S.mark); if (S.lwMark) pts.push(S.lwMark);
-  if (S.lat) pts.push({lat:S.lat,lon:S.lon});
-  if (!pts.length) return null;
-  let minLat=Infinity,maxLat=-Infinity,minLon=Infinity,maxLon=-Infinity;
-  pts.forEach(p=>{minLat=Math.min(minLat,p.lat);maxLat=Math.max(maxLat,p.lat);minLon=Math.min(minLon,p.lon);maxLon=Math.max(maxLon,p.lon);});
-  const pLat=Math.max((maxLat-minLat)*0.28,0.004), pLon=Math.max((maxLon-minLon)*0.28,0.005);
-  return {minLat:minLat-pLat,maxLat:maxLat+pLat,minLon:minLon-pLon,maxLon:maxLon+pLon};
+function syncGun(){if(!RACE.active||!RACE.startEpoch){toast('Start sequence first');closeModal('timerModal');return;}const rem=RACE.startEpoch-Date.now();RACE.startEpoch=Date.now()+Math.round(rem/60000)*60000;closeModal('timerModal');toast('Synced');}
+function stopCountdown(){if(cdInterval)clearInterval(cdInterval);RACE.active=false;RACE.startEpoch=null;document.getElementById('cdBar').className='countdown-bar';document.getElementById('btnTimer').classList.remove('on');updateStartUI();}
+function tickCountdown(){
+  if(!RACE.active||!RACE.startEpoch)return;
+  const rem=RACE.startEpoch-Date.now(); const bar=document.getElementById('cdBar');
+  if(rem<=0){document.getElementById('cdTime').textContent='GO';document.getElementById('cdPhase').textContent='RACING';bar.className='countdown-bar visible seq-go';if(rem<-3000)stopCountdown();return;}
+  const ts=Math.ceil(rem/1000), m=Math.floor(ts/60), s=ts%60;
+  document.getElementById('cdTime').textContent=`${m}:${s.toString().padStart(2,'0')}`;
+  bar.className='countdown-bar visible '+(ts<=60?'seq-1':'seq-prep');
+  document.getElementById('cdPhase').textContent=ts>60?`${Math.ceil(ts/60)} MIN`:(ts<=10?'FINAL':'1 MIN');
+  markDirty();
 }
+document.getElementById('cdSync').addEventListener('click',()=>{if(!RACE.active||!RACE.startEpoch)return;const rem=RACE.startEpoch-Date.now();RACE.startEpoch=Date.now()+Math.round(rem/60000)*60000;toast('Synced');});
+document.getElementById('cdStop').addEventListener('click',stopCountdown);
 
-function proj(lat, lon, b, W, H) {
-  return {
-    x: (lon-b.minLon)/(b.maxLon-b.minLon)*W,
-    y: (1-(lat-b.minLat)/(b.maxLat-b.minLat))*H
-  };
-}
-
-function render() {
-  // FIX: skip redraw if nothing changed (except during demo which sets dirty itself)
-  if (!_dirty) return;
-  _dirty = false;
-
-  const W = tc.width / devicePixelRatio;
-  const H = tc.height / devicePixelRatio;
-  ctx.save();
-  ctx.scale(devicePixelRatio, devicePixelRatio);
-  ctx.clearRect(0,0,W,H);
-
-  ctx.fillStyle = '#091524';
-  ctx.fillRect(0,0,W,H);
-
-  ctx.strokeStyle = 'rgba(0,212,170,0.04)'; ctx.lineWidth = 1;
-  for (let x=0; x<W; x+=50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
-  for (let y=0; y<H; y+=50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
-
-  const bounds = getBounds();
-  if (!bounds) {
-    ctx.fillStyle = 'rgba(0,212,170,0.2)';
-    ctx.font = '600 14px Barlow Condensed, sans-serif';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('TAP COURSE TO SET MARKS', W/2, H/2-12);
-    ctx.font = '13px Barlow Condensed, sans-serif';
-    ctx.fillStyle = 'rgba(74,104,128,0.7)';
-    ctx.fillText('or DEMO to start immediately', W/2, H/2+12);
-    ctx.restore(); return;
+// ===== START LINE ANALYSIS =====
+function computeStartMetrics(){
+  if(!COURSE.pinA||!COURSE.pinB||NAV.lat===null)return null;
+  const A={x:0,y:0}, B=llToXY(COURSE.pinA,COURSE.pinB), P=llToXY(COURSE.pinA,{lat:NAV.lat,lon:NAV.lon});
+  const AB={x:B.x-A.x,y:B.y-A.y}, len=Math.hypot(AB.x,AB.y);
+  if(len<3)return null;
+  const AP={x:P.x-A.x,y:P.y-A.y}, tRaw=(AP.x*AB.x+AP.y*AB.y)/(len*len);
+  const t=Math.max(0,Math.min(1,tRaw)), C={x:A.x+AB.x*t,y:A.y+AB.y*t};
+  const toLine={x:C.x-P.x,y:C.y-P.y}, distM=Math.hypot(toLine.x,toLine.y);
+  const side=Math.sign(AB.x*AP.y-AB.y*AP.x)||1;
+  let favored=null, biasM=0, favEnd=null;
+  if(WIND.twd!==null){
+    const up={x:Math.sin(WIND.twd*Math.PI/180),y:Math.cos(WIND.twd*Math.PI/180)};
+    const mid={x:B.x/2,y:B.y/2};
+    const aP=(A.x-mid.x)*up.x+(A.y-mid.y)*up.y, bP=(B.x-mid.x)*up.x+(B.y-mid.y)*up.y;
+    favored=aP>=bP?'A':'B'; favEnd=favored==='A'?COURSE.pinA:COURSE.pinB; biasM=Math.abs(aP-bP);
   }
-
-  const p = (lat,lon) => proj(lat,lon,bounds,W,H);
-
-  if (S.twd !== null && S.mark) {
-    const mk = p(S.mark.lat, S.mark.lon);
-    const rad = (S.twd+180)*Math.PI/180;
-    const len = Math.max(W,H)*0.6;
-    const hw = 40;
-    const px = Math.cos(rad), py = -Math.sin(rad);
-    const ox = -py, oy = px;
-    ctx.save();
-    const grad = ctx.createLinearGradient(mk.x, mk.y, mk.x+px*len, mk.y+py*len);
-    grad.addColorStop(0,'rgba(0,212,170,0.07)');
-    grad.addColorStop(1,'rgba(0,212,170,0)');
-    ctx.fillStyle = grad;
-    ctx.beginPath();
-    ctx.moveTo(mk.x+ox*hw, mk.y+oy*hw);
-    ctx.lineTo(mk.x+px*len+ox*hw, mk.y+py*len+oy*hw);
-    ctx.lineTo(mk.x+px*len-ox*hw, mk.y+py*len-oy*hw);
-    ctx.lineTo(mk.x-ox*hw, mk.y-oy*hw);
-    ctx.closePath(); ctx.fill();
-    ctx.restore();
-  }
-
-  if (S.twd !== null && S.mark) {
-    const tac = computeTactics();
-    if (tac) {
-      const mk = p(S.mark.lat, S.mark.lon);
-      const len = Math.max(W,H)*1.5;
-      const sRad = tac.laySttbd * Math.PI/180;
-      ctx.strokeStyle = 'rgba(76,222,128,0.3)'; ctx.lineWidth = 1.5;
-      ctx.setLineDash([6,5]);
-      ctx.beginPath(); ctx.moveTo(mk.x,mk.y);
-      ctx.lineTo(mk.x+Math.sin(sRad)*len, mk.y-Math.cos(sRad)*len); ctx.stroke();
-      const pRad = tac.layPort * Math.PI/180;
-      ctx.strokeStyle = 'rgba(232,64,64,0.3)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(mk.x,mk.y);
-      ctx.lineTo(mk.x+Math.sin(pRad)*len, mk.y-Math.cos(pRad)*len); ctx.stroke();
-      ctx.setLineDash([]);
-    }
-  }
-
-  if (S.lat && S.mark && S.twd !== null) {
-    const tac = computeTactics();
-    if (tac) {
-      const bp = p(S.lat, S.lon);
-      const mk = p(S.mark.lat, S.mark.lon);
-      const col = tac.best === 'stbd' ? 'rgba(76,222,128,0.9)' : 'rgba(232,64,64,0.9)';
-      const hdgRad = tac.bestHdg * Math.PI/180;
-      const legLen = Math.hypot(mk.x-bp.x, mk.y-bp.y) * 0.55;
-      const tpx = bp.x + Math.sin(hdgRad)*legLen;
-      const tpy = bp.y - Math.cos(hdgRad)*legLen;
-
-      ctx.strokeStyle = col; ctx.lineWidth = 2;
-      ctx.setLineDash([9,4]);
-      ctx.beginPath();
-      ctx.moveTo(bp.x, bp.y);
-      ctx.lineTo(tpx, tpy);
-      ctx.lineTo(mk.x, mk.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = col;
-      ctx.beginPath(); ctx.arc(tpx,tpy,4,0,2*Math.PI); ctx.fill();
-      ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1;
-      ctx.beginPath(); ctx.arc(tpx,tpy,4,0,2*Math.PI); ctx.stroke();
+  const course=NAV.cog??NAV.heading, sogMS=(NAV.sog||0)*0.514444;
+  let closingMS=0;
+  if(distM>0.5&&course!==null){const v={x:Math.sin(course*Math.PI/180)*sogMS,y:Math.cos(course*Math.PI/180)*sogMS};const u=distM>0?{x:toLine.x/distM,y:toLine.y/distM}:{x:0,y:0};closingMS=v.x*u.x+v.y*u.y;}
+  const ttl=closingMS>0.1?distM/closingMS:Infinity;
+  const gunRem=RACE.active&&RACE.startEpoch?Math.max(0,(RACE.startEpoch-Date.now())/1000):Infinity;
+  const burn=isFinite(gunRem)&&isFinite(ttl)?gunRem-ttl:Infinity;
+  let distToFavM=distM, approachSpd=NAV.sog||4;
+  if(favEnd){
+    const FP=llToXY(COURSE.pinA,favEnd); distToFavM=Math.hypot(FP.x-P.x,FP.y-P.y);
+    if(WIND.twd!==null&&Object.keys(polarTable).length){
+      const fb=bearing(NAV.lat,NAV.lon,favEnd.lat,favEnd.lon);
+      approachSpd=Math.max(1,getPolarSpeed(angDiff(WIND.twd,fb),WIND.tws||10));
     }
   }
-
-  if (S.track.length > 1) {
-    ctx.strokeStyle = 'rgba(0,212,170,0.35)'; ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    S.track.forEach((pt,i)=>{const px=p(pt.lat,pt.lon); i===0?ctx.moveTo(px.x,px.y):ctx.lineTo(px.x,px.y);});
-    ctx.stroke();
-  }
-
-  if (S.pinA && S.pinB) {
-    const a=p(S.pinA.lat,S.pinA.lon), b=p(S.pinB.lat,S.pinB.lon);
-    ctx.strokeStyle='rgba(245,166,35,0.85)'; ctx.lineWidth=2.5;
-    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-    drawBuoy(ctx, a.x, a.y, 'square', '#f5a623', 'A');
-    drawBuoy(ctx, b.x, b.y, 'circle', '#f5a623', 'B');
-    ctx.fillStyle='rgba(245,166,35,0.6)';
-    ctx.font='11px Barlow Condensed, sans-serif';
-    ctx.textAlign='left'; ctx.textBaseline='bottom';
-    ctx.fillText('START LINE', Math.min(a.x,b.x), Math.min(a.y,b.y)-3);
-  }
-
-  if (S.mark) {
-    const mk=p(S.mark.lat,S.mark.lon);
-    drawBuoy(ctx, mk.x, mk.y, 'diamond', '#ffdf00', 'W');
-    ctx.fillStyle='rgba(255,223,0,0.6)';
-    ctx.font='11px Barlow Condensed, sans-serif';
-    ctx.textAlign='left'; ctx.textBaseline='bottom';
-    ctx.fillText('WIND MARK', mk.x+12, mk.y-3);
-  }
-
-  if (S.lwMark) {
-    const lw=p(S.lwMark.lat,S.lwMark.lon);
-    drawBuoy(ctx, lw.x, lw.y, 'circle', '#00a888', 'L');
-    ctx.fillStyle='rgba(0,168,136,0.6)';
-    ctx.font='11px Barlow Condensed, sans-serif';
-    ctx.textAlign='left'; ctx.textBaseline='bottom';
-    ctx.fillText('LEE MARK', lw.x+12, lw.y-3);
-  }
-
-  if (S.lat) {
-    const bp = p(S.lat, S.lon);
-    drawBoat(ctx, bp.x, bp.y, (S.heading || S.cog || 0)*Math.PI/180);
-  }
-
-  if (S.activeLeg === 'start') {
-    const m = computeStartMetrics();
-    if (m) {
-      ctx.fillStyle = 'rgba(14,32,56,0.88)';
-      ctx.strokeStyle = 'rgba(0,212,170,0.22)';
-      ctx.lineWidth = 1;
-      roundRect(ctx, 10, H-70, Math.min(W-20, 340), 54, 8, true, true);
-      ctx.fillStyle = '#00d4aa';
-      ctx.font = 'bold 12px Space Mono, monospace';
-      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-      ctx.fillText(`START  ${Math.round(m.distM)}m TO LINE   TTL ${fmtTime(m.ttl)}`, 20, H-60);
-      ctx.fillStyle = m.burn < 0 ? '#e84040' : '#f5a623';
-      ctx.fillText(isFinite(m.burn) ? `BURN ${m.burn>=0?'+':''}${fmtTime(m.burn)}   ${m.favored ? 'FAV '+m.favored+' +'+Math.round(m.biasM)+'m' : 'NO WIND'}` : 'START TIMER NOT RUNNING', 20, H-38);
-    }
-  }
-
-  ctx.fillStyle='rgba(0,212,170,0.45)';
-  ctx.font='bold 11px Space Mono, monospace';
-  ctx.textAlign='left'; ctx.textBaseline='top';
-  ctx.fillText('N ↑',10,10);
-
-  const latSpan = bounds.maxLat-bounds.minLat;
-  const nmSpan = latSpan * 60;
-  const barNM = nmSpan < 0.3 ? 0.05 : nmSpan < 1 ? 0.1 : nmSpan < 3 ? 0.5 : 1;
-  const barPx = (barNM/nmSpan)*H;
-  ctx.strokeStyle='rgba(255,255,255,0.3)'; ctx.lineWidth=1.5;
-  ctx.beginPath(); ctx.moveTo(10,H-18); ctx.lineTo(10+barPx,H-18); ctx.stroke();
-  ctx.fillStyle='rgba(255,255,255,0.35)';
-  ctx.font='9px Space Mono, monospace'; ctx.textAlign='left'; ctx.textBaseline='bottom';
-  ctx.fillText(barNM.toFixed(2)+' NM',10,H-6);
-
-  ctx.restore();
+  const approachMS=approachSpd*0.514444;
+  const tackCostM=approachMS*(COURSE.tackDur+8);
+  const timeToFavSec=(distToFavM+tackCostM)/approachMS;
+  const commitIn=isFinite(gunRem)?gunRem-timeToFavSec:Infinity;
+  const isOver=side>0&&distM<2;
+  return{distM,ttl,burn,gunRem,closingMS,favored,biasM,favEnd,lineLenM:len,pctAlong:tRaw*100,side,approachSpd,commitIn,timeToFavSec,isOver};
 }
 
-function drawBuoy(ctx, x, y, shape, color, label) {
-  ctx.fillStyle = color;
-  ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 1;
-  if (shape === 'circle') {
-    ctx.beginPath(); ctx.arc(x,y,8,0,2*Math.PI); ctx.fill(); ctx.stroke();
-  } else if (shape === 'square') {
-    ctx.beginPath(); ctx.rect(x-7,y-7,14,14); ctx.fill(); ctx.stroke();
-  } else if (shape === 'diamond') {
-    ctx.beginPath(); ctx.moveTo(x,y-10); ctx.lineTo(x+8,y); ctx.lineTo(x,y+10); ctx.lineTo(x-8,y); ctx.closePath(); ctx.fill(); ctx.stroke();
-  }
-  ctx.fillStyle = '#000';
-  ctx.font = 'bold 9px Space Mono, monospace';
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(label, x, y+0.5);
+function updateStartUI(){
+  const isStart=COURSE.activeLeg==='start';
+  document.getElementById('startSchematic').classList.toggle('visible',isStart&&!!(COURSE.pinA&&COURSE.pinB));
+  document.getElementById('commitBanner').classList.toggle('visible',isStart&&RACE.active);
+  if(!isStart)return;
+  const m=computeStartMetrics();
+  if(!m){['sdDist','sdBurn','sdFav','commitTime'].forEach(id=>document.getElementById(id).textContent='--');document.getElementById('commitDesc').textContent='SET PINS & TIMER';return;}
+  document.getElementById('sdDist').textContent=Math.round(m.distM)+'m';
+  const bEl=document.getElementById('sdBurn'), bRow=document.getElementById('sdBurnRow');
+  if(isFinite(m.burn)){bEl.textContent=(m.burn>=0?'+':'')+fmtTime(m.burn);bRow.className='sdr '+(m.burn<0?'crit':m.burn<15?'warn':'hi');}
+  else{bEl.textContent='NO TMR';bRow.className='sdr';}
+  document.getElementById('sdFav').textContent=m.favored?`${m.favored} +${Math.round(m.biasM)}m`:'NO WIND';
+  const cb=document.getElementById('commitBanner'), ct=document.getElementById('commitTime'), cd=document.getElementById('commitDesc');
+  if(m.isOver){cb.className='commit-banner visible late';ct.textContent='OCS!';cd.textContent='OVER EARLY - DUCK BACK';}
+  else if(!RACE.active){ct.textContent='--:--';cd.textContent='START TIMER FIRST';}
+  else if(!isFinite(m.commitIn)||m.commitIn<0){cb.className='commit-banner visible late';ct.textContent='GO NOW';cd.textContent=approachDesc(m);}
+  else if(m.commitIn<20){cb.className='commit-banner visible go';ct.textContent=fmtTime(m.commitIn);cd.textContent='PREPARE - '+approachDesc(m);}
+  else{cb.className='commit-banner visible';ct.textContent=fmtTime(m.commitIn);cd.textContent=approachDesc(m);}
+  drawLineSchematic(m);
 }
-
-function drawBoat(ctx, x, y, hdgRad) {
-  ctx.save(); ctx.translate(x,y); ctx.rotate(hdgRad);
-  ctx.shadowColor = '#00d4aa'; ctx.shadowBlur = 10;
-  ctx.fillStyle = '#00d4aa';
-  ctx.beginPath();
-  ctx.moveTo(0,-15); ctx.quadraticCurveTo(6,0,4,12); ctx.lineTo(0,9); ctx.lineTo(-4,12); ctx.quadraticCurveTo(-6,0,0,-15);
-  ctx.closePath(); ctx.fill();
-  ctx.shadowBlur = 0;
-  ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(0,-3,2,0,2*Math.PI); ctx.fill();
-  ctx.strokeStyle='rgba(0,212,170,0.5)'; ctx.lineWidth=1.5;
-  ctx.setLineDash([3,3]);
-  ctx.beginPath(); ctx.moveTo(0,-15); ctx.lineTo(0,-35); ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.restore();
+function approachDesc(m){
+  if(!m.favEnd||WIND.twd===null)return'';
+  const fb=bearing(NAV.lat,NAV.lon,m.favEnd.lat,m.favEnd.lon);
+  const twa=angDiff(WIND.twd,fb);
+  return`FAV ${m.favored} | ${twa>0?'PORT':'STBD'} | ${m.approachSpd.toFixed(1)}kt`;
 }
-
-function roundRect(ctx, x, y, w, h, r, fill, stroke) {
-  if (w < 2*r) r = w/2;
-  if (h < 2*r) r = h/2;
-  ctx.beginPath();
-  ctx.moveTo(x+r, y);
-  ctx.arcTo(x+w, y, x+w, y+h, r);
-  ctx.arcTo(x+w, y+h, x, y+h, r);
-  ctx.arcTo(x, y+h, x, y, r);
-  ctx.arcTo(x, y, x+w, y, r);
-  ctx.closePath();
-  if (fill) ctx.fill();
-  if (stroke) ctx.stroke();
-}
-
-// ═══════════════════════════════════════════════════════
-// MATH
-// ═══════════════════════════════════════════════════════
-function haversine(lat1,lon1,lat2,lon2) {
-  const R=6371000, dl=((lat2-lat1)*Math.PI/180), dn=((lon2-lon1)*Math.PI/180);
-  const a=Math.sin(dl/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dn/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-function bearing(lat1,lon1,lat2,lon2) {
-  const dn=(lon2-lon1)*Math.PI/180;
-  const y=Math.sin(dn)*Math.cos(lat2*Math.PI/180);
-  const x=Math.cos(lat1*Math.PI/180)*Math.sin(lat2*Math.PI/180)-Math.sin(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.cos(dn);
-  return (Math.atan2(y,x)*180/Math.PI+360)%360;
-}
-function midpoint(a,b) { return {lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}; }
-
-// ═══════════════════════════════════════════════════════
-// MODAL / UI HELPERS
-// ═══════════════════════════════════════════════════════
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-function setPill(id, state) {
-  const el = document.getElementById(id);
-  el.className = 'pill ' + (state === 'off' ? '' : state);
-}
-
-function switchTab(modal, tab) {
-  document.querySelectorAll(`#${modal}Modal .tab-panel`).forEach(p => p.classList.remove('active'));
-  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t => t.classList.remove('active'));
-  const panel = document.getElementById(`${modal}-${tab}`);
-  if (panel) panel.classList.add('active');
-  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t => {
-    if (t.getAttribute('onclick')?.includes(`'${tab}'`)) t.classList.add('active');
+function drawLineSchematic(m){
+  const c=document.getElementById('lineCanvas');
+  const W=c.parentElement.clientWidth, H=32;
+  c.width=W*devicePixelRatio; c.height=H*devicePixelRatio;
+  c.style.width=W+'px'; c.style.height=H+'px';
+  const x=c.getContext('2d'); x.scale(devicePixelRatio,devicePixelRatio);
+  x.clearRect(0,0,W,H);
+  const mg=18, lw=W-mg*2;
+  x.strokeStyle='rgba(245,166,35,0.7)'; x.lineWidth=2;
+  x.beginPath(); x.moveTo(mg,H/2); x.lineTo(mg+lw,H/2); x.stroke();
+  [mg,mg+lw].forEach((px,i)=>{
+    x.fillStyle='#f5a623'; x.beginPath(); x.arc(px,H/2,5,0,2*Math.PI); x.fill();
+    x.fillStyle='rgba(0,0,0,0.8)'; x.font='bold 7px Space Mono, monospace'; x.textAlign='center'; x.textBaseline='middle';
+    x.fillText(i===0?'A':'B',px,H/2+0.5);
   });
+  if(m.favored){
+    const fx=m.favored==='A'?mg:mg+lw;
+    x.strokeStyle='rgba(76,222,128,0.8)'; x.lineWidth=3;
+    x.beginPath(); x.arc(fx,H/2,9,0,2*Math.PI); x.stroke();
+  }
+  const bx=mg+lw*Math.max(0.02,Math.min(0.98,m.pctAlong/100));
+  const bc=m.isOver?'#e84040':(m.burn<0?'#e84040':m.burn<15?'#f5a623':'#00d4aa');
+  x.fillStyle=bc; x.beginPath(); x.arc(bx,H/2-10,5,0,2*Math.PI); x.fill();
+  x.strokeStyle=bc; x.lineWidth=1.5; x.setLineDash([2,2]);
+  x.beginPath(); x.moveTo(bx,H/2-5); x.lineTo(bx,H/2); x.stroke(); x.setLineDash([]);
 }
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+// ===== TACTICS =====
+function computeTactics(){
+  if(!WIND.twd||!COURSE.mark||!NAV.lat)return null;
+  const opt=getOptimalAngle(), stbdHdg=normAngle(WIND.twd-opt), portHdg=normAngle(WIND.twd+opt);
+  const mb=bearing(NAV.lat,NAV.lon,COURSE.mark.lat,COURSE.mark.lon);
+  const ts=angDiff(WIND.twd,stbdHdg), tp=angDiff(WIND.twd,portHdg);
+  const ss=getPolarSpeed(ts,WIND.tws||10), sp=getPolarSpeed(tp,WIND.tws||10);
+  const as=Math.abs(angDiff(stbdHdg,mb))*Math.PI/180, ap=Math.abs(angDiff(portHdg,mb))*Math.PI/180;
+  const vs=ss*Math.cos(as), vp=sp*Math.cos(ap);
+  const best=vs>=vp?'stbd':'port', bh=best==='stbd'?stbdHdg:portHdg, bv=best==='stbd'?vs:vp;
+  const mx=Math.max(ss,sp), eff=mx>0?Math.min(100,Math.max(0,bv/mx*100)):0;
+  return{stbdHdg,portHdg,best,bestHdg:bh,bestVMG:bv,vmg_s:vs,vmg_p:vp,eff,markBrng:mb,laySttbd:normAngle(WIND.twd-opt+180),layPort:normAngle(WIND.twd+opt+180)};
+}
+function computeDownwindTactics(){
+  if(!WIND.twd||!COURSE.lwMark||!NAV.lat)return null;
+  const opt=getOptimalAngle(), ga=180-opt, sg=normAngle(WIND.twd+ga), pg=normAngle(WIND.twd-ga);
+  const mb=bearing(NAV.lat,NAV.lon,COURSE.lwMark.lat,COURSE.lwMark.lon);
+  const ts=angDiff(WIND.twd,sg), tp=angDiff(WIND.twd,pg);
+  const ss=getPolarSpeed(ts,WIND.tws||10), sp=getPolarSpeed(tp,WIND.tws||10);
+  const as=Math.abs(angDiff(sg,mb))*Math.PI/180, ap=Math.abs(angDiff(pg,mb))*Math.PI/180;
+  const vs=ss*Math.cos(as), vp=sp*Math.cos(ap), best=vs>=vp?'stbd':'port';
+  return{best,stbdGybe:sg,portGybe:pg,vmg_s:vs,vmg_p:vp,bestHdg:best==='stbd'?sg:pg,bestVMG:best==='stbd'?vs:vp};
 }
 
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
-});
+// ===== INSTRUMENTS =====
+function updateInstruments(){
+  const h=NAV.heading;
+  document.getElementById('iHdg').textContent=h!==null?Math.round(h):'---';
+  document.getElementById('iSog').textContent=NAV.sog.toFixed(1);
+  document.getElementById('iTwa').textContent=(WIND.twd!==null&&h!==null)?Math.round(angDiff(WIND.twd,h))+'deg':'---';
+  if(COURSE.activeLeg==='start'){
+    const m=computeStartMetrics();
+    document.getElementById('iVmg').textContent=m&&isFinite(m.burn)?fmtTime(m.burn):'--';
+    document.getElementById('iVmg').className='inst-val '+(m&&m.burn<0?'crit':m&&m.burn<15?'warn':'warn');
+    document.getElementById('tackRec').textContent=m?`LINE ${Math.round(m.distM)}m  TTL ${fmtTime(m.ttl)}`:'SET PINS';
+    document.getElementById('tackRec').className=m&&m.burn<0?'tack-rec port':m&&m.burn<15?'tack-rec stbd':'tack-rec none';
+    drawVMGArc(m?Math.max(0,Math.min(100,m.closingMS/3*100)):0);
+  }else if(COURSE.activeLeg==='downwind'){
+    const tac=computeDownwindTactics();
+    if(tac){document.getElementById('iVmg').textContent=tac.bestVMG.toFixed(1);const rec=document.getElementById('tackRec');rec.textContent=tac.best==='stbd'?`STBD GYBE ${Math.round(tac.stbdGybe)}deg`:`PORT GYBE ${Math.round(tac.portGybe)}deg`;rec.className=tac.best==='stbd'?'tack-rec stbd':'tack-rec port';drawVMGArc(60);}
+    else{document.getElementById('tackRec').textContent='SET LEEWARD MARK';document.getElementById('tackRec').className='tack-rec none';drawVMGArc(0);}
+  }else{
+    const tac=computeTactics();
+    if(tac){
+      document.getElementById('iVmg').textContent=tac.bestVMG.toFixed(1);
+      const rec=document.getElementById('tackRec');
+      rec.textContent=tac.best==='stbd'?`STBD ${Math.round(tac.stbdHdg)}deg VMG ${tac.vmg_s.toFixed(1)}kt`:`PORT ${Math.round(tac.portHdg)}deg VMG ${tac.vmg_p.toFixed(1)}kt`;
+      rec.className=tac.best==='stbd'?'tack-rec stbd':'tack-rec port';
+      drawVMGArc(tac.eff);
+    }else{document.getElementById('iVmg').textContent='--';document.getElementById('tackRec').textContent='SET COURSE TO COMPUTE TACK';document.getElementById('tackRec').className='tack-rec none';drawVMGArc(0);}
+  }
+  document.getElementById('wbSpd').textContent=WIND.tws!==null?Math.round(WIND.tws)+'kt':'--kt';
+  document.getElementById('wbDir').textContent=WIND.twd!==null?Math.round(WIND.twd)+'deg':'---deg';
+  const tr=getWindTrend();
+  const te=document.getElementById('windTrend');
+  if(tr.trend==='STEADY'||tr.trend==='NO DATA'){te.textContent=tr.trend;te.className='wind-trend';}
+  else if(tr.trend==='LEFT'){te.textContent=`L ${tr.deg}deg`;te.className='wind-trend lift';}
+  else{te.textContent=`R ${tr.deg}deg`;te.className='wind-trend hdr-shift';}
+  updateStartUI();
+}
+function drawVMGArc(eff){
+  const c=document.getElementById('vmgArc'), x=c.getContext('2d'), W=44,cx=22,cy=22,r=18;
+  x.clearRect(0,0,W,W); x.strokeStyle='rgba(0,212,170,0.12)'; x.lineWidth=4;
+  x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.stroke();
+  if(eff>0){const col=eff>75?'#4cde80':eff>40?'#00d4aa':'#f5a623';x.strokeStyle=col;x.lineWidth=4;x.beginPath();x.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(eff/100)*2*Math.PI);x.stroke();}
+  x.fillStyle=eff>0?'rgba(0,212,170,0.9)':'rgba(74,104,128,0.6)'; x.font='bold 9px Space Mono, monospace';
+  x.textAlign='center'; x.textBaseline='middle'; x.fillText(eff>0?Math.round(eff):'--',cx,cy);
+}
 
-// ═══════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════
-initPolarTable();
-loadState();     // restore last session from localStorage
-markDirty();
-render();
-renderWindRose();
-updateInstruments();
+// ===== WIND ROSE =====
+function renderWindRose(){
+  const c=document.getElementById('wrCanvas'), x=c.getContext('2d'), W=64,cx=32,cy=32,r=28;
+  x.clearRect(0,0,W,W); x.fillStyle='rgba(6,16,32,0.6)'; x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.fill();
+  x.strokeStyle='rgba(0,212,170,0.15)'; x.lineWidth=1; x.beginPath(); x.arc(cx,cy,r,0,2*Math.PI); x.stroke();
+  if(WIND.twd!==null){
+    const tws=WIND.tws||0, rad=(WIND.twd-90)*Math.PI/180;
+    x.strokeStyle='#f5a623'; x.lineWidth=2; x.beginPath(); x.moveTo(cx,cy); x.lineTo(cx+Math.cos(rad)*r*0.82,cy+Math.sin(rad)*r*0.82); x.stroke();
+    const ex=cx+Math.cos(rad)*r*0.82, ey=cy+Math.sin(rad)*r*0.82;
+    x.save(); x.translate(ex,ey); x.rotate(rad+Math.PI/2); x.fillStyle='#f5a623';
+    x.beginPath(); x.moveTo(0,0); x.lineTo(-4,10); x.lineTo(4,10); x.closePath(); x.fill(); x.restore();
+    const barbs=Math.min(Math.round(tws/5),5);
+    for(let b=0;b<barbs;b++){const bt=0.25+b*0.14,bx=cx+Math.cos(rad)*r*0.82*bt,by=cy+Math.sin(rad)*r*0.82*bt,p=rad-Math.PI/2;x.strokeStyle='rgba(245,166,35,0.7)';x.lineWidth=1.5;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+Math.cos(p)*7,by+Math.sin(p)*7);x.stroke();}
+  }else{x.fillStyle='rgba(74,104,128,0.6)';x.font='bold 8px Space Mono, monospace';x.textAlign='center';x.textBaseline='middle';x.fillText('NO',cx,cy-5);x.fillText('WIND',cx,cy+6);}
+}
 
-// FIX: polling loop respects dirty flag — only redraws when something changed
-setInterval(() => {
-  if (CD.active) markDirty(); // countdown always needs a tick
-  render();
-  renderWindRose();
-  updateInstruments();
-}, 500);
+// ===== CHART RENDER =====
+function getBounds(){
+  const pts=[];
+  if(COURSE.pinA)pts.push(COURSE.pinA); if(COURSE.pinB)pts.push(COURSE.pinB);
+  if(COURSE.mark)pts.push(COURSE.mark); if(COURSE.lwMark)pts.push(COURSE.lwMark);
+  if(NAV.lat)pts.push({lat:NAV.lat,lon:NAV.lon});
+  if(!pts.length)return null;
+  let mnLa=Infinity,mxLa=-Infinity,mnLo=Infinity,mxLo=-Infinity;
+  pts.forEach(p=>{mnLa=Math.min(mnLa,p.lat);mxLa=Math.max(mxLa,p.lat);mnLo=Math.min(mnLo,p.lon);mxLo=Math.max(mxLo,p.lon);});
+  const pLa=Math.max((mxLa-mnLa)*0.3,0.004), pLo=Math.max((mxLo-mnLo)*0.3,0.005);
+  return{minLat:mnLa-pLa,maxLat:mxLa+pLa,minLon:mnLo-pLo,maxLon:mxLo+pLo};
+}
+function proj(lat,lon,b,W,H){
+  const rx=(lon-b.minLon)/(b.maxLon-b.minLon), ry=1-(lat-b.minLat)/(b.maxLat-b.minLat);
+  return{x:(rx*VIEW.scale+VIEW.offX*VIEW.scale)*W, y:(ry*VIEW.scale+VIEW.offY*VIEW.scale)*H};
+}
+function render(){
+  if(!_dirty)return; _dirty=false;
+  const W=tcMain.width/devicePixelRatio, H=tcMain.height/devicePixelRatio, bounds=getBounds();
+  if(bounds)renderTiles(bounds,W,H);
+  else{ctxT.save();ctxT.scale(devicePixelRatio,devicePixelRatio);ctxT.clearRect(0,0,W,H);ctxT.restore();}
+  ctxM.save(); ctxM.scale(devicePixelRatio,devicePixelRatio); ctxM.clearRect(0,0,W,H);
+  if(!bounds){
+    ctxM.fillStyle='#091524'; ctxM.fillRect(0,0,W,H);
+    ctxM.fillStyle='rgba(0,212,170,0.2)'; ctxM.font='600 14px Barlow Condensed, sans-serif';
+    ctxM.textAlign='center'; ctxM.textBaseline='middle';
+    ctxM.fillText('TAP COURSE TO SET MARKS',W/2,H/2-12);
+    ctxM.fillStyle='rgba(74,104,128,0.7)'; ctxM.font='13px Barlow Condensed, sans-serif';
+    ctxM.fillText('or DEMO to start',W/2,H/2+12);
+    ctxM.restore(); return;
+  }
+  const p=(la,lo)=>proj(la,lo,bounds,W,H);
+  ctxM.fillStyle='rgba(6,14,28,0.38)'; ctxM.fillRect(0,0,W,H);
+  // Wind corridor
+  if(WIND.twd!==null&&COURSE.mark){
+    const mk=p(COURSE.mark.lat,COURSE.mark.lon), rad=(WIND.twd+180)*Math.PI/180, len=Math.max(W,H)*0.6, hw=40;
+    const px=Math.cos(rad), py=-Math.sin(rad), ox=-py, oy=px;
+    ctxM.save();
+    const g=ctxM.createLinearGradient(mk.x,mk.y,mk.x+px*len,mk.y+py*len);
+    g.addColorStop(0,'rgba(0,212,170,0.09)'); g.addColorStop(1,'rgba(0,212,170,0)');
+    ctxM.fillStyle=g; ctxM.beginPath();
+    ctxM.moveTo(mk.x+ox*hw,mk.y+oy*hw); ctxM.lineTo(mk.x+px*len+ox*hw,mk.y+py*len+oy*hw);
+    ctxM.lineTo(mk.x+px*len-ox*hw,mk.y+py*len-oy*hw); ctxM.lineTo(mk.x-ox*hw,mk.y-oy*hw);
+    ctxM.closePath(); ctxM.fill(); ctxM.restore();
+  }
+  // Laylines upwind
+  if(WIND.twd!==null&&COURSE.mark&&COURSE.activeLeg==='upwind'){
+    const tac=computeTactics();
+    if(tac){
+      const mk=p(COURSE.mark.lat,COURSE.mark.lon), len=Math.max(W,H)*1.5;
+      ctxM.setLineDash([6,5]);
+      ctxM.strokeStyle='rgba(76,222,128,0.3)'; ctxM.lineWidth=1.5;
+      const sR=tac.laySttbd*Math.PI/180;
+      ctxM.beginPath(); ctxM.moveTo(mk.x,mk.y); ctxM.lineTo(mk.x+Math.sin(sR)*len,mk.y-Math.cos(sR)*len); ctxM.stroke();
+      ctxM.strokeStyle='rgba(232,64,64,0.3)';
+      const pR=tac.layPort*Math.PI/180;
+      ctxM.beginPath(); ctxM.moveTo(mk.x,mk.y); ctxM.lineTo(mk.x+Math.sin(pR)*len,mk.y-Math.cos(pR)*len); ctxM.stroke();
+      ctxM.setLineDash([]);
+    }
+  }
+  // Route
+  if(NAV.lat&&COURSE.activeLeg!=='start'){
+    const tac=COURSE.activeLeg==='downwind'?computeDownwindTactics():computeTactics();
+    const tm=COURSE.activeLeg==='downwind'?COURSE.lwMark:COURSE.mark;
+    if(tac&&tm){
+      const bp=p(NAV.lat,NAV.lon), mk=p(tm.lat,tm.lon);
+      const col=tac.best==='stbd'?'rgba(76,222,128,0.9)':'rgba(232,64,64,0.9)';
+      const hR=tac.bestHdg*Math.PI/180, ll=Math.hypot(mk.x-bp.x,mk.y-bp.y)*0.55;
+      const tpx=bp.x+Math.sin(hR)*ll, tpy=bp.y-Math.cos(hR)*ll;
+      ctxM.strokeStyle=col; ctxM.lineWidth=2; ctxM.setLineDash([9,4]);
+      ctxM.beginPath(); ctxM.moveTo(bp.x,bp.y); ctxM.lineTo(tpx,tpy); ctxM.lineTo(mk.x,mk.y); ctxM.stroke();
+      ctxM.setLineDash([]);
+      ctxM.fillStyle=col; ctxM.beginPath(); ctxM.arc(tpx,tpy,4,0,2*Math.PI); ctxM.fill();
+    }
+  }
+  // Track
+  if(NAV.track.length>1){
+    ctxM.strokeStyle='rgba(0,212,170,0.35)'; ctxM.lineWidth=1.5; ctxM.beginPath();
+    NAV.track.forEach((pt,i)=>{const px=p(pt.lat,pt.lon);i===0?ctxM.moveTo(px.x,px.y):ctxM.lineTo(px.x,px.y);}); ctxM.stroke();
+  }
+  // Start line
+  if(COURSE.pinA&&COURSE.pinB){
+    const a=p(COURSE.pinA.lat,COURSE.pinA.lon), b=p(COURSE.pinB.lat,COURSE.pinB.lon);
+    ctxM.strokeStyle='rgba(245,166,35,0.85)'; ctxM.lineWidth=2.5;
+    ctxM.beginPath(); ctxM.moveTo(a.x,a.y); ctxM.lineTo(b.x,b.y); ctxM.stroke();
+    drawBuoy(ctxM,a.x,a.y,'square','#f5a623','A');
+    drawBuoy(ctxM,b.x,b.y,'circle','#f5a623','B');
+    const m=computeStartMetrics();
+    if(m&&m.favored){const fv=m.favored==='A'?a:b;ctxM.strokeStyle='rgba(76,222,128,0.7)';ctxM.lineWidth=2;ctxM.beginPath();ctxM.arc(fv.x,fv.y,13,0,2*Math.PI);ctxM.stroke();}
+    ctxM.fillStyle='rgba(245,166,35,0.55)'; ctxM.font='11px Barlow Condensed, sans-serif';
+    ctxM.textAlign='left'; ctxM.textBaseline='bottom'; ctxM.fillText('START',Math.min(a.x,b.x),Math.min(a.y,b.y)-3);
+  }
+  if(COURSE.mark){const mk=p(COURSE.mark.lat,COURSE.mark.lon);drawBuoy(ctxM,mk.x,mk.y,'diamond','#ffdf00','W');ctxM.fillStyle='rgba(255,223,0,0.55)';ctxM.font='11px Barlow Condensed, sans-serif';ctxM.textAlign='left';ctxM.textBaseline='bottom';ctxM.fillText('WIND MARK',mk.x+12,mk.y-3);}
+  if(COURSE.lwMark){const lw=p(COURSE.lwMark.lat,COURSE.lwMark.lon);drawBuoy(ctxM,lw.x,lw.y,'circle','#00a888','L');}
+  if(NAV.lat){const bp=p(NAV.lat,NAV.lon);drawBoat(ctxM,bp.x,bp.y,(NAV.heading||NAV.cog||0)*Math.PI/180);}
+  ctxM.fillStyle='rgba(0,212,170,0.5)'; ctxM.font='bold 11px Space Mono, monospace';
+  ctxM.textAlign='left'; ctxM.textBaseline='top'; ctxM.fillText('N',10,10);
+  const lSpan=(bounds.maxLat-bounds.minLat)/VIEW.scale, nmSpan=lSpan*60;
+  const barNM=nmSpan<0.3?0.05:nmSpan<1?0.1:nmSpan<3?0.5:1, barPx=(barNM/nmSpan)*H;
+  ctxM.strokeStyle='rgba(255,255,255,0.35)'; ctxM.lineWidth=1.5;
+  ctxM.beginPath(); ctxM.moveTo(10,H-18); ctxM.lineTo(10+barPx,H-18); ctxM.stroke();
+  ctxM.fillStyle='rgba(255,255,255,0.4)'; ctxM.font='9px Space Mono, monospace';
+  ctxM.textAlign='left'; ctxM.textBaseline='bottom'; ctxM.fillText(barNM.toFixed(2)+' NM',10,H-6);
+  ctxM.restore();
+}
+function drawBuoy(ctx,x,y,shape,color,label){
+  ctx.fillStyle=color; ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1;
+  if(shape==='circle'){ctx.beginPath();ctx.arc(x,y,8,0,2*Math.PI);ctx.fill();ctx.stroke();}
+  else if(shape==='square'){ctx.beginPath();ctx.rect(x-7,y-7,14,14);ctx.fill();ctx.stroke();}
+  else if(shape==='diamond'){ctx.beginPath();ctx.moveTo(x,y-10);ctx.lineTo(x+8,y);ctx.lineTo(x,y+10);ctx.lineTo(x-8,y);ctx.closePath();ctx.fill();ctx.stroke();}
+  ctx.fillStyle='#000'; ctx.font='bold 9px Space Mono, monospace'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(label,x,y+0.5);
+}
+function drawBoat(ctx,x,y,hdgRad){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(hdgRad);
+  ctx.shadowColor='#00d4aa'; ctx.shadowBlur=12; ctx.fillStyle='#00d4aa';
+  ctx.beginPath(); ctx.moveTo(0,-16); ctx.quadraticCurveTo(7,0,5,13); ctx.lineTo(0,10); ctx.lineTo(-5,13); ctx.quadraticCurveTo(-7,0,0,-16); ctx.closePath(); ctx.fill();
+  ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(0,-3,2,0,2*Math.PI); ctx.fill();
+  ctx.strokeStyle='rgba(0,212,170,0.5)'; ctx.lineWidth=1.5; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(0,-16); ctx.lineTo(0,-38); ctx.stroke(); ctx.setLineDash([]); ctx.restore();
+}
+
+// ===== MATH =====
+function normAngle(a){return((a%360)+360)%360;}
+function angDiff(a,b){let d=normAngle(b-a);return d>180?d-360:d;}
+function fmtTime(sec){if(!isFinite(sec))return'--:--';const sg=sec<0?'-':'';sec=Math.abs(Math.round(sec));return`${sg}${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;}
+function haversine(a,b,c,d){const R=6371000,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.PI/180,x=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function bearing(a,b,c,d){const dn=(d-b)*Math.PI/180,y=Math.sin(dn)*Math.cos(c*Math.PI/180),x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dn);return(Math.atan2(y,x)*180/Math.PI+360)%360;}
+function midpoint(a,b){return{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2};}
+function llToXY(ref,pt){const R=6371000,l0=ref.lat*Math.PI/180;return{x:(pt.lon-ref.lon)*Math.PI/180*R*Math.cos(l0),y:(pt.lat-ref.lat)*Math.PI/180*R};}
+
+// ===== MODAL HELPERS =====
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function setPill(id,state){document.getElementById(id).className='pill '+(state==='off'?'':state);}
+function switchTab(modal,tab){
+  document.querySelectorAll(`#${modal}Modal .tab-panel`).forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t=>t.classList.remove('active'));
+  const panel=document.getElementById(`${modal}-${tab}`); if(panel)panel.classList.add('active');
+  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t=>{if(t.getAttribute('onclick')?.includes(`'${tab}'`))t.classList.add('active');});
+}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200);}
+document.querySelectorAll('.modal-bg').forEach(bg=>{bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open');});});
+
+// ===== INIT =====
+document.getElementById('polarPreset').value='compac35';
+loadPolarPreset(); savePolarSilent();
+loadState();
+document.getElementById('mapToggle').classList.toggle('on',VIEW.showMap);
+document.getElementById('mapToggle').textContent=VIEW.showMap?'CHART ON':'CHART OFF';
+markDirty(); render(); renderWindRose(); updateInstruments();
+startWindAutoRefresh();
+setInterval(()=>{if(RACE.active||COURSE.activeLeg==='start')markDirty();render();renderWindRose();updateInstruments();},500);
 </script>
 </body>
 </html>
