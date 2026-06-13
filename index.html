@@ -38,7 +38,6 @@ html, body {
   touch-action: none;
 }
 
-/* ── LAYOUT: 3 rows — header / chart / instruments ── */
 .app {
   display: flex;
   flex-direction: column;
@@ -152,7 +151,6 @@ html, body {
 }
 #tc { display: block; width: 100%; height: 100%; touch-action: none; }
 
-/* Floating wind badge */
 .wind-badge {
   position: absolute;
   top: 10px; right: 10px;
@@ -309,7 +307,6 @@ html, body {
   margin-bottom: 16px;
 }
 
-/* tabs inside modal */
 .mtabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 1px solid rgba(0,212,170,0.15); }
 .mtab {
   font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
@@ -339,17 +336,13 @@ html, body {
 .frow input:focus, .frow select:focus { outline: none; border-color: var(--teal); }
 .frow-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-/* polar table */
 .polar-table { width: 100%; border-collapse: collapse; }
 .polar-table th {
   font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
   color: var(--muted); padding: 4px 6px; text-align: center;
   border-bottom: 1px solid rgba(0,212,170,0.15);
 }
-.polar-table td {
-  padding: 4px 4px;
-  text-align: center;
-}
+.polar-table td { padding: 4px 4px; text-align: center; }
 .polar-table input {
   width: 100%;
   background: var(--deep);
@@ -391,7 +384,6 @@ html, body {
 .mbtn.dem { background: transparent; color: var(--amber); border-color: rgba(245,166,35,0.35); }
 .mbtn.can { background: transparent; color: var(--muted); border-color: rgba(74,104,128,0.35); }
 
-/* Start timer modal */
 .timer-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -426,7 +418,6 @@ html, body {
   text-align: center;
 }
 
-/* Toast */
 .toast {
   position: fixed;
   bottom: 100px;
@@ -451,7 +442,6 @@ html, body {
 <body>
 <div class="app">
 
-  <!-- HEADER -->
   <div class="hdr">
     <div class="logo">TACTICIAN</div>
     <div class="pills">
@@ -461,7 +451,6 @@ html, body {
     </div>
   </div>
 
-  <!-- COUNTDOWN BANNER (hidden until started) -->
   <div class="countdown-bar" id="cdBar">
     <div>
       <div class="cd-label" id="cdPhase">PREP</div>
@@ -471,7 +460,6 @@ html, body {
     <button class="cd-btn" id="cdStop">✕</button>
   </div>
 
-  <!-- TACTICAL CHART -->
   <div class="chart-wrap" id="chartWrap">
     <canvas id="tc"></canvas>
     <div class="wind-badge" id="windBadge">
@@ -483,7 +471,6 @@ html, body {
     </div>
   </div>
 
-  <!-- INSTRUMENT STRIP -->
   <div class="inst-strip">
     <div class="inst">
       <div class="inst-val hi" id="iHdg">---</div>
@@ -503,7 +490,6 @@ html, body {
     </div>
   </div>
 
-  <!-- TACK RECOMMENDATION -->
   <div class="tack-strip">
     <div class="tack-rec none" id="tackRec">SET COURSE TO COMPUTE TACK</div>
     <div class="vmg-block">
@@ -512,29 +498,23 @@ html, body {
     </div>
   </div>
 
-  <!-- TOOLBAR -->
   <div class="toolbar">
-    <!-- Sensors -->
     <button class="tbtn" id="btnSensors" onclick="toggleSensors()">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4"/><path d="M17.7 6.3a8 8 0 0 1 0 11.4"/><path d="M3.5 3.5a14 14 0 0 0 0 17"/><path d="M20.5 3.5a14 14 0 0 1 0 17"/></svg>
       <span class="tbtn-lbl">Sensors</span>
     </button>
-    <!-- Wind -->
     <button class="tbtn" id="btnWind" onclick="fetchWind()">
       <svg viewBox="0 0 24 24"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
       <span class="tbtn-lbl">Wind</span>
     </button>
-    <!-- Course -->
     <button class="tbtn" id="btnCourse" onclick="openModal('courseModal')">
       <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
       <span class="tbtn-lbl">Course</span>
     </button>
-    <!-- Polar -->
     <button class="tbtn" id="btnPolar" onclick="openModal('polarModal')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
       <span class="tbtn-lbl">Polar</span>
     </button>
-    <!-- Timer -->
     <button class="tbtn" id="btnTimer" onclick="openModal('timerModal')">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="M22 6l-3-3"/><line x1="12" y1="5" x2="12" y2="2"/></svg>
       <span class="tbtn-lbl">Start</span>
@@ -543,7 +523,7 @@ html, body {
 
 </div><!-- .app -->
 
-<!-- ── COURSE MODAL ── -->
+<!-- COURSE MODAL -->
 <div class="modal-bg" id="courseModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -596,7 +576,7 @@ html, body {
   </div>
 </div>
 
-<!-- ── POLAR MODAL ── -->
+<!-- POLAR MODAL -->
 <div class="modal-bg" id="polarModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -632,7 +612,7 @@ html, body {
   </div>
 </div>
 
-<!-- ── TIMER MODAL ── -->
+<!-- TIMER MODAL -->
 <div class="modal-bg" id="timerModal">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -672,22 +652,22 @@ const S = {
   activeLeg: 'upwind',
   track: [],
   prevLat: null, prevLon: null, prevGpsT: null,
-  polar: null,       // parsed polar table
-  polarAngles: [],   // upwind optimal angles per TWS
+  polar: null,
+  polarAngles: [],
   demoInterval: null,
   demoT: 0,
+  // FIX: SOG smoothing buffer
+  sogBuffer: [],
 };
 
-// Race countdown
 const CD = {
   active: false,
-  startEpoch: null,    // epoch ms when gun fires
+  startEpoch: null,
   totalMs: 5 * 60000,
   seq: 5,
   phase: '',
 };
 
-// Polar presets  [TWA: [6kt, 10kt, 14kt, 20kt]]
 const PRESETS = {
   hobie18:  { name:'Hobie 18', rows: [[40,5.2,7.8,9.1,9.4],[52,5.8,8.4,9.8,10.2],[70,6.2,8.0,9.0,9.3],[90,5.9,7.5,8.4,8.7],[110,5.6,7.8,9.2,9.6],[135,5.0,7.0,8.5,9.0],[150,4.5,6.5,7.8,8.3]] },
   j24:      { name:'J/24',     rows: [[40,3.8,5.4,6.1,6.3],[52,4.1,5.8,6.5,6.7],[70,4.4,5.6,6.3,6.5],[90,4.2,5.4,6.1,6.3],[110,4.0,5.6,6.8,7.0],[135,3.6,5.2,6.5,6.7],[150,3.2,4.8,6.0,6.2]] },
@@ -699,25 +679,84 @@ const PRESETS = {
 const POLAR_TWS = [6, 10, 14, 20];
 const DEFAULT_ANGLES = [40, 52, 70, 90, 110, 135, 150];
 
+// FIX: dirty flag — only redraw when state actually changes
+let _dirty = true;
+function markDirty() { _dirty = true; }
+
+// ═══════════════════════════════════════════════════════
+// LOCALSTORAGE PERSISTENCE
+// ═══════════════════════════════════════════════════════
+const LS_KEY = 'tactician_v1';
+
+function saveState() {
+  try {
+    const payload = {
+      pinA: S.pinA, pinB: S.pinB,
+      mark: S.mark, lwMark: S.lwMark,
+      activeLeg: S.activeLeg,
+      twd: S.twd, tws: S.tws,
+      polar: S.polar, polarAngles: S.polarAngles,
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+  } catch(e) { /* storage full or private mode */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const p = JSON.parse(raw);
+    if (p.pinA)   S.pinA   = p.pinA;
+    if (p.pinB)   S.pinB   = p.pinB;
+    if (p.mark)   S.mark   = p.mark;
+    if (p.lwMark) S.lwMark = p.lwMark;
+    if (p.activeLeg) S.activeLeg = p.activeLeg;
+    if (p.twd !== null && p.twd !== undefined) S.twd = p.twd;
+    if (p.tws !== null && p.tws !== undefined) S.tws = p.tws;
+    if (p.polar)        S.polar = p.polar;
+    if (p.polarAngles)  S.polarAngles = p.polarAngles;
+    // Restore leg selector
+    if (p.activeLeg) {
+      const sel = document.getElementById('cLeg');
+      if (sel) sel.value = p.activeLeg;
+    }
+    // Restore polar preset display
+    if (p.polar) {
+      // Repopulate form from saved data
+      const angles = Object.keys(p.polar).map(Number).sort((a,b)=>a-b);
+      const rows = angles.map(a => [a, ...p.polar[a]]);
+      buildPolarTable(rows);
+    }
+    markDirty();
+    toast('Session restored');
+  } catch(e) { /* corrupt data — ignore */ }
+}
+
 // ═══════════════════════════════════════════════════════
 // CANVAS SETUP
 // ═══════════════════════════════════════════════════════
 const tc = document.getElementById('tc');
 const ctx = tc.getContext('2d');
 
+// FIX: single resize handler via ResizeObserver only; window.resize as fallback only if RO absent
+let _roAttached = false;
 function resizeTC() {
   const w = tc.parentElement.clientWidth;
   const h = tc.parentElement.clientHeight;
+  if (tc.width === w * devicePixelRatio && tc.height === h * devicePixelRatio) return;
   tc.width = w * devicePixelRatio;
   tc.height = h * devicePixelRatio;
   tc.style.width = w + 'px';
   tc.style.height = h + 'px';
+  markDirty();
   render();
 }
-window.addEventListener('resize', resizeTC);
-// Use ResizeObserver for better mobile coverage
+
 if (window.ResizeObserver) {
   new ResizeObserver(resizeTC).observe(document.getElementById('chartWrap'));
+  _roAttached = true;
+} else {
+  window.addEventListener('resize', resizeTC);
 }
 resizeTC();
 
@@ -726,11 +765,11 @@ resizeTC();
 // ═══════════════════════════════════════════════════════
 let sensorsOn = false;
 let gpsWatcher = null;
+// FIX: track which orientation event is providing good data to avoid double-fire
+let _orientAbsoluteActive = false;
 
 async function toggleSensors() {
-  if (sensorsOn) {
-    stopSensors(); return;
-  }
+  if (sensorsOn) { stopSensors(); return; }
   await startSensors();
 }
 
@@ -738,7 +777,6 @@ async function startSensors() {
   const btn = document.getElementById('btnSensors');
   btn.classList.add('on');
 
-  // GPS
   if ('geolocation' in navigator) {
     gpsWatcher = navigator.geolocation.watchPosition(onGPS, onGPSErr, {
       enableHighAccuracy: true, maximumAge: 1000, timeout: 15000
@@ -747,7 +785,6 @@ async function startSensors() {
     setPill('gpsPill','warn');
   }
 
-  // Compass / IMU
   if (window.DeviceOrientationEvent) {
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
       try {
@@ -768,8 +805,9 @@ async function startSensors() {
 
 function stopSensors() {
   if (gpsWatcher !== null) navigator.geolocation.clearWatch(gpsWatcher);
-  window.removeEventListener('deviceorientationabsolute', onOrientation, true);
-  window.removeEventListener('deviceorientation', onOrientation, true);
+  window.removeEventListener('deviceorientationabsolute', onOrientationAbsolute, true);
+  window.removeEventListener('deviceorientation', onOrientationRelative, true);
+  _orientAbsoluteActive = false;
   sensorsOn = false;
   document.getElementById('btnSensors').classList.remove('on');
   setPill('gpsPill','off'); setPill('imuPill','off');
@@ -777,17 +815,31 @@ function stopSensors() {
 }
 
 function listenOrientation() {
-  window.addEventListener('deviceorientationabsolute', onOrientation, true);
-  window.addEventListener('deviceorientation', onOrientation, true);
+  // FIX: separate handlers so absolute takes priority; relative only fires if absolute isn't working
+  window.addEventListener('deviceorientationabsolute', onOrientationAbsolute, true);
+  window.addEventListener('deviceorientation', onOrientationRelative, true);
 }
 
-function onOrientation(e) {
+function onOrientationAbsolute(e) {
+  if (e.alpha === null) return;
+  _orientAbsoluteActive = true;
+  const h = (360 - e.alpha + 360) % 360;
+  S.heading = h;
+  setPill('imuPill','ok');
+  markDirty();
+  updateInstruments();
+}
+
+// FIX: only use deviceorientation fallback if absolute hasn't fired
+function onOrientationRelative(e) {
+  if (_orientAbsoluteActive) return;
   let h = null;
-  if (e.absolute && e.alpha !== null) h = (360 - e.alpha + 360) % 360;
-  else if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
+  if (e.webkitCompassHeading != null) h = e.webkitCompassHeading;
+  else if (e.alpha !== null) h = (360 - e.alpha + 360) % 360;
   if (h !== null) {
     S.heading = h;
     setPill('imuPill','ok');
+    markDirty();
     updateInstruments();
   }
 }
@@ -796,22 +848,33 @@ function onGPS(pos) {
   const t = Date.now();
   const lat = pos.coords.latitude;
   const lon = pos.coords.longitude;
+
   if (S.prevLat !== null && S.prevGpsT !== null) {
     const dt = (t - S.prevGpsT) / 1000;
     if (dt > 0.5) {
       const d = haversine(S.prevLat, S.prevLon, lat, lon);
-      S.sog = (d / dt) * 3600 * 0.539957;
+      const rawSog = (d / dt) * 3600 * 0.539957;
+
+      // FIX: 3-sample rolling average to kill GPS SOG spikes
+      S.sogBuffer.push(rawSog);
+      if (S.sogBuffer.length > 3) S.sogBuffer.shift();
+      S.sog = S.sogBuffer.reduce((a,b) => a+b, 0) / S.sogBuffer.length;
+
       S.cog = bearing(S.prevLat, S.prevLon, lat, lon);
       if (!S.heading) S.heading = S.cog;
     }
   }
+
   S.lat = lat; S.lon = lon;
   S.prevLat = lat; S.prevLon = lon; S.prevGpsT = t;
   S.track.push({lat, lon});
   if (S.track.length > 150) S.track.shift();
   setPill('gpsPill','ok');
-  updateInstruments(); render();
+  markDirty();
+  updateInstruments();
+  render();
 }
+
 function onGPSErr() { setPill('gpsPill','warn'); }
 
 // ═══════════════════════════════════════════════════════
@@ -831,6 +894,8 @@ async function fetchWind() {
     setPill('windPill','ok');
     toast('Wind data updated');
     btn.classList.remove('on');
+    markDirty();
+    saveState();
     updateInstruments(); render(); renderWindRose();
   } catch(e) {
     setPill('windPill','warn');
@@ -863,9 +928,10 @@ function saveCourse() {
   }
   closeModal('courseModal');
   toast('Course set');
+  markDirty();
+  saveState();
   updateInstruments(); render();
 }
-
 
 function setCoursePointFromGPS(which) {
   if (S.lat === null || S.lon === null) { toast('Start Sensors and wait for GPS first'); return; }
@@ -879,11 +945,12 @@ function clearStartLine() {
   ['cPinALat','cPinALon','cPinBLat','cPinBLon'].forEach(id => document.getElementById(id).value = '');
   S.pinA = null; S.pinB = null;
   toast('Start pins cleared');
+  markDirty();
+  saveState();
   updateInstruments(); render();
 }
 
 function loadDemo() {
-  // Antigua demo
   S.pinA = {lat:17.1285, lon:-61.8478}; S.pinB = {lat:17.1285, lon:-61.8455};
   S.mark = {lat:17.1365, lon:-61.8466}; S.lwMark = null;
   S.lat = 17.1270; S.lon = -61.8466;
@@ -895,10 +962,13 @@ function loadDemo() {
   closeModal('courseModal');
   toast('Demo course loaded');
 
-  // Load Hobie18 polar if none set
-  if (!S.polar) { document.getElementById('polarPreset').value='hobie18'; loadPolarPreset(); savePolar(); }
+  // FIX: load polar without triggering closeModal on polarModal (it's not open)
+  if (!S.polar) {
+    document.getElementById('polarPreset').value = 'hobie18';
+    loadPolarPreset();
+    savePolarSilent(); // saves polar without closing the polar modal
+  }
 
-  // Animate
   if (S.demoInterval) clearInterval(S.demoInterval);
   S.demoT = 0;
   S.demoInterval = setInterval(() => {
@@ -911,9 +981,11 @@ function loadDemo() {
     S.twd = 70 + Math.sin(S.demoT * 0.2) * 4;
     S.track.push({lat:S.lat, lon:S.lon});
     if (S.track.length > 100) S.track.shift();
+    markDirty();
     updateInstruments(); render(); renderWindRose();
   }, 250);
 
+  markDirty();
   updateInstruments(); render(); renderWindRose();
 }
 
@@ -927,13 +999,12 @@ function buildPolarTable(rows) {
     const tr = document.createElement('tr');
     tr.innerHTML = `<td style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 2px">${row[0]}°</td>`;
     for (let i = 1; i <= 4; i++) {
-      tr.innerHTML += `<td><input type="number" step="0.1" min="0" max="20" data-twa="${row[0]}" data-twsi="${i-1}" value="${row[i]}"></td>`;
+      tr.innerHTML += `<td><input type="number" step="0.1" min="0" max="20" data-twa="${row[0]}" data-twsi="${i-1}" value="${row[i] || ''}"></td>`;
     }
     tbody.appendChild(tr);
   });
 }
 
-// Init with default angles and blank values
 function initPolarTable() {
   buildPolarTable(DEFAULT_ANGLES.map(a => [a, '', '', '', '']));
 }
@@ -944,7 +1015,8 @@ function loadPolarPreset() {
   buildPolarTable(PRESETS[key].rows);
 }
 
-function savePolar() {
+// FIX: internal polar save that doesn't close a modal — used by loadDemo
+function savePolarSilent() {
   const inputs = document.querySelectorAll('#polarBody input');
   const table = {};
   inputs.forEach(inp => {
@@ -954,25 +1026,30 @@ function savePolar() {
     table[twa][twsi] = parseFloat(inp.value) || 0;
   });
   S.polar = table;
+  S.polarAngles = computePolarAngles(table);
+  saveState();
+}
 
-  // Pre-compute best upwind angle per TWS
-  S.polarAngles = POLAR_TWS.map((_, ti) => {
+function savePolar() {
+  savePolarSilent();
+  closeModal('polarModal');
+  toast('Polar saved — ' + Object.keys(S.polar).length + ' angles loaded');
+}
+
+function computePolarAngles(table) {
+  return POLAR_TWS.map((_, ti) => {
     let bestVMG = -Infinity, bestAngle = 45;
     Object.entries(table).forEach(([twa, speeds]) => {
       const a = parseInt(twa);
-      if (a > 90) return; // upwind only
+      if (a > 90) return;
       const spd = speeds[ti];
       const vmg = spd * Math.cos(a * Math.PI / 180);
       if (vmg > bestVMG) { bestVMG = vmg; bestAngle = a; }
     });
     return bestAngle;
   });
-
-  closeModal('polarModal');
-  toast('Polar saved — ' + (Object.keys(table).length) + ' angles loaded');
 }
 
-// Interpolate optimal upwind angle for current TWS
 function getOptimalAngle() {
   if (!S.polarAngles.length || !S.tws) return 45;
   const tws = S.tws;
@@ -987,22 +1064,39 @@ function getOptimalAngle() {
   return 45;
 }
 
-// Interpolate boat speed from polar
+// FIX: corrected TWS bracket interpolation — was always returning index 0
 function getPolarSpeed(twa, tws) {
   if (!S.polar || !Object.keys(S.polar).length) return S.sog || 5;
-  const angles = Object.keys(S.polar).map(Number).sort((a,b)=>a-b);
-  const twi = POLAR_TWS.findIndex((t,i) => tws <= t || i === POLAR_TWS.length-1);
-  const ti = Math.max(0, Math.min(twi, 3));
-  // Find surrounding angles
+  const angles = Object.keys(S.polar).map(Number).sort((a,b) => a-b);
   const absTwa = Math.abs(twa);
+
+  // Find TWS bracket
+  let ti0, ti1, tFrac;
+  if (tws <= POLAR_TWS[0]) {
+    ti0 = 0; ti1 = 0; tFrac = 0;
+  } else if (tws >= POLAR_TWS[POLAR_TWS.length-1]) {
+    ti0 = POLAR_TWS.length-1; ti1 = POLAR_TWS.length-1; tFrac = 0;
+  } else {
+    ti0 = 0;
+    for (let i = 0; i < POLAR_TWS.length-1; i++) {
+      if (tws >= POLAR_TWS[i] && tws <= POLAR_TWS[i+1]) { ti0 = i; break; }
+    }
+    ti1 = ti0 + 1;
+    tFrac = (tws - POLAR_TWS[ti0]) / (POLAR_TWS[ti1] - POLAR_TWS[ti0]);
+  }
+
+  // Find TWA bracket
   let lo = angles[0], hi = angles[angles.length-1];
   for (let i = 0; i < angles.length-1; i++) {
     if (absTwa >= angles[i] && absTwa <= angles[i+1]) { lo = angles[i]; hi = angles[i+1]; break; }
   }
-  const t = lo === hi ? 0 : (absTwa - lo) / (hi - lo);
-  const spdLo = S.polar[lo]?.[ti] || 0;
-  const spdHi = S.polar[hi]?.[ti] || 0;
-  return spdLo * (1-t) + spdHi * t;
+  const aFrac = lo === hi ? 0 : (absTwa - lo) / (hi - lo);
+
+  // Bilinear interpolation across both TWA and TWS
+  const spd = (a, ti) => (S.polar[a] && S.polar[a][ti] != null) ? S.polar[a][ti] : 0;
+  const spdLo = spd(lo, ti0) * (1-tFrac) + spd(lo, ti1) * tFrac;
+  const spdHi = spd(hi, ti0) * (1-tFrac) + spd(hi, ti1) * tFrac;
+  return spdLo * (1-aFrac) + spdHi * aFrac;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1034,34 +1128,39 @@ function startCountdown() {
   document.getElementById('btnTimer').classList.add('on');
 }
 
+// FIX: guard against null startEpoch before operating on it
 function syncGun() {
-  // Sync: treat current moment as a gun — round to nearest minute and restart
+  if (!CD.active || !CD.startEpoch) {
+    toast('Start a sequence first');
+    closeModal('timerModal');
+    return;
+  }
   const now = Date.now();
-  const remaining = CD.startEpoch ? CD.startEpoch - now : 0;
-  const roundedMs = Math.round(remaining / 60000) * 60000;
-  CD.startEpoch = now + roundedMs;
+  const rem = CD.startEpoch - now;
+  const rounded = Math.round(rem / 60000) * 60000;
+  CD.startEpoch = now + rounded;
   closeModal('timerModal');
-  toast('Synced to gun');
+  toast('Synced ±0');
 }
 
 function stopCountdown() {
   if (cdInterval) clearInterval(cdInterval);
   CD.active = false;
+  CD.startEpoch = null;
   document.getElementById('cdBar').classList.remove('visible','seq-5','seq-4','seq-1','seq-go');
   document.getElementById('btnTimer').classList.remove('on');
 }
 
 function tickCountdown() {
-  if (!CD.active) return;
+  if (!CD.active || !CD.startEpoch) return;
   const now = Date.now();
   const rem = CD.startEpoch - now;
 
   if (rem <= 0) {
-    // GUN
     document.getElementById('cdTime').textContent = 'GO';
     document.getElementById('cdPhase').textContent = 'RACING';
     document.getElementById('cdBar').className = 'countdown-bar visible seq-go';
-    if (rem < -3000) stopCountdown(); // clear 3s after gun
+    if (rem < -3000) stopCountdown();
     return;
   }
 
@@ -1070,11 +1169,10 @@ function tickCountdown() {
   const secs = totalSec % 60;
   document.getElementById('cdTime').textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
 
-  // Phase labels & color classes
   const bar = document.getElementById('cdBar');
-  bar.className = 'countdown-bar visible'; // reset
-
+  bar.className = 'countdown-bar visible';
   const seqMins = CD.seq;
+
   if (totalSec > (seqMins-1)*60) {
     document.getElementById('cdPhase').textContent = `${seqMins} MIN`;
     bar.classList.add('seq-5');
@@ -1094,8 +1192,8 @@ function tickCountdown() {
 }
 
 document.getElementById('cdSync').addEventListener('click', () => {
-  if (!CD.active) return;
-  // Snap remaining to nearest whole minute
+  // FIX: guard null startEpoch on inline sync button too
+  if (!CD.active || !CD.startEpoch) return;
   const now = Date.now();
   const rem = CD.startEpoch - now;
   const rounded = Math.round(rem / 60000) * 60000;
@@ -1110,7 +1208,6 @@ document.getElementById('cdStop').addEventListener('click', stopCountdown);
 // ═══════════════════════════════════════════════════════
 function normAngle(a) { return ((a % 360) + 360) % 360; }
 function angDiff(a, b) { let d = normAngle(b-a); return d > 180 ? d-360 : d; }
-
 
 function fmtTime(sec) {
   if (!isFinite(sec)) return '--:--';
@@ -1160,7 +1257,6 @@ function computeStartMetrics() {
 
   let favored = null, biasM = null;
   if (S.twd !== null) {
-    // Higher projection upwind is the windward/favored end for a windward start.
     const up = {x: Math.sin(S.twd*Math.PI/180), y: Math.cos(S.twd*Math.PI/180)};
     const mid = {x:B.x/2, y:B.y/2};
     const aProj = (A.x-mid.x)*up.x + (A.y-mid.y)*up.y;
@@ -1198,7 +1294,6 @@ function computeTactics() {
   const portHdg  = normAngle(S.twd + polar);
   const markBrng = bearing(S.lat, S.lon, S.mark.lat, S.mark.lon);
 
-  // VMG toward mark on each tack using polar speed
   const twa_stbd = angDiff(S.twd, stbdHdg);
   const twa_port  = angDiff(S.twd, portHdg);
   const spd_stbd = getPolarSpeed(twa_stbd, S.tws || 10);
@@ -1235,27 +1330,26 @@ function updateInstruments() {
   if (S.activeLeg === 'start') {
     updateStartDisplay();
   } else {
-  const tac = computeTactics();
-  if (tac) {
-    document.getElementById('iVmg').textContent = tac.bestVMG.toFixed(1);
-    const rec = document.getElementById('tackRec');
-    if (tac.best === 'stbd') {
-      rec.textContent = `▶ STBD TACK  ${Math.round(tac.stbdHdg)}°  VMG ${tac.vmg_stbd.toFixed(1)}kt`;
-      rec.className = 'tack-rec stbd';
+    const tac = computeTactics();
+    if (tac) {
+      document.getElementById('iVmg').textContent = tac.bestVMG.toFixed(1);
+      const rec = document.getElementById('tackRec');
+      if (tac.best === 'stbd') {
+        rec.textContent = `▶ STBD TACK  ${Math.round(tac.stbdHdg)}°  VMG ${tac.vmg_stbd.toFixed(1)}kt`;
+        rec.className = 'tack-rec stbd';
+      } else {
+        rec.textContent = `◀ PORT TACK  ${Math.round(tac.portHdg)}°  VMG ${tac.vmg_port.toFixed(1)}kt`;
+        rec.className = 'tack-rec port';
+      }
+      drawVMGArc(tac.eff);
     } else {
-      rec.textContent = `◀ PORT TACK  ${Math.round(tac.portHdg)}°  VMG ${tac.vmg_port.toFixed(1)}kt`;
-      rec.className = 'tack-rec port';
+      document.getElementById('iVmg').textContent = '--';
+      document.getElementById('tackRec').textContent = 'SET COURSE TO COMPUTE TACK';
+      document.getElementById('tackRec').className = 'tack-rec none';
+      drawVMGArc(0);
     }
-    drawVMGArc(tac.eff);
-  } else {
-    document.getElementById('iVmg').textContent = '--';
-    document.getElementById('tackRec').textContent = 'SET COURSE TO COMPUTE TACK';
-    document.getElementById('tackRec').className = 'tack-rec none';
-    drawVMGArc(0);
-  }
   }
 
-  // Wind badge
   document.getElementById('wbSpd').textContent = S.tws !== null ? Math.round(S.tws)+'kt' : '--kt';
   document.getElementById('wbDir').textContent = S.twd !== null ? Math.round(S.twd)+'°' : '---°';
 }
@@ -1281,7 +1375,7 @@ function drawVMGArc(eff) {
 }
 
 // ═══════════════════════════════════════════════════════
-// WIND ROSE (badge)
+// WIND ROSE
 // ═══════════════════════════════════════════════════════
 function renderWindRose() {
   const c = document.getElementById('wrCanvas');
@@ -1296,19 +1390,16 @@ function renderWindRose() {
   if (S.twd !== null) {
     const tws = S.tws || 0;
     const rad = (S.twd - 90)*Math.PI/180;
-    // Stem
     x.strokeStyle='#f5a623'; x.lineWidth=2;
     x.beginPath();
     x.moveTo(cx,cy);
     x.lineTo(cx+Math.cos(rad)*r*0.82, cy+Math.sin(rad)*r*0.82);
     x.stroke();
-    // Arrowhead
     const ex=cx+Math.cos(rad)*r*0.82, ey=cy+Math.sin(rad)*r*0.82;
     x.save(); x.translate(ex,ey); x.rotate(rad+Math.PI/2);
     x.fillStyle='#f5a623';
     x.beginPath(); x.moveTo(0,0); x.lineTo(-4,10); x.lineTo(4,10); x.closePath(); x.fill();
     x.restore();
-    // Speed barbs
     const barbs = Math.min(Math.round(tws/5), 5);
     for (let b=0; b<barbs; b++) {
       const t=0.25+b*0.14;
@@ -1348,17 +1439,19 @@ function proj(lat, lon, b, W, H) {
 }
 
 function render() {
+  // FIX: skip redraw if nothing changed (except during demo which sets dirty itself)
+  if (!_dirty) return;
+  _dirty = false;
+
   const W = tc.width / devicePixelRatio;
   const H = tc.height / devicePixelRatio;
   ctx.save();
   ctx.scale(devicePixelRatio, devicePixelRatio);
   ctx.clearRect(0,0,W,H);
 
-  // ── Background
   ctx.fillStyle = '#091524';
   ctx.fillRect(0,0,W,H);
 
-  // Grid
   ctx.strokeStyle = 'rgba(0,212,170,0.04)'; ctx.lineWidth = 1;
   for (let x=0; x<W; x+=50) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
   for (let y=0; y<H; y+=50) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
@@ -1377,7 +1470,6 @@ function render() {
 
   const p = (lat,lon) => proj(lat,lon,bounds,W,H);
 
-  // ── Wind corridor from mark
   if (S.twd !== null && S.mark) {
     const mk = p(S.mark.lat, S.mark.lon);
     const rad = (S.twd+180)*Math.PI/180;
@@ -1399,19 +1491,16 @@ function render() {
     ctx.restore();
   }
 
-  // ── Laylines
   if (S.twd !== null && S.mark) {
     const tac = computeTactics();
     if (tac) {
       const mk = p(S.mark.lat, S.mark.lon);
       const len = Math.max(W,H)*1.5;
-      // Stbd layline (green)
       const sRad = tac.laySttbd * Math.PI/180;
       ctx.strokeStyle = 'rgba(76,222,128,0.3)'; ctx.lineWidth = 1.5;
       ctx.setLineDash([6,5]);
       ctx.beginPath(); ctx.moveTo(mk.x,mk.y);
       ctx.lineTo(mk.x+Math.sin(sRad)*len, mk.y-Math.cos(sRad)*len); ctx.stroke();
-      // Port layline (red)
       const pRad = tac.layPort * Math.PI/180;
       ctx.strokeStyle = 'rgba(232,64,64,0.3)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(mk.x,mk.y);
@@ -1420,7 +1509,6 @@ function render() {
     }
   }
 
-  // ── Recommended route
   if (S.lat && S.mark && S.twd !== null) {
     const tac = computeTactics();
     if (tac) {
@@ -1441,7 +1529,6 @@ function render() {
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Tack point indicator
       ctx.fillStyle = col;
       ctx.beginPath(); ctx.arc(tpx,tpy,4,0,2*Math.PI); ctx.fill();
       ctx.strokeStyle='rgba(0,0,0,0.5)'; ctx.lineWidth=1;
@@ -1449,7 +1536,6 @@ function render() {
     }
   }
 
-  // ── Track
   if (S.track.length > 1) {
     ctx.strokeStyle = 'rgba(0,212,170,0.35)'; ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -1457,23 +1543,18 @@ function render() {
     ctx.stroke();
   }
 
-  // ── Start line
   if (S.pinA && S.pinB) {
     const a=p(S.pinA.lat,S.pinA.lon), b=p(S.pinB.lat,S.pinB.lon);
     ctx.strokeStyle='rgba(245,166,35,0.85)'; ctx.lineWidth=2.5;
     ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
-    // Pin A — square
     drawBuoy(ctx, a.x, a.y, 'square', '#f5a623', 'A');
-    // Pin B — circle
     drawBuoy(ctx, b.x, b.y, 'circle', '#f5a623', 'B');
-    // Label
     ctx.fillStyle='rgba(245,166,35,0.6)';
     ctx.font='11px Barlow Condensed, sans-serif';
     ctx.textAlign='left'; ctx.textBaseline='bottom';
     ctx.fillText('START LINE', Math.min(a.x,b.x), Math.min(a.y,b.y)-3);
   }
 
-  // ── Windward mark
   if (S.mark) {
     const mk=p(S.mark.lat,S.mark.lon);
     drawBuoy(ctx, mk.x, mk.y, 'diamond', '#ffdf00', 'W');
@@ -1483,7 +1564,6 @@ function render() {
     ctx.fillText('WIND MARK', mk.x+12, mk.y-3);
   }
 
-  // ── Leeward mark
   if (S.lwMark) {
     const lw=p(S.lwMark.lat,S.lwMark.lon);
     drawBuoy(ctx, lw.x, lw.y, 'circle', '#00a888', 'L');
@@ -1493,13 +1573,11 @@ function render() {
     ctx.fillText('LEE MARK', lw.x+12, lw.y-3);
   }
 
-  // ── Boat
   if (S.lat) {
     const bp = p(S.lat, S.lon);
     drawBoat(ctx, bp.x, bp.y, (S.heading || S.cog || 0)*Math.PI/180);
   }
 
-  // ── Race start metrics overlay
   if (S.activeLeg === 'start') {
     const m = computeStartMetrics();
     if (m) {
@@ -1516,13 +1594,11 @@ function render() {
     }
   }
 
-  // ── North indicator
   ctx.fillStyle='rgba(0,212,170,0.45)';
   ctx.font='bold 11px Space Mono, monospace';
   ctx.textAlign='left'; ctx.textBaseline='top';
   ctx.fillText('N ↑',10,10);
 
-  // ── Scale bar
   const latSpan = bounds.maxLat-bounds.minLat;
   const nmSpan = latSpan * 60;
   const barNM = nmSpan < 0.3 ? 0.05 : nmSpan < 1 ? 0.1 : nmSpan < 3 ? 0.5 : 1;
@@ -1554,24 +1630,20 @@ function drawBuoy(ctx, x, y, shape, color, label) {
 
 function drawBoat(ctx, x, y, hdgRad) {
   ctx.save(); ctx.translate(x,y); ctx.rotate(hdgRad);
-  // Shadow glow
   ctx.shadowColor = '#00d4aa'; ctx.shadowBlur = 10;
   ctx.fillStyle = '#00d4aa';
   ctx.beginPath();
   ctx.moveTo(0,-15); ctx.quadraticCurveTo(6,0,4,12); ctx.lineTo(0,9); ctx.lineTo(-4,12); ctx.quadraticCurveTo(-6,0,0,-15);
   ctx.closePath(); ctx.fill();
   ctx.shadowBlur = 0;
-  // Mast
   ctx.fillStyle = '#fff';
   ctx.beginPath(); ctx.arc(0,-3,2,0,2*Math.PI); ctx.fill();
-  // Heading vector
   ctx.strokeStyle='rgba(0,212,170,0.5)'; ctx.lineWidth=1.5;
   ctx.setLineDash([3,3]);
   ctx.beginPath(); ctx.moveTo(0,-15); ctx.lineTo(0,-35); ctx.stroke();
   ctx.setLineDash([]);
   ctx.restore();
 }
-
 
 function roundRect(ctx, x, y, w, h, r, fill, stroke) {
   if (w < 2*r) r = w/2;
@@ -1606,49 +1678,52 @@ function midpoint(a,b) { return {lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}; }
 // ═══════════════════════════════════════════════════════
 // MODAL / UI HELPERS
 // ═══════════════════════════════════════════════════════
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-}
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
 function setPill(id, state) {
   const el = document.getElementById(id);
   el.className = 'pill ' + (state === 'off' ? '' : state);
 }
+
 function switchTab(modal, tab) {
-  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll(`#${modal}Modal .tab-panel`).forEach(p=>p.classList.remove('active'));
-  const panels = document.querySelectorAll(`#${modal}Modal .tab-panel`);
-  const tabs = document.querySelectorAll(`#${modal}Modal .mtab`);
-  // find by panel id suffix
-  document.querySelectorAll(`#${modal}Modal .tab-panel`).forEach(p=>{
-    if (p.id === `${modal}-${tab}`) p.classList.add('active');
-  });
-  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t=>{
-    if (t.getAttribute('onclick')?.includes(tab)) t.classList.add('active');
+  document.querySelectorAll(`#${modal}Modal .tab-panel`).forEach(p => p.classList.remove('active'));
+  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t => t.classList.remove('active'));
+  const panel = document.getElementById(`${modal}-${tab}`);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll(`#${modal}Modal .mtab`).forEach(t => {
+    if (t.getAttribute('onclick')?.includes(`'${tab}'`)) t.classList.add('active');
   });
 }
+
 function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 2200);
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-// Close modal on background tap
-document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click', e=>{ if(e.target===bg) bg.classList.remove('open'); });
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
 });
 
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
 initPolarTable();
+loadState();     // restore last session from localStorage
+markDirty();
 render();
 renderWindRose();
 updateInstruments();
-setInterval(()=>{ render(); renderWindRose(); updateInstruments(); }, 500);
+
+// FIX: polling loop respects dirty flag — only redraws when something changed
+setInterval(() => {
+  if (CD.active) markDirty(); // countdown always needs a tick
+  render();
+  renderWindRose();
+  updateInstruments();
+}, 500);
 </script>
 </body>
 </html>
