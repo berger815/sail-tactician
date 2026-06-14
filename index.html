@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/14 23:12</title>
+<title>TACTICIAN v06/14 23:24</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 23:12</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 23:24</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -567,6 +567,19 @@ function optAng(tws){
   for(let i=0;i<4;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){const t=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);return polarAngles[i]*(1-t)+polarAngles[i+1]*t;}}
   return 42;
 }
+function optDownwindAng(tws){
+  // Best downwind VMG angle (TWA from bow, 90-180 range)
+  // Computed from polar: maximize bsp * cos(180 - twa)
+  const angs=Object.keys(polarTable).map(Number).sort((a,b)=>a-b)
+    .filter(a=>a>=90);
+  if(!angs.length)return 150;
+  let best=-Infinity,bestAng=150;
+  angs.forEach(a=>{
+    const b=pBSP(a,tws)*Math.cos((180-a)*Math.PI/180);
+    if(b>best){best=b;bestAng=a;}
+  });
+  return bestAng;
+}
 
 // ── LEG CLASSIFIER ───────────────────────────────────────
 function classifyLeg(mb){
@@ -600,30 +613,54 @@ function legBearing(){
 // ── TACTICS ──────────────────────────────────────────────
 function tactics(){
   const tgt=activeMark();if(!tgt||WIND.twd===null||NAV.lat===null)return null;
-  const mb=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);  // live bearing for VMG
+  const mb=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);  // live bearing for display
   const lb=legBearing()??mb;                         // stable bearing for leg type
   const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
+
+  // Lateral component toward mark: positive means moving toward mark's side
+  // Uses perpendicular to rhumb line (90deg clockwise from mark direction)
+  function lateralToMark(hdg,bsp,markBrng){
+    const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
+    const px=Math.cos(markBrng*Math.PI/180),py=-Math.sin(markBrng*Math.PI/180);
+    return vx*px+vy*py;
+  }
+
   if(leg==='upwind'){
     const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
-    const vs=pBSP(angDiff(WIND.twd,sH),tws)*Math.cos(Math.abs(angDiff(sH,mb))*Math.PI/180);
-    const vp=pBSP(angDiff(WIND.twd,pH),tws)*Math.cos(Math.abs(angDiff(pH,mb))*Math.PI/180);
-    const best=vs>=vp?'stbd':'port',bH=best==='stbd'?sH:pH,bV=best==='stbd'?vs:vp;
-    const eff=Math.max(vs,vp)>0?bV/Math.max(vs,vp)*100:0;
+    const bsp_s=pBSP(angDiff(WIND.twd,sH),tws);
+    const bsp_p=pBSP(angDiff(WIND.twd,pH),tws);
+    // Real VMG = upwind component of speed (always positive on a correct tack)
+    const vmg_s=bsp_s*Math.cos(opt*Math.PI/180);
+    const vmg_p=bsp_p*Math.cos(opt*Math.PI/180);
+    // Pick tack that moves laterally toward the mark
+    const lat_s=lateralToMark(sH,bsp_s,lb);
+    const lat_p=lateralToMark(pH,bsp_p,lb);
+    const best=lat_s>=lat_p?'stbd':'port';
+    const bH=best==='stbd'?sH:pH;
+    const bV=best==='stbd'?vmg_s:vmg_p;
+    const eff=Math.max(vmg_s,vmg_p)>0?bV/Math.max(vmg_s,vmg_p)*100:0;
     return{leg,best,bestHdg:bH,bestVMG:bV,eff,sH,pH,
            layS:normA(WIND.twd-opt+180),layP:normA(WIND.twd+opt+180),
            mb,shift:shiftNote()};
   }
   if(leg==='downwind'){
-    const ga=180-opt,sG=normA(WIND.twd+ga),pG=normA(WIND.twd-ga);
-    const vs=pBSP(angDiff(WIND.twd,sG),tws)*Math.cos(Math.abs(angDiff(sG,mb))*Math.PI/180);
-    const vp=pBSP(angDiff(WIND.twd,pG),tws)*Math.cos(Math.abs(angDiff(pG,mb))*Math.PI/180);
-    const best=vs>=vp?'stbd':'port',bH=best==='stbd'?sG:pG,bV=best==='stbd'?vs:vp;
-    return{leg,best,bestHdg:bH,bestVMG:bV,eff:72,sG,pG,mb,shift:shiftNote()};
+    const optD=optDownwindAng(tws);  // optimal downwind TWA e.g. 164°
+    const sG=normA(WIND.twd+optD),pG=normA(WIND.twd-optD);
+    const bsp_s=pBSP(optD,tws),bsp_p=pBSP(optD,tws);
+    // Downwind VMG = bsp * cos(180 - optD), always positive
+    const vmg=bsp_s*Math.cos((180-optD)*Math.PI/180);
+    const lat_s=lateralToMark(sG,bsp_s,lb);
+    const lat_p=lateralToMark(pG,bsp_p,lb);
+    const best=lat_s>=lat_p?'stbd':'port';
+    const bH=best==='stbd'?sG:pG;
+    return{leg,best,bestHdg:bH,bestVMG:Math.max(0,vmg),eff:72,sG,pG,mb,shift:shiftNote()};
   }
+  // Reach: direct bearing, real VMG
   const twa=angDiff(WIND.twd,mb),spd=pBSP(twa,tws);
+  const vmg_reach=spd*Math.cos(angDiff(mb,lb)*Math.PI/180);
   const sd=shiftDeg();
   const note=Math.abs(sd)<2?'ON TRACK':sd<0?'LIFTED — SAIL HIGH':'HEADED — SAIL LOW';
-  return{leg,best:'reach',bestHdg:mb,bestVMG:spd,eff:78,mb,note,shift:shiftNote()};
+  return{leg,best:'reach',bestHdg:mb,bestVMG:Math.max(0,vmg_reach),eff:78,mb,note,shift:shiftNote()};
 }
 
 // Post-start CTS — best tack to Mark 1 from current position
@@ -631,17 +668,22 @@ function postStartCTS(){
   if(!CRS.wpts.length||WIND.twd===null||NAV.lat===null)return null;
   const m1=CRS.wpts[0];
   const mb=brng(NAV.lat,NAV.lon,m1.lat,m1.lon);
-  // Use start→mark1 bearing for leg type
   const lb=(CRS.pinA&&CRS.pinB)?brng(midLL(CRS.pinA,CRS.pinB).lat,midLL(CRS.pinA,CRS.pinB).lon,m1.lat,m1.lon):mb;
   const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
+  function lat2mark(hdg,bsp){
+    const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
+    const px=Math.cos(lb*Math.PI/180),py=-Math.sin(lb*Math.PI/180);
+    return vx*px+vy*py;
+  }
   if(leg==='upwind'){
     const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
-    const vs=pBSP(angDiff(WIND.twd,sH),tws)*Math.cos(Math.abs(angDiff(sH,mb))*Math.PI/180);
-    const vp=pBSP(angDiff(WIND.twd,pH),tws)*Math.cos(Math.abs(angDiff(pH,mb))*Math.PI/180);
-    const best=vs>=vp?'stbd':'port';
-    return{hdg:best==='stbd'?sH:pH,tack:best,spd:best==='stbd'?vs:vp,leg};
+    const bs=pBSP(angDiff(WIND.twd,sH),tws),bp=pBSP(angDiff(WIND.twd,pH),tws);
+    const vmg_s=bs*Math.cos(opt*Math.PI/180),vmg_p=bp*Math.cos(opt*Math.PI/180);
+    const best=lat2mark(sH,bs)>=lat2mark(pH,bp)?'stbd':'port';
+    return{hdg:best==='stbd'?sH:pH,tack:best,spd:best==='stbd'?vmg_s:vmg_p,leg};
   }
-  return{hdg:mb,tack:'reach',spd:pBSP(angDiff(WIND.twd,mb),tws),leg};
+  const spd=pBSP(angDiff(WIND.twd,mb),tws);
+  return{hdg:mb,tack:'reach',spd:Math.max(0,spd),leg};
 }
 
 // ── A* OPTIMAL PATH ──────────────────────────────────────
