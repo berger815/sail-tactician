@@ -760,7 +760,13 @@ function gpsToWpt(){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':
 function clearWpts(){CRS.wpts=[];CRS.activeMark=-1;renderWptList();saveState();dirty=true;toast('Marks cleared');}
 function toggleRnd(i){const r=CRS.wpts[i].rounding;CRS.wpts[i].rounding=r==='port'?'stbd':r==='stbd'?'none':'port';renderWptList();saveState();}
 function deleteWpt(i){CRS.wpts.splice(i,1);if(CRS.activeMark>=CRS.wpts.length)CRS.activeMark=CRS.wpts.length-1;renderWptList();saveState();dirty=true;}
-function renderWptList(){const el=G('wptList');el.innerHTML='';CRS.wpts.forEach((w,i)=>{const d=document.createElement('div');d.className='wpt-item'+(i===CRS.activeMark?' cur':'');d.innerHTML=`<span class="wpt-seq">${i+1}</span><span class="wpt-lab">${w.label}</span><span class="wpt-co">${w.lat.toFixed(4)}, ${w.lon.toFixed(4)}</span><button class="wpt-rnd ${w.rounding}" onclick="toggleRnd(${i})">${w.rounding.toUpperCase()}</button><button class="wpt-del" onclick="deleteWpt(${i})">&#x2715;</button>`;el.appendChild(d);});}
+function setActiveMark(i){CRS.activeMark=i;renderWptList();saveState();dirty=true;refreshOptPath();toast('Active mark → '+CRS.wpts[i].label);}
+function renderWptList(){const el=G('wptList');el.innerHTML='';
+if(CRS.wpts.length>0){const hint=document.createElement('div');hint.style.cssText='font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em';hint.textContent='TAP ROW TO SET ACTIVE MARK';el.appendChild(hint);}
+CRS.wpts.forEach((w,i)=>{const d=document.createElement('div');d.className='wpt-item'+(i===CRS.activeMark?' cur':'');
+d.innerHTML=`<span class="wpt-seq">${i+1}</span><span class="wpt-lab">${w.label}</span><span class="wpt-co">${w.lat.toFixed(4)}, ${w.lon.toFixed(4)}</span><button class="wpt-rnd ${w.rounding}" onclick="event.stopPropagation();toggleRnd(${i})">${w.rounding.toUpperCase()}</button><button class="wpt-del" onclick="event.stopPropagation();deleteWpt(${i})">&#x2715;</button>`;
+d.onclick=()=>setActiveMark(i);el.appendChild(d);});
+}
 function toggleFinCustom(){G('finCustom').style.display=G('finMode').value==='custom'?'block':'none';}
 
 // ── DEMO ──────────────────────────────────────────────────
