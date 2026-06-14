@@ -400,11 +400,13 @@ reset(){this.x=null;this.P=5}}
 // Heading buffer — 5-reading rolling average before Kalman
 const _hdgBuf=[];function smoothHdg(raw){_hdgBuf.push(raw);if(_hdgBuf.length>5)_hdgBuf.shift();if(_hdgBuf.length<2)return raw;let s=0,ref=_hdgBuf[0];_hdgBuf.forEach(h=>{let d=h-ref;if(d>180)d-=360;if(d<-180)d+=360;s+=d;});return((ref+s/_hdgBuf.length)%360+360)%360;}
 // Position Kalman — smooths lat/lon independently
-class KPos{constructor(){this.Q=0.00000002;this.R=0.000001;this.P=0.001;this.x=null}
-update(z){if(this.x===null){this.x=z;return z}this.P+=this.Q;const K=this.P/(this.P+this.R);this.x+=K*(z-this.x);this.P*=(1-K);return this.x}
-reset(){this.x=null;this.P=0.001}}
+// Simple EMA position smoother — alpha=0.3 means 30% new, 70% old
+// Avoids Kalman miscalibration on decimal degree scale
+class EMAPos{constructor(alpha=0.25){this.a=alpha;this.x=null}
+update(z){if(this.x===null){this.x=z;return z}this.x=this.x*(1-this.a)+z*this.a;return this.x}
+reset(){this.x=null}}
 const kfH=new K1D(0.05,8),kfS=new KLin(0.02,2),kfW=new K1D(0.02,6);
-const kfLat=new KPos(),kfLon=new KPos();
+const kfLat=new EMAPos(0.25),kfLon=new EMAPos(0.25);
 
 // ── STATE ─────────────────────────────────────────────────
 const NAV={lat:null,lon:null,hdg:null,sog:0,cog:null,
@@ -849,7 +851,7 @@ function onOriR(e){if(absOri)return;let r=null;if(e.webkitCompassHeading!=null)r
 function onGPS(p){
   const t=Date.now(),rawLat=p.coords.latitude,rawLon=p.coords.longitude;
   const lat=kfLat.update(rawLat),lon=kfLon.update(rawLon);
-  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);NAV.sog=kfS.update(d/dt*3600*0.539957);NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
+  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);const rawSog=d/dt*3600*0.539957;NAV.sog=kfS.update(Math.min(rawSog,30));NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
   NAV.lat=lat;NAV.lon=lon;NAV.pLat=lat;NAV.pLon=lon;NAV.pT=t;
   NAV.track.push({lat,lon,t});if(NAV.track.length>300)NAV.track.shift();
   pill('pGPS','ok');dirty=true;refreshOptPath();
@@ -1317,4 +1319,3 @@ requestAnimationFrame(rafLoop);
 </script>
 </body>
 </html>
-
