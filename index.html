@@ -406,7 +406,7 @@ class EMAPos{constructor(alpha=0.25){this.a=alpha;this.x=null}
 update(z){if(this.x===null){this.x=z;return z}this.x=this.x*(1-this.a)+z*this.a;return this.x}
 reset(){this.x=null}}
 const kfH=new K1D(0.05,8),kfS=new KLin(0.02,2),kfW=new K1D(0.02,6);
-const kfLat=new EMAPos(0.25),kfLon=new EMAPos(0.25);
+const kfLat=new EMAPos(0.15),kfLon=new EMAPos(0.15);
 
 // ── STATE ─────────────────────────────────────────────────
 const NAV={lat:null,lon:null,hdg:null,sog:0,cog:null,
@@ -479,9 +479,22 @@ async function fetchNDBC(id,name){
   }
 }
 function setWind(twd,tws,src){
+  // Sanity check — reject bad data
+  if(isNaN(twd)||isNaN(tws)||tws<0||tws>60||twd<0||twd>360){
+    toast('Bad wind data — ignored');return;
+  }
+  // If we have history, reject single reading that jumps >40deg from recent avg
+  if(WIND.hist.length>=3){
+    const recent=WIND.hist.slice(-3);
+    const avg=recent.reduce((s,e)=>s+e.twd,0)/recent.length;
+    let diff=Math.abs(twd-avg);if(diff>180)diff=360-diff;
+    if(diff>40&&src!=='Manual'&&src!=='Demo'){
+      toast(`Wind jump ${Math.round(diff)}° ignored`);return;
+    }
+  }
   WIND.twd=kfW.update(twd);WIND.tws=tws;WIND.fetchedAt=Date.now();
   WIND.hist.push({t:Date.now(),twd,tws});if(WIND.hist.length>30)WIND.hist.shift();
-  pill('pWND','ok');toast(`Wind ${Math.round(twd)}° @ ${tws.toFixed(1)}kt (${src})`);
+  pill('pWND','ok');toast('Wind '+Math.round(twd)+'@ '+tws.toFixed(1)+'kt ('+src+')');
   dirty=true;saveState();
 }
 function setManualWind(){
@@ -851,7 +864,7 @@ function onOriR(e){if(absOri)return;let r=null;if(e.webkitCompassHeading!=null)r
 function onGPS(p){
   const t=Date.now(),rawLat=p.coords.latitude,rawLon=p.coords.longitude;
   const lat=kfLat.update(rawLat),lon=kfLon.update(rawLon);
-  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);const rawSog=d/dt*3600*0.539957;NAV.sog=kfS.update(Math.min(rawSog,30));NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
+  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);if(dt>0.5&&dt<30){const rawSog=d/dt*3600*0.539957;if(rawSog<25)NAV.sog=kfS.update(rawSog);}NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
   NAV.lat=lat;NAV.lon=lon;NAV.pLat=lat;NAV.pLon=lon;NAV.pT=t;
   NAV.track.push({lat,lon,t});if(NAV.track.length>300)NAV.track.shift();
   pill('pGPS','ok');dirty=true;refreshOptPath();
@@ -1319,4 +1332,3 @@ requestAnimationFrame(rafLoop);
 </script>
 </body>
 </html>
-
