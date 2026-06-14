@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/14 22:53</title>
+<title>TACTICIAN v06/14 23:12</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 22:53</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 23:12</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -571,16 +571,38 @@ function optAng(tws){
 // ── LEG CLASSIFIER ───────────────────────────────────────
 function classifyLeg(mb){
   if(WIND.twd===null)return'upwind';
-  // angDiff(wind,bearing): 180=mark directly upwind, 0=mark directly downwind
+  // angDiff(wind,bearing): ~180=mark upwind, ~0=mark downwind
   const a=Math.abs(angDiff(WIND.twd,mb));
   if(a>110)return'upwind';if(a<70)return'downwind';return'reach';
+}
+function legBearing(){
+  // Use previous mark → current mark bearing for leg classification
+  // More stable than live boat position which varies during leg
+  const i=CRS.activeMark;
+  if(i<0||i>=CRS.wpts.length)return null;
+  const tgt=CRS.wpts[i];
+  if(i===0){
+    // First leg: start midpoint → mark 1
+    if(CRS.pinA&&CRS.pinB){
+      const mid=midLL(CRS.pinA,CRS.pinB);
+      return brng(mid.lat,mid.lon,tgt.lat,tgt.lon);
+    }
+  }else{
+    // Subsequent legs: previous mark → current mark
+    const prev=CRS.wpts[i-1];
+    return brng(prev.lat,prev.lon,tgt.lat,tgt.lon);
+  }
+  // Fallback to live boat position
+  if(NAV.lat!==null)return brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);
+  return null;
 }
 
 // ── TACTICS ──────────────────────────────────────────────
 function tactics(){
   const tgt=activeMark();if(!tgt||WIND.twd===null||NAV.lat===null)return null;
-  const mb=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);
-  const leg=classifyLeg(mb),tws=WIND.tws||10,opt=optAng(tws);
+  const mb=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);  // live bearing for VMG
+  const lb=legBearing()??mb;                         // stable bearing for leg type
+  const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
   if(leg==='upwind'){
     const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
     const vs=pBSP(angDiff(WIND.twd,sH),tws)*Math.cos(Math.abs(angDiff(sH,mb))*Math.PI/180);
@@ -609,7 +631,9 @@ function postStartCTS(){
   if(!CRS.wpts.length||WIND.twd===null||NAV.lat===null)return null;
   const m1=CRS.wpts[0];
   const mb=brng(NAV.lat,NAV.lon,m1.lat,m1.lon);
-  const leg=classifyLeg(mb),tws=WIND.tws||10,opt=optAng(tws);
+  // Use start→mark1 bearing for leg type
+  const lb=(CRS.pinA&&CRS.pinB)?brng(midLL(CRS.pinA,CRS.pinB).lat,midLL(CRS.pinA,CRS.pinB).lon,m1.lat,m1.lon):mb;
+  const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
   if(leg==='upwind'){
     const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
     const vs=pBSP(angDiff(WIND.twd,sH),tws)*Math.cos(Math.abs(angDiff(sH,mb))*Math.PI/180);
@@ -896,7 +920,7 @@ function onOriR(e){if(absOri)return;let r=null;if(e.webkitCompassHeading!=null)r
 function onGPS(p){
   const t=Date.now(),rawLat=p.coords.latitude,rawLon=p.coords.longitude;
   const lat=kfLat.update(rawLat),lon=kfLon.update(rawLon);
-  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);if(dt>0.5&&dt<30){const rawSog=d/dt*3600*0.539957;if(rawSog<25)NAV.sog=kfS.update(rawSog);}NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
+  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);if(dt>=2&&dt<60){const rawSog=d/dt*3600*0.539957;if(rawSog<20)NAV.sog=kfS.update(rawSog);}NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
   NAV.lat=lat;NAV.lon=lon;NAV.pLat=lat;NAV.pLon=lon;NAV.pT=t;
   NAV.track.push({lat,lon,t});if(NAV.track.length>300)NAV.track.shift();
   pill('pGPS','ok');dirty=true;refreshOptPath();
