@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/14 22:24</title>
+<title>TACTICIAN v06/14 22:53</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -157,6 +157,11 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .wsrc-name{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--white)}
 .wsrc-info{font-family:var(--cond);font-size:11px;color:var(--muted);margin-top:1px}
 .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.edit-popup{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.edit-popup.open{display:flex}
+.edit-box{background:var(--hull);border:1px solid var(--tealring);border-radius:10px;padding:18px 16px;width:100%;max-width:340px}
+.edit-box h4{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;margin-bottom:14px}
+.edit-btns{display:flex;gap:6px;margin-top:12px}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--hull);border:1px solid var(--tealring);border-radius:6px;padding:7px 16px;font-family:var(--mono);font-size:10px;color:var(--teal);opacity:0;pointer-events:none;transition:all 0.2s;z-index:999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -164,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 22:24</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 22:53</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -383,6 +388,26 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 
 <div class="toast" id="toast"></div>
 
+<!-- EDIT MARK POPUP -->
+<div class="edit-popup" id="editPopup">
+  <div class="edit-box">
+    <h4 id="editTitle">Edit Mark</h4>
+    <div class="fg2">
+      <div class="frow"><label>Lat</label><input type="number" id="editLat" step="0.0001"></div>
+      <div class="frow"><label>Lon</label><input type="number" id="editLon" step="0.0001"></div>
+    </div>
+    <div class="frow" id="editRndRow" style="display:none">
+      <label>Rounding</label>
+      <select id="editRnd"><option value="port">Port</option><option value="stbd">Starboard</option><option value="none">None</option></select>
+    </div>
+    <div class="edit-btns">
+      <button class="mbtn pri" style="flex:2" onclick="saveEditMark()">Update</button>
+      <button class="mbtn sec" onclick="gpsToEdit()">GPS</button>
+      <button class="mbtn can" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
 'use strict';
 // ╔══════════════════════════════════════════════════════╗
@@ -546,8 +571,9 @@ function optAng(tws){
 // ── LEG CLASSIFIER ───────────────────────────────────────
 function classifyLeg(mb){
   if(WIND.twd===null)return'upwind';
+  // angDiff(wind,bearing): 180=mark directly upwind, 0=mark directly downwind
   const a=Math.abs(angDiff(WIND.twd,mb));
-  if(a<70)return'upwind';if(a>110)return'downwind';return'reach';
+  if(a>110)return'upwind';if(a<70)return'downwind';return'reach';
 }
 
 // ── TACTICS ──────────────────────────────────────────────
@@ -932,6 +958,34 @@ cvM.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches.length===2&
 cvM.addEventListener('touchend',e=>{if(e.touches.length<2)VIEW.pd=null;if(e.touches.length===0)VIEW.drag=false;},{passive:true});
 let lastTap=0;cvM.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTap<280){VIEW.scale=1;VIEW.ox=0;VIEW.oy=0;VIEW.locked=false;dirty=true;}lastTap=n;},{passive:true});
 
+// Tap on chart to edit marks
+cvM.addEventListener('touchend',e=>{
+  if(e.touches.length>0)return; // only on final lift
+  if(Date.now()-lastTap<320)return; // ignore double-tap
+  const touch=e.changedTouches[0];
+  const rect=cvM.getBoundingClientRect();
+  const tx=touch.clientX-rect.left,ty=touch.clientY-rect.top;
+  const b=getBounds();if(!b)return;
+  const W=cvM.clientWidth,H=cvM.clientHeight;
+  // Check all interactive points
+  const hits=[];
+  function chk(lat,lon,type,idx){
+    if(lat==null)return;
+    const p=proj(lat,lon,b,W,H);
+    const dist=Math.hypot(p.x-tx,p.y-ty);
+    if(dist<28)hits.push({dist,type,idx});
+  }
+  if(CRS.pinA)chk(CRS.pinA.lat,CRS.pinA.lon,'pinA');
+  if(CRS.pinB)chk(CRS.pinB.lat,CRS.pinB.lon,'pinB');
+  if(CRS.finA&&CRS.finA!==CRS.pinA)chk(CRS.finA.lat,CRS.finA.lon,'finA');
+  if(CRS.finB&&CRS.finB!==CRS.pinB)chk(CRS.finB.lat,CRS.finB.lon,'finB');
+  CRS.wpts.forEach((w,i)=>chk(w.lat,w.lon,'wpt',i));
+  if(hits.length===0)return;
+  hits.sort((a,b)=>a.dist-b.dist);
+  const h=hits[0];
+  openEdit(h.type,h.idx);
+},{passive:true});
+
 // Bounds + projection
 function getBounds(){
   const pts=[];if(CRS.pinA)pts.push(CRS.pinA);if(CRS.pinB)pts.push(CRS.pinB);
@@ -1220,14 +1274,33 @@ function renderChart(){
     ctxM.beginPath();ctxM.moveTo(mk.x,mk.y);ctxM.lineTo(mk.x+Math.sin(pR)*len,mk.y-Math.cos(pR)*len);ctxM.stroke();
     ctxM.setLineDash([]);
   }
-  // Rhumb lines
-  if(CRS.wpts.length>0){
-    ctxM.strokeStyle='rgba(0,212,170,0.13)';ctxM.lineWidth=1.5;ctxM.setLineDash([3,6]);
-    ctxM.beginPath();
-    const st=CRS.pinA?pp(midLL(CRS.pinA,CRS.pinB).lat,midLL(CRS.pinA,CRS.pinB).lon):null;
-    if(st)ctxM.moveTo(st.x,st.y);
-    CRS.wpts.forEach((w,i)=>{const wp=pp(w.lat,w.lon);if(i===0&&!st)ctxM.moveTo(wp.x,wp.y);else ctxM.lineTo(wp.x,wp.y);});
-    ctxM.stroke();ctxM.setLineDash([]);
+  // ── FULL COURSE OVERVIEW LINE ──
+  // Draw: start midpoint → mark1 → mark2 → ... → finish
+  {
+    const coursePts=[];
+    if(CRS.pinA&&CRS.pinB)coursePts.push({lat:(CRS.pinA.lat+CRS.pinB.lat)/2,lon:(CRS.pinA.lon+CRS.pinB.lon)/2,type:'start'});
+    CRS.wpts.forEach((w,i)=>coursePts.push({lat:w.lat,lon:w.lon,type:'wpt',idx:i}));
+    const fa=CRS.finA??CRS.pinA,fb2=CRS.finB??CRS.pinB;
+    if(fa&&fb2)coursePts.push({lat:(fa.lat+fb2.lat)/2,lon:(fa.lon+fb2.lon)/2,type:'finish'});
+    if(coursePts.length>1){
+      // Thin ghost line — full course
+      ctxM.strokeStyle='rgba(0,212,170,0.18)';ctxM.lineWidth=1.5;ctxM.setLineDash([4,6]);
+      ctxM.beginPath();
+      coursePts.forEach((p,i)=>{const pp2=pp(p.lat,p.lon);i===0?ctxM.moveTo(pp2.x,pp2.y):ctxM.lineTo(pp2.x,pp2.y);});
+      ctxM.stroke();ctxM.setLineDash([]);
+      // Label each leg with distance
+      for(let i=0;i<coursePts.length-1;i++){
+        const a=coursePts[i],b2=coursePts[i+1];
+        const pa=pp(a.lat,a.lon),pb=pp(b2.lat,b2.lon);
+        const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+        const dist=haversine(a.lat,a.lon,b2.lat,b2.lon)/1852;
+        if(dist>0.05){
+          ctxM.fillStyle='rgba(0,212,170,0.45)';
+          ctxM.font='8px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';
+          ctxM.fillText(dist.toFixed(2)+'nm',mx,my);
+        }
+      }
+    }
   }
   // ── OPTIMAL PATH ──
   if(optPath.length>1){
@@ -1318,6 +1391,40 @@ function haversine(a,b,c,d){const R=6371000,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.P
 function brng(a,b,c,d){const dn=(d-b)*Math.PI/180,y=Math.sin(dn)*Math.cos(c*Math.PI/180),x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dn);return(Math.atan2(y,x)*180/Math.PI+360)%360}
 function midLL(a,b){return{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}}
 function ll2xy(ref,pt){const R=6371000,l0=ref.lat*Math.PI/180;return{x:(pt.lon-ref.lon)*Math.PI/180*R*Math.cos(l0),y:(pt.lat-ref.lat)*Math.PI/180*R}}
+
+// ── EDIT MARK ────────────────────────────────────────────
+let _editTarget=null; // {type:'pinA'|'pinB'|'finA'|'finB'|'wpt', idx?:number}
+function openEdit(type, idx){
+  _editTarget={type,idx};
+  const popup=G('editPopup'),rndRow=G('editRndRow');
+  let lat,lon,rnd=null,title='';
+  if(type==='pinA'){lat=CRS.pinA?.lat;lon=CRS.pinA?.lon;title='EDIT PIN A';}
+  else if(type==='pinB'){lat=CRS.pinB?.lat;lon=CRS.pinB?.lon;title='EDIT PIN B';}
+  else if(type==='finA'){lat=CRS.finA?.lat;lon=CRS.finA?.lon;title='EDIT FINISH A';}
+  else if(type==='finB'){lat=CRS.finB?.lat;lon=CRS.finB?.lon;title='EDIT FINISH B';}
+  else if(type==='wpt'){const w=CRS.wpts[idx];lat=w.lat;lon=w.lon;rnd=w.rounding;title='EDIT MARK '+w.label;}
+  G('editTitle').textContent=title;
+  G('editLat').value=lat?.toFixed(6)||'';
+  G('editLon').value=lon?.toFixed(6)||'';
+  rndRow.style.display=rnd!==null?'block':'none';
+  if(rnd!==null)G('editRnd').value=rnd;
+  popup.classList.add('open');
+}
+function closeEdit(){G('editPopup').classList.remove('open');_editTarget=null;}
+function gpsToEdit(){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS…':'Tap Sensors first');return;}G('editLat').value=NAV.lat.toFixed(6);G('editLon').value=NAV.lon.toFixed(6);}
+function saveEditMark(){
+  if(!_editTarget)return;
+  const lat=parseFloat(G('editLat').value),lon=parseFloat(G('editLon').value);
+  if(isNaN(lat)||isNaN(lon)){toast('Need lat/lon');return;}
+  const {type,idx}=_editTarget;
+  if(type==='pinA')CRS.pinA={lat,lon};
+  else if(type==='pinB')CRS.pinB={lat,lon};
+  else if(type==='finA')CRS.finA={lat,lon};
+  else if(type==='finB')CRS.finB={lat,lon};
+  else if(type==='wpt'){CRS.wpts[idx].lat=lat;CRS.wpts[idx].lon=lon;CRS.wpts[idx].rounding=G('editRnd').value;}
+  closeEdit();saveState();dirty=true;refreshOptPath();
+  toast('Mark updated');
+}
 
 // ── DOM HELPERS ───────────────────────────────────────────
 function G(id){return document.getElementById(id)}
