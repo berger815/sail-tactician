@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/14 23:36</title>
+<title>TACTICIAN v06/14 23:47</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 23:36</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/14 23:47</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -297,8 +297,8 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
     <button class="mtab" onclick="mTab('mCourse','finish')">Finish</button>
   </div>
   <div class="tp on" id="mCourse-line">
-    <div class="fg2"><div class="frow"><label>Pin A Lat</label><input type="number" id="cALat" step="0.0001" placeholder="33.8632"></div><div class="frow"><label>Pin A Lon</label><input type="number" id="cALon" step="0.0001" placeholder="-78.9821"></div></div>
-    <div class="fg2"><div class="frow"><label>Pin B Lat</label><input type="number" id="cBLat" step="0.0001" placeholder="33.8638"></div><div class="frow"><label>Pin B Lon</label><input type="number" id="cBLon" step="0.0001" placeholder="-78.9798"></div></div>
+    <div class="fg2"><div class="frow"><label>Pin A Lat</label><input type="number" id="cALat" step="0.0001" placeholder="33.8632" value="33.8422"></div><div class="frow"><label>Pin A Lon</label><input type="number" id="cALon" step="0.0001" placeholder="-78.9821" value="-78.6103"></div></div>
+    <div class="fg2"><div class="frow"><label>Pin B Lat</label><input type="number" id="cBLat" step="0.0001" placeholder="33.8638" value="33.8393"></div><div class="frow"><label>Pin B Lon</label><input type="number" id="cBLon" step="0.0001" placeholder="-78.9798" value="-78.6054"></div></div>
     <div class="frow"><label>Tack Duration (sec)</label><input type="number" id="cTackDur" value="20" min="5" max="60"></div>
     <div class="mbtns">
       <button class="mbtn sec" onclick="gpsToPin('A')">GPS&#8594;A</button>
@@ -333,7 +333,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <div class="modal-bg" id="mWind"><div class="modal">
   <div class="mhandle"></div><div class="mh3">Wind Source</div>
   <div class="wsrc-list" id="wsrcList"></div>
-  <div class="fg2"><div class="frow"><label>Direction (deg)</label><input type="number" id="manTWD" placeholder="215" min="0" max="360"></div><div class="frow"><label>Speed (kt)</label><input type="number" id="manTWS" placeholder="12" min="0" max="60"></div></div>
+  <div class="fg2"><div class="frow"><label>Direction (deg)</label><input type="number" id="manTWD" placeholder="215" min="0" max="360" value="215"></div><div class="frow"><label>Speed (kt)</label><input type="number" id="manTWS" placeholder="12" min="0" max="60" value="12"></div></div>
   <div class="mbtns">
     <button class="mbtn pri" onclick="fetchSelWind()">Fetch Wind</button>
     <button class="mbtn sec" onclick="setManualWind()">Use Manual</button>
@@ -525,7 +525,9 @@ function setWind(twd,tws,src){
 function setManualWind(){
   const twd=parseFloat(G('manTWD').value),tws=parseFloat(G('manTWS').value);
   if(isNaN(twd)||isNaN(tws)){toast('Enter direction and speed');return;}
+  windSrcIdx=4;  // lock to manual, stop auto-refresh
   setWind(twd,tws,'Manual');closeModal('mWind');
+  renderWsrcList();  // show Manual as selected
 }
 function windAge(){
   if(!WIND.fetchedAt)return'';
@@ -533,7 +535,7 @@ function windAge(){
   if(m<1)return'just now';if(m===1)return'1 min ago';return`${m} min ago`;
 }
 function isWindStale(){return WIND.fetchedAt&&(Date.now()-WIND.fetchedAt)>10*60*1000;}
-setInterval(()=>{if(WIND.fetchedAt&&WSRCS[windSrcIdx].id!=='manual')fetchSelWind();},5*60*1000);
+setInterval(()=>{if(WIND.fetchedAt&&WSRCS[windSrcIdx].id!=='manual'&&windSrcIdx!==4)fetchSelWind();},5*60*1000);
 
 // ── POLARS ────────────────────────────────────────────────
 const PRESETS={
@@ -863,15 +865,15 @@ function toggleFinCustom(){G('finCustom').style.display=G('finMode').value==='cu
 
 // ── DEMO ──────────────────────────────────────────────────
 function loadLR(){
-  G('dLat').value='33.8615';G('dLon').value='-78.9810';
-  G('dHdg').value='340';G('dSog').value='4.8';
+  // Little River Inlet sausage course — wind 215°
+  G('dLat').value='33.840754';G('dLon').value='-78.607820';
+  G('dHdg').value='257';G('dSog').value='4.8';
   G('dTwd').value='215';G('dTws').value='12';
-  CRS.pinA={lat:33.8632,lon:-78.9821};CRS.pinB={lat:33.8638,lon:-78.9798};
-  CRS.wpts=[{label:'1',lat:33.8720,lon:-78.9810,rounding:'port'},
-             {label:'2',lat:33.8705,lon:-78.9755,rounding:'stbd'},
-             {label:'3',lat:33.8650,lon:-78.9775,rounding:'port'}];
+  CRS.pinA={lat:33.8422,lon:-78.6103};
+  CRS.pinB={lat:33.8393,lon:-78.6054};
+  CRS.wpts=[{label:'1',lat:33.8271,lon:-78.6193,rounding:'port'}];
   CRS.finA=null;CRS.finB=null;CRS.activeMark=0;CRS.tackDur=20;
-  renderWptList();toast('Little River — tap Start Demo');
+  renderWptList();toast('Little River sausage loaded — tap Start Demo');
 }
 function startDemo(){
   if(demoInt)clearInterval(demoInt);
