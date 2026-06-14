@@ -738,10 +738,10 @@ function saveCourse(){
   if(!NAV.lat){const m=midLL(CRS.pinA,CRS.pinB);NAV.lat=m.lat-0.005;NAV.lon=m.lon;}
   closeModal('mCourse');toast('Course set');dirty=true;saveState();refreshOptPath();
 }
-function gpsToPin(w){if(!NAV.lat){toast('GPS not ready');return;}const id=w==='A'?['cALat','cALon']:['cBLat','cBLon'];G(id[0]).value=NAV.lat.toFixed(6);G(id[1]).value=NAV.lon.toFixed(6);toast(`GPS → Pin ${w}`);}
+function gpsToPin(w){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}const id=w==='A'?['cALat','cALon']:['cBLat','cBLon'];G(id[0]).value=NAV.lat.toFixed(6);G(id[1]).value=NAV.lon.toFixed(6);toast('GPS → Pin '+w);}
 function clearLine(){CRS.pinA=null;CRS.pinB=null;toast('Line cleared');dirty=true;}
 function addWpt(){const lbl=G('wLbl').value.trim()||`${CRS.wpts.length+1}`,lat=parseFloat(G('wLat').value),lon=parseFloat(G('wLon').value);if(isNaN(lat)||isNaN(lon)){toast('Need lat/lon');return;}CRS.wpts.push({label:lbl,lat,lon,rounding:'port'});if(CRS.activeMark<0)CRS.activeMark=0;['wLbl','wLat','wLon'].forEach(id=>G(id).value='');renderWptList();saveState();dirty=true;toast(`Mark ${lbl} added`);}
-function gpsToWpt(){if(!NAV.lat){toast('GPS not ready');return;}G('wLat').value=NAV.lat.toFixed(6);G('wLon').value=NAV.lon.toFixed(6);toast('GPS loaded');}
+function gpsToWpt(){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}G('wLat').value=NAV.lat.toFixed(6);G('wLon').value=NAV.lon.toFixed(6);toast('GPS loaded');}
 function clearWpts(){CRS.wpts=[];CRS.activeMark=-1;renderWptList();saveState();dirty=true;toast('Marks cleared');}
 function toggleRnd(i){const r=CRS.wpts[i].rounding;CRS.wpts[i].rounding=r==='port'?'stbd':r==='stbd'?'none':'port';renderWptList();saveState();}
 function deleteWpt(i){CRS.wpts.splice(i,1);if(CRS.activeMark>=CRS.wpts.length)CRS.activeMark=CRS.wpts.length-1;renderWptList();saveState();dirty=true;}
