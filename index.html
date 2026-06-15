@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 13:13</title>
+<title>TACTICIAN v06/15 13:36</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -162,6 +162,20 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .edit-box{background:var(--hull);border:1px solid var(--tealring);border-radius:10px;padding:18px 16px;width:100%;max-width:340px}
 .edit-box h4{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;margin-bottom:14px}
 .edit-btns{display:flex;gap:6px;margin-top:12px}
+.plan-map{width:100%;height:200px;border-radius:6px;overflow:hidden;position:relative;margin-bottom:10px;background:var(--deep);border:1px solid var(--tealring)}
+.plan-map canvas{position:absolute;inset:0;width:100%;height:100%}
+.plan-cond{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.pcond{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:6px 8px;display:flex;flex-direction:column;gap:3px}
+.pcond-lbl{font-family:var(--cond);font-size:9px;color:var(--muted);letter-spacing:0.08em}
+.pcond-row{display:flex;align-items:center;gap:4px}
+.pcond-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--teal);flex:1;text-align:center}
+.pcond-btn{font-family:var(--mono);font-size:12px;color:var(--muted);background:var(--hull);border:1px solid var(--tealring);border-radius:3px;padding:1px 6px;cursor:pointer;touch-action:manipulation}
+.psave-list{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+.psave-item{display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--deep);border:1px solid var(--tealring);border-radius:4px}
+.psave-lbl{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--teal);min-width:16px}
+.psave-desc{font-family:var(--mono);font-size:9px;color:var(--white);flex:1}
+.psave-time{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.psave-del{color:var(--muted);background:none;border:none;cursor:pointer;font-size:11px;padding:0 4px}
 .plan-scen{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
 .pscen{background:var(--deep);border:1px solid var(--tealring);border-radius:6px;padding:8px;position:relative}
 .pscen.best{border-color:var(--green);background:rgba(61,220,132,0.06)}
@@ -207,7 +221,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 13:13</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 13:36</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -392,11 +406,51 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
     </div>
   </div>
   <div class="tp" id="mCourse-plan">
-    <div id="planContent" style="min-height:120px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:20px">
-        Set course and wind then tap Plan tab to generate scenarios.
+    <!-- Plan conditions inputs -->
+    <div class="plan-cond">
+      <div class="pcond">
+        <div class="pcond-lbl">TWD</div>
+        <div class="pcond-row">
+          <button class="pcond-btn" onclick="adjPlan('twd',-5)">&#9664;</button>
+          <div class="pcond-val" id="planTWD">215&#176;</div>
+          <button class="pcond-btn" onclick="adjPlan('twd',5)">&#9654;</button>
+        </div>
+      </div>
+      <div class="pcond">
+        <div class="pcond-lbl">TWS</div>
+        <div class="pcond-row">
+          <button class="pcond-btn" onclick="adjPlan('tws',-1)">&#9664;</button>
+          <div class="pcond-val" id="planTWS">12kt</div>
+          <button class="pcond-btn" onclick="adjPlan('tws',1)">&#9654;</button>
+        </div>
+      </div>
+      <div class="pcond">
+        <div class="pcond-lbl">TACK PEN</div>
+        <div class="pcond-row">
+          <button class="pcond-btn" onclick="adjPlan('pen',-5)">&#9664;</button>
+          <div class="pcond-val" id="planPEN">50s</div>
+          <button class="pcond-btn" onclick="adjPlan('pen',5)">&#9654;</button>
+        </div>
       </div>
     </div>
+    <button class="mbtn sec" style="width:100%;margin-bottom:8px;padding:6px" onclick="syncPlanWind()">&#8593; USE LIVE WIND</button>
+    <!-- Map -->
+    <div class="plan-map" id="planMapWrap">
+      <canvas id="cvPlanTiles"></canvas>
+      <canvas id="cvPlanMain"></canvas>
+    </div>
+    <!-- Scenario cards + detail -->
+    <div id="planContent" style="min-height:60px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:10px">
+        Set course then tap Plan tab.
+      </div>
+    </div>
+    <!-- Saved scenarios -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;margin-bottom:4px">
+      <span style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">SAVED SCENARIOS</span>
+      <button class="mbtn sec" style="padding:3px 8px;font-size:8px;flex:none" onclick="savePlanScenario()">SAVE CURRENT</button>
+    </div>
+    <div class="psave-list" id="planSaveList"></div>
   </div>
   <div class="tp" id="mCourse-finish">
     <div class="frow"><label>Finish Gate</label><select id="finMode" onchange="toggleFinCustom()"><option value="start">Reuse start line</option><option value="custom">Custom gate</option></select></div>
@@ -860,7 +914,190 @@ function legBearing(){
 }
 
 // ── TACTICS ──────────────────────────────────────────────
-// Global utility — used by tactics() and planLeg()
+// ── PLAN STATE ───────────────────────────────────────────
+const PLAN_STATE={
+  twd:215, tws:12, pen:50,
+  activeScen:0,  // 0=port, 1=stbd, 2=split
+  saved:[],      // [{label,twd,tws,pen,rec,time}]
+  scenarios:[]   // last computed
+};
+
+function adjPlan(field,delta){
+  if(field==='twd')PLAN_STATE.twd=((PLAN_STATE.twd+delta)+360)%360;
+  else if(field==='tws')PLAN_STATE.tws=Math.max(1,Math.min(40,PLAN_STATE.tws+delta));
+  else if(field==='pen')PLAN_STATE.pen=Math.max(0,Math.min(120,PLAN_STATE.pen+delta));
+  G('planTWD').textContent=Math.round(PLAN_STATE.twd)+'°';
+  G('planTWS').textContent=PLAN_STATE.tws+'kt';
+  G('planPEN').textContent=PLAN_STATE.pen+'s';
+  runPlan();
+}
+
+function syncPlanWind(){
+  if(WIND.twd!==null)PLAN_STATE.twd=Math.round(WIND.twd);
+  if(WIND.tws!==null)PLAN_STATE.tws=Math.round(WIND.tws);
+  PLAN_STATE.pen=(CRS.tackDur||20)+(CRS.rebuildDur||30);
+  G('planTWD').textContent=Math.round(PLAN_STATE.twd)+'°';
+  G('planTWS').textContent=PLAN_STATE.tws+'kt';
+  G('planPEN').textContent=PLAN_STATE.pen+'s';
+  runPlan();
+  toast('Plan synced to live wind');
+}
+
+function selectPlanScen(idx){
+  PLAN_STATE.activeScen=idx;
+  document.querySelectorAll('.pscen').forEach((el,i)=>{
+    el.style.opacity=i===idx?'1':'0.5';
+    el.style.borderColor=i===idx?'var(--teal)':'var(--tealring)';
+  });
+  drawPlanMap(PLAN_STATE.scenarios);
+}
+
+function savePlanScenario(){
+  const s=PLAN_STATE.scenarios;if(!s.length)return;
+  const best=s.reduce((a,b)=>a.totalTime<b.totalTime?a:b);
+  const names=['PORT','STBD','SPLIT'];
+  const label=String.fromCharCode(65+PLAN_STATE.saved.length);
+  PLAN_STATE.saved.push({
+    label,
+    desc:Math.round(PLAN_STATE.twd)+'° / '+PLAN_STATE.tws+'kt',
+    rec:names[s.indexOf(best)],
+    time:fmtT(best.totalTime),
+    twd:PLAN_STATE.twd,tws:PLAN_STATE.tws,pen:PLAN_STATE.pen
+  });
+  if(PLAN_STATE.saved.length>5)PLAN_STATE.saved.shift();
+  renderPlanSaved();
+  toast('Scenario '+label+' saved');
+}
+
+function deleteSaved(i){
+  PLAN_STATE.saved.splice(i,1);
+  // Relabel
+  PLAN_STATE.saved.forEach((s,j)=>s.label=String.fromCharCode(65+j));
+  renderPlanSaved();
+}
+
+function renderPlanSaved(){
+  const el=G('planSaveList');if(!el)return;
+  if(!PLAN_STATE.saved.length){el.innerHTML='<div style="font-family:var(--mono);font-size:8px;color:var(--muted);padding:4px">No saved scenarios yet</div>';return;}
+  el.innerHTML='';
+  PLAN_STATE.saved.forEach((s,i)=>{
+    const d=document.createElement('div');d.className='psave-item';
+    d.innerHTML='<span class="psave-lbl">'+s.label+'</span><span class="psave-desc">'+s.desc+'</span><span class="psave-time" style="color:'+(s.rec==='PORT'?'var(--red)':'var(--green)')+'">'+s.rec+' '+s.time+'</span><button class="psave-del" onclick="deleteSaved('+i+')">✕</button>';
+    el.appendChild(d);
+  });
+}
+
+// ── PLAN MAP ──────────────────────────────────────────────
+let planTileCache={};
+function drawPlanMap(scenarios){
+  const wrap=G('planMapWrap');if(!wrap)return;
+  const W=wrap.clientWidth||300,H=200;
+  const cvT=G('cvPlanTiles'),cvM=G('cvPlanMain');
+  if(!cvT||!cvM)return;
+  [cvT,cvM].forEach(c=>{c.width=W*devicePixelRatio;c.height=H*devicePixelRatio;c.style.width=W+'px';c.style.height=H+'px';});
+
+  if(!CRS.pinA||!CRS.wpts.length)return;
+
+  // Build bounding box
+  const pts=[CRS.pinA,CRS.pinB,...CRS.wpts];
+  if(CRS.finA)pts.push(CRS.finA,CRS.finB);
+  // Include tack points from scenarios
+  if(scenarios){scenarios.forEach(sc=>{if(sc&&sc.legs)sc.legs.forEach(l=>{if(l.tPt)pts.push(l.tPt);});});}
+  let s2=Infinity,n2=-Infinity,w2=Infinity,e2=-Infinity;
+  pts.forEach(p=>{if(!p)return;s2=Math.min(s2,p.lat);n2=Math.max(n2,p.lat);w2=Math.min(w2,p.lon);e2=Math.max(e2,p.lon);});
+  const pLa=Math.max((n2-s2)*0.4,0.004),pLo=Math.max((e2-w2)*0.4,0.005);
+  const b={s:s2-pLa,n:n2+pLa,w:w2-pLo,e:e2+pLo};
+
+  // Draw OSM tiles
+  const ctxT=cvT.getContext('2d');ctxT.save();ctxT.scale(devicePixelRatio,devicePixelRatio);ctxT.clearRect(0,0,W,H);
+  const z=Math.min(15,Math.max(10,Math.round(14+Math.log2(1))));
+  const n2t=(lat,lon)=>{const nz=2**z,tx=Math.floor((lon+180)/360*nz),lr=lat*Math.PI/180,ty=Math.floor((1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*nz);return{x:tx,y:ty,z};};
+  const t2l=(tx,ty)=>{const nz=2**z,lon=tx/nz*360-180,lr=Math.atan(Math.sinh(Math.PI*(1-2*ty/nz)));return{lat:lr*180/Math.PI,lon};};
+  const ctr=n2t((b.n+b.s)/2,(b.e+b.w)/2);
+  const dtX=360/2**z,tL=t2l(ctr.x,ctr.y).lat,bL2=t2l(ctr.x,ctr.y+1).lat;
+  const dtY=Math.abs(tL-bL2),pxX=W/(b.e-b.w),pxY=H/(b.n-b.s);
+  const twX=dtX*pxX,twY=dtY*pxY;
+  for(let tx=ctr.x-3;tx<=ctr.x+3;tx++){for(let ty=ctr.y-3;ty<=ctr.y+3;ty++){
+    const o=t2l(tx,ty);const sx=(o.lon-b.w)/(b.e-b.w)*W;const sy=(1-(o.lat-b.s)/(b.n-b.s))*H;
+    const k=z+'/'+tx+'/'+ty;
+    if(!planTileCache[k]){const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{planTileCache[k].ok=true;drawPlanMap(scenarios);};img.src='https://tile.openstreetmap.org/'+z+'/'+tx+'/'+ty+'.png';planTileCache[k]={img,ok:false};}
+    if(planTileCache[k].ok){ctxT.globalAlpha=0.45;ctxT.drawImage(planTileCache[k].img,sx,sy,twX+1,twY+1);ctxT.globalAlpha=1;}
+  }}
+  ctxT.restore();
+
+  // Draw overlay
+  const ctxM=cvM.getContext('2d');ctxM.save();ctxM.scale(devicePixelRatio,devicePixelRatio);ctxM.clearRect(0,0,W,H);
+  ctxM.fillStyle='rgba(3,8,15,0.3)';ctxM.fillRect(0,0,W,H);
+  const pp2=(lat,lon)=>({x:(lon-b.w)/(b.e-b.w)*W,y:(1-(lat-b.s)/(b.n-b.s))*H});
+
+  // Wind arrows at top
+  if(PLAN_STATE.twd!=null){
+    const wr=(PLAN_STATE.twd-90)*Math.PI/180;
+    ctxM.strokeStyle='rgba(245,166,35,0.25)';ctxM.lineWidth=1;
+    for(let i=0;i<5;i++){const ax=W*0.1+i*(W*0.2),ay=22;ctxM.beginPath();ctxM.moveTo(ax,ay);ctxM.lineTo(ax+Math.cos(wr)*16,ay+Math.sin(wr)*16);ctxM.stroke();}
+    ctxM.fillStyle='rgba(245,166,35,0.5)';ctxM.font='8px var(--mono)';ctxM.textAlign='left';ctxM.textBaseline='top';ctxM.fillText('W '+Math.round(PLAN_STATE.twd)+'° / '+PLAN_STATE.tws+'kt',4,4);
+  }
+
+  // Scenario paths
+  const scColors=['#3ddc84','#f5a623','rgba(200,200,200,0.7)'];
+  const scNames=['PORT','STBD','SPLIT'];
+  const scDash=[[8,4],[4,4],[2,4]];
+  if(scenarios){
+    scenarios.forEach((sc,si)=>{
+      if(!sc||!sc.legs)return;
+      const isActive=si===PLAN_STATE.activeScen;
+      ctxM.globalAlpha=isActive?1:0.35;
+      ctxM.strokeStyle=scColors[si];ctxM.lineWidth=isActive?3:1.5;
+      ctxM.setLineDash(scDash[si]);
+      // Walk leg paths
+      const mid=midLL(CRS.pinA,CRS.pinB);
+      let curPt={lat:mid.lat,lon:mid.lon};
+      ctxM.beginPath();
+      const c0=pp2(curPt.lat,curPt.lon);ctxM.moveTo(c0.x,c0.y);
+      sc.legs.forEach((l,li)=>{
+        // If leg has tack point, draw via it
+        if(l.tPt){
+          const tp=pp2(l.tPt.lat,l.tPt.lon);ctxM.lineTo(tp.x,tp.y);
+          // Mark T or G
+          if(isActive){
+            ctxM.stroke();ctxM.beginPath();
+            ctxM.fillStyle=scColors[si];
+            ctxM.arc(tp.x,tp.y,6,0,2*Math.PI);ctxM.fill();
+            ctxM.fillStyle='#000';ctxM.font='bold 7px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';
+            ctxM.fillText(l.leg==='upwind'?'T':'G',tp.x,tp.y);
+            ctxM.strokeStyle=scColors[si];ctxM.lineWidth=isActive?3:1.5;ctxM.setLineDash(scDash[si]);
+            ctxM.beginPath();ctxM.moveTo(tp.x,tp.y);
+          }
+        }
+        // End point
+        const wpt=CRS.wpts[li];const endPt=wpt?{lat:wpt.lat,lon:wpt.lon}:{lat:mid.lat,lon:mid.lon};
+        const ep=pp2(endPt.lat,endPt.lon);ctxM.lineTo(ep.x,ep.y);
+        curPt=endPt;
+      });
+      ctxM.stroke();ctxM.setLineDash([]);ctxM.globalAlpha=1;
+    });
+  }
+
+  // Start line
+  if(CRS.pinA&&CRS.pinB){
+    const a=pp2(CRS.pinA.lat,CRS.pinA.lon),bpt=pp2(CRS.pinB.lat,CRS.pinB.lon);
+    ctxM.strokeStyle='rgba(245,166,35,0.8)';ctxM.lineWidth=2.5;ctxM.beginPath();ctxM.moveTo(a.x,a.y);ctxM.lineTo(bpt.x,bpt.y);ctxM.stroke();
+    [[a,'A'],[bpt,'B']].forEach(([p,lbl])=>{ctxM.fillStyle='#f5a623';ctxM.beginPath();ctxM.arc(p.x,p.y,7,0,2*Math.PI);ctxM.fill();ctxM.fillStyle='#000';ctxM.font='bold 7px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(lbl,p.x,p.y);});
+  }
+  // Marks
+  CRS.wpts.forEach(w=>{const p=pp2(w.lat,w.lon);ctxM.fillStyle='#00d4aa';ctxM.beginPath();ctxM.arc(p.x,p.y,7,0,2*Math.PI);ctxM.fill();ctxM.fillStyle='#000';ctxM.font='bold 7px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(w.label,p.x,p.y);});
+
+  // Legend
+  const names2=['PORT','STBD','SPLIT'];
+  scColors.forEach((col,i)=>{
+    ctxM.strokeStyle=col;ctxM.lineWidth=2;ctxM.setLineDash(scDash[i]);
+    ctxM.beginPath();ctxM.moveTo(W-90,H-22+i*9);ctxM.lineTo(W-74,H-22+i*9);ctxM.stroke();
+    ctxM.setLineDash([]);ctxM.fillStyle=col;ctxM.font='7px var(--mono)';ctxM.textAlign='left';ctxM.textBaseline='middle';ctxM.fillText(names2[i],W-70,H-22+i*9);
+  });
+  ctxM.restore();
+}
+
+// ── RACE PLANNING ENGINE ─────────────────────────────────
 function lateralToMark(hdg,bsp,markBrng){
   const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
   const px=Math.cos(markBrng*Math.PI/180),py=-Math.sin(markBrng*Math.PI/180);
@@ -1180,30 +1417,36 @@ function planLeg(fromLat,fromLon,toLat,toLon,wind,tws,firstTack){
     const twa=angDiff(wind,mb);
     const bsp=pBSP(Math.abs(twa),tws);
     const time_s=dist/(bsp*0.514444);
-    return{time_s,tacks:0,gybes:0,cts1:Math.round(mb),cts2:null,leg,vmg:bsp,dist_nm};
+    return{time_s,tacks:0,gybes:0,cts1:Math.round(mb),cts2:null,leg,vmg:bsp,dist_nm,tPt:null};
   }
   if(leg==='upwind'){
     const sH=normA(wind-opt),pH=normA(wind+opt);
     const bsp=pBSP(opt,tws);
     const vmg=bsp*Math.cos(opt*Math.PI/180);
-    // Two-tack solution: leg time = dist/vmg + tack penalty
     const h1=firstTack==='port'?pH:sH;
     const h2=firstTack==='port'?sH:pH;
     const time_s=dist/(vmg*0.514444)+td;
-    return{time_s,tacks:1,gybes:0,cts1:Math.round(h1),cts2:Math.round(h2),leg,vmg,dist_nm};
+    // Compute tack point for map — project 40% of distance on first heading
+    const R=6371000,d1=dist*0.45,la1r=fromLat*Math.PI/180,hdgr=h1*Math.PI/180;
+    const tpLat=Math.asin(Math.sin(la1r)*Math.cos(d1/R)+Math.cos(la1r)*Math.sin(d1/R)*Math.cos(hdgr))*180/Math.PI;
+    const tpLon=fromLon+Math.atan2(Math.sin(hdgr)*Math.sin(d1/R)*Math.cos(la1r),Math.cos(d1/R)-Math.sin(la1r)*Math.sin(tpLat*Math.PI/180))*180/Math.PI;
+    return{time_s,tacks:1,gybes:0,cts1:Math.round(h1),cts2:Math.round(h2),leg,vmg,dist_nm,tPt:{lat:tpLat,lon:tpLon}};
   }
   if(leg==='downwind'){
     const sG=normA(wind+optD),pG=normA(wind-optD);
     const bsp=pBSP(optD,tws);
     const vmg=bsp*Math.cos((180-optD)*Math.PI/180);
-    // Gybe selection based on lateral
     const lat_s=lateralToMark(sG,bsp,mb);
     const lat_p=lateralToMark(pG,bsp,mb);
     const g1=lat_s>=lat_p?'stbd':'port';
     const h1=g1==='stbd'?sG:pG;
     const h2=g1==='stbd'?pG:sG;
     const time_s=dist/(vmg*0.514444)+td;
-    return{time_s,tacks:0,gybes:1,cts1:Math.round(h1),cts2:Math.round(h2),leg,vmg,dist_nm};
+    // Compute gybe point for map
+    const R=6371000,d1=dist*0.45,la1r=fromLat*Math.PI/180,hdgr=h1*Math.PI/180;
+    const tpLat=Math.asin(Math.sin(la1r)*Math.cos(d1/R)+Math.cos(la1r)*Math.sin(d1/R)*Math.cos(hdgr))*180/Math.PI;
+    const tpLon=fromLon+Math.atan2(Math.sin(hdgr)*Math.sin(d1/R)*Math.cos(la1r),Math.cos(d1/R)-Math.sin(la1r)*Math.sin(tpLat*Math.PI/180))*180/Math.PI;
+    return{time_s,tacks:0,gybes:1,cts1:Math.round(h1),cts2:Math.round(h2),leg,vmg,dist_nm,tPt:{lat:tpLat,lon:tpLon}};
   }
   return{time_s:999,tacks:0,gybes:0,cts1:Math.round(mb),cts2:null,leg:'unknown',vmg:0,dist_nm};
 }
@@ -1260,20 +1503,28 @@ function runPlan(){
     el.innerHTML='<div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:20px">Missing: '+missing.join(', ')+'<br><br>pinA:'+JSON.stringify(CRS.pinA)+'<br>wpts:'+CRS.wpts.length+'<br>twd:'+WIND.twd+'</div>';
     return;
   }
-  const tws=WIND.tws||12;
+  // Sync plan controls display
+  G('planTWD').textContent=Math.round(PLAN_STATE.twd)+'°';
+  G('planTWS').textContent=PLAN_STATE.tws+'kt';
+  G('planPEN').textContent=PLAN_STATE.pen+'s';
+  const tws=PLAN_STATE.tws;
+  // Override tack duration with plan penalty
+  const _origTackDur=CRS.tackDur;
+  CRS.tackDur=PLAN_STATE.pen;
   try{
   const scenarios=[
-    planCourse('port',WIND.twd,tws),
-    planCourse('stbd',WIND.twd,tws),
-    planSplit(WIND.twd,tws)
+    planCourse('port',PLAN_STATE.twd,tws),
+    planCourse('stbd',PLAN_STATE.twd,tws),
+    planSplit(PLAN_STATE.twd,tws)
   ].filter(Boolean);
+  PLAN_STATE.scenarios=scenarios;
   const names=['PORT FIRST','STBD FIRST','SPLIT'];
   const bestTime=Math.min(...scenarios.map(s=>s.totalTime));
 
   // Wind shift sensitivity ±10°, ±20°
   const shifts=[-20,-10,0,10,20];
   const shiftRows=shifts.map(d=>{
-    const w=normA(WIND.twd+d);
+    const w=normA(PLAN_STATE.twd+d);
     const sp=planCourse('port',w,tws);
     const ss=planCourse('stbd',w,tws);
     if(!sp||!ss)return null;
@@ -1282,7 +1533,11 @@ function runPlan(){
   }).filter(Boolean);
 
   // Favored end — safe without GPS
+  // Use plan wind for fav end calculation
+  const _savedTWD=WIND.twd;
+  WIND.twd=PLAN_STATE.twd;
   let sm=null;try{sm=startMetrics();}catch(e){}
+  WIND.twd=_savedTWD;
 
   // Build HTML
   let html='';
@@ -1340,7 +1595,20 @@ function runPlan(){
   html+='</div>';
 
   el.innerHTML=html;
+  CRS.tackDur=_origTackDur;  // restore
+  // Draw map
+  setTimeout(()=>{
+    drawPlanMap(scenarios);
+    renderPlanSaved();
+    // Wire scenario card taps
+    document.querySelectorAll('.pscen').forEach((el2,i)=>{
+      el2.style.cursor='pointer';
+      el2.onclick=()=>selectPlanScen(i);
+    });
+    selectPlanScen(0);
+  },50);
   }catch(err){
+    CRS.tackDur=_origTackDur;
     el.innerHTML='<div style="font-family:var(--mono);font-size:9px;color:var(--red);padding:10px">Plan error: '+err.message+'</div>';
   }
 }
