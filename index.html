@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 00:51</title>
+<title>TACTICIAN v06/15 00:55</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:51</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:55</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -845,14 +845,7 @@ function computeOptPath(fLat,fLon,toLat,toLon){
       {lat:toLat,lon:toLon,type:'mark'}
     ]});
   });
-  // Always include straight-line option — gybe/tack only wins if actually faster
-  const dStraight=haversine(fLat,fLon,toLat,toLon);
-  const vStraight=pBSP(Math.abs(angDiff(WIND.twd,mb)),tws);
-  const tStraight=dStraight/(vStraight*0.514444);
-  paths.push({time:tStraight,path:[
-    {lat:fLat,lon:fLon,type:'start'},
-    {lat:toLat,lon:toLon,type:'mark'}
-  ]});
+  if(!paths.length)return[{lat:fLat,lon:fLon,type:'start'},{lat:toLat,lon:toLon,type:'mark'}];
   paths.sort((a,b)=>a.time-b.time);
   return paths[0].path;
 }
