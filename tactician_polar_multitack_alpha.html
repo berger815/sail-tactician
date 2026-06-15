@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>TACTICIAN v06/15 polar-multitack-alpha</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
+:root{
+  --ink:#03080f;--deep:#050d18;--hull:#081828;--plate:#0b1e35;
+  --glass:rgba(3,8,15,0.93);--teal:#00d4aa;--tealfade:rgba(0,212,170,0.08);
+  --tealring:rgba(0,212,170,0.18);--amber:#f5a623;--red:#e84040;
+  --green:#3ddc84;--blue:#4a9eff;--white:#cce0f0;--muted:#3a5570;
+  --mono:"Space Mono",monospace;--cond:"Barlow Condensed",sans-serif;
+  --sb:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none}
+html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:var(--white);font-family:var(--cond)}
+.app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+.hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:4px 12px;background:var(--ink);border-bottom:1px solid var(--tealring);gap:6px;min-height:36px}
+.logo{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.3em;color:var(--teal);flex-shrink:0}
+.pills{display:flex;gap:3px}
+.pill{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:20px;border:1px solid var(--muted);color:var(--muted);display:flex;align-items:center;gap:3px}
+.pill.ok{border-color:var(--green);color:var(--green)}.pill.warn{border-color:var(--amber);color:var(--amber)}
+.pdot{width:4px;height:4px;border-radius:50%;background:currentColor}
+.pill.ok .pdot{animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.12}}
+.mode-tog{display:flex;border:1px solid var(--tealring);border-radius:4px;overflow:hidden;flex-shrink:0}
+.mtog{font-family:var(--mono);font-size:9px;padding:4px 10px;letter-spacing:0.08em;background:transparent;border:none;color:var(--muted);cursor:pointer;touch-action:manipulation;text-transform:uppercase}
+.mtog.on{background:var(--teal);color:var(--ink);font-weight:700}
+.gun-bar{flex-shrink:0;display:none;align-items:center;justify-content:space-between;padding:0 12px;height:52px;background:var(--hull);border-bottom:1px solid var(--tealring);transition:background 0.3s}
+.gun-bar.vis{display:flex}.gun-bar.prep{background:rgba(245,166,35,0.1);border-bottom-color:var(--amber)}
+.gun-bar.final{background:rgba(232,64,64,0.14);border-bottom-color:var(--red)}.gun-bar.go{background:rgba(61,220,132,0.12);border-bottom-color:var(--green)}
+.gun-phase{font-family:var(--cond);font-size:13px;font-weight:700;letter-spacing:0.1em;color:var(--muted);min-width:64px}
+.gun-time{font-family:var(--mono);font-size:34px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums;transition:color 0.3s}
+.gun-bar.prep .gun-time{color:var(--amber)}.gun-bar.final .gun-time{color:var(--red);animation:gpulse 0.5s infinite alternate}.gun-bar.go .gun-time{color:var(--green);font-size:22px}
+@keyframes gpulse{from{opacity:1}to{opacity:0.3}}
+.gun-btns{display:flex;gap:5px}
+.gun-btn{font-family:var(--mono);font-size:8px;padding:4px 9px;border-radius:3px;border:1px solid var(--tealring);color:var(--teal);background:transparent;cursor:pointer;touch-action:manipulation}
+.mode-start{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
+.mode-start.gone,.mode-race.gone{display:none}
+.line-chart{flex-shrink:0;position:relative;background:var(--deep);border-bottom:1px solid var(--tealring);height:130px}
+#cvLC{display:block;width:100%;height:100%}
+.lc-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:9px;color:rgba(0,212,170,0.4);letter-spacing:0.1em;pointer-events:none;text-align:center;line-height:1.6}
+.time-strip{flex-shrink:0;display:grid;grid-template-columns:1fr 1fr 1fr;background:var(--ink);border-bottom:1px solid var(--tealring)}
+.ts{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 6px;border-right:1px solid var(--tealring);gap:2px}
+.ts:last-child{border-right:none}
+.tsv{font-family:var(--mono);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:var(--white)}
+.tsv.hi{color:var(--teal)}.tsv.ok{color:var(--green)}.tsv.warn{color:var(--amber)}.tsv.crit{color:var(--red)}
+.tsl{font-family:var(--cond);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.tss{font-family:var(--cond);font-size:10px;color:var(--muted);text-align:center}
+.wind-row{flex-shrink:0;display:grid;grid-template-columns:84px 1fr 70px;gap:10px;align-items:center;background:var(--hull);border-bottom:1px solid var(--tealring);padding:6px 12px}
+.wr-main{display:flex;flex-direction:column;align-items:center;gap:1px}
+.wr-dir{font-family:var(--mono);font-size:28px;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums;line-height:1}
+.wr-spd{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--amber)}
+.wr-lbl{font-family:var(--cond);font-size:9px;color:var(--muted);letter-spacing:0.08em}
+.wr-age{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:1px}.wr-age.stale{color:var(--red)}
+.wr-graph{height:44px}
+#cvShift{display:block;width:100%;height:100%}
+.wr-trend{display:flex;flex-direction:column;align-items:center;gap:3px}
+.wtv{font-family:var(--mono);font-size:15px;font-weight:700;line-height:1}
+.wtv.lift{color:var(--green)}.wtv.hdr{color:var(--red)}.wtv.steady{color:var(--muted)}
+.wtl{font-family:var(--cond);font-size:9px;color:var(--muted);letter-spacing:0.06em}
+.wtn{font-family:var(--mono);font-size:8px;color:var(--teal);text-align:center;line-height:1.3;margin-top:2px}
+.cts-pair{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:0}
+.cts-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;gap:4px;border-right:1px solid var(--tealring)}
+.cts-cell:last-child{border-right:none}
+.cts-sub{font-family:var(--cond);font-size:11px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.cts-hdg{font-family:var(--mono);font-size:52px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums;line-height:1;letter-spacing:0.01em}
+.cts-tack{font-family:var(--mono);font-size:12px;font-weight:700;padding:3px 12px;border-radius:20px;border:1px solid;letter-spacing:0.06em}
+.cts-tack.stbd{border-color:rgba(61,220,132,0.5);color:var(--green);background:rgba(61,220,132,0.07)}
+.cts-tack.port{border-color:rgba(232,64,64,0.5);color:var(--red);background:rgba(232,64,64,0.07)}
+.cts-tack.none{border-color:var(--tealring);color:var(--muted);background:transparent}
+.cts-spd{font-family:var(--cond);font-size:12px;color:var(--muted)}
+.mode-race{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
+.hero-cts{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:10px 12px 8px;background:var(--ink);border-bottom:1px solid var(--tealring);gap:4px}
+.hero-num{font-family:var(--mono);font-size:72px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;letter-spacing:0.01em;transition:color 0.3s}
+.hero-num.stbd{color:var(--green)}.hero-num.port{color:var(--red)}.hero-num.reach{color:var(--blue)}.hero-num.none{color:var(--muted)}
+.hero-sub{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:0.05em;color:var(--muted);text-align:center;line-height:1.4}
+.hero-sub.stbd{color:var(--green)}.hero-sub.port{color:var(--red)}.hero-sub.reach{color:var(--blue)}
+.race-row{flex-shrink:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--hull);border-bottom:1px solid var(--tealring)}
+.rr{padding:5px 4px 4px;border-right:1px solid rgba(0,212,170,0.07);display:flex;flex-direction:column;align-items:center;gap:1px}
+.rr:last-child{border-right:none}
+.rv{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1;color:var(--white);font-variant-numeric:tabular-nums}
+.rv.hi{color:var(--teal)}.rv.ok{color:var(--green)}.rv.warn{color:var(--amber)}.rv.crit{color:var(--red)}
+.rl{font-family:var(--cond);font-size:9px;letter-spacing:0.1em;color:var(--muted);text-transform:uppercase}
+.chart-wrap{flex:1;position:relative;overflow:hidden;background:var(--deep);min-height:0}
+#cvTiles,#cvMain{position:absolute;inset:0;touch-action:none}
+#cvTiles{z-index:1}#cvMain{z-index:2;background:transparent}
+.map-btn{position:absolute;top:7px;left:7px;z-index:10;background:var(--glass);border:1px solid var(--tealring);border-radius:4px;padding:3px 8px;font-family:var(--mono);font-size:8px;color:var(--muted);cursor:pointer;touch-action:manipulation}
+.map-btn.on{color:var(--teal);border-color:rgba(0,212,170,0.4)}
+.wind-badge{position:absolute;top:7px;right:7px;z-index:10;background:var(--glass);border:1px solid var(--tealring);border-radius:6px;padding:5px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none}
+.wb-row{font-family:var(--mono);font-size:11px;color:var(--amber);font-weight:700;display:flex;gap:7px}
+.wb-trend{font-family:var(--mono);font-size:8px;color:var(--muted)}.wb-trend.lift{color:var(--green)}.wb-trend.hdr{color:var(--red)}
+.wb-age{font-family:var(--mono);font-size:8px;color:var(--muted)}.wb-age.stale{color:var(--red)}
+.leg-chip{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);z-index:10;background:var(--glass);border:1px solid var(--tealring);border-radius:20px;padding:4px 14px;font-family:var(--mono);font-size:9px;color:var(--teal);letter-spacing:0.08em;pointer-events:none;white-space:nowrap;display:none}
+.xte-chip{position:absolute;bottom:7px;right:7px;z-index:10;background:var(--glass);border:1px solid var(--tealring);border-radius:6px;padding:4px 8px;pointer-events:none;text-align:right;display:none}
+.xte-lbl{font-family:var(--cond);font-size:9px;color:var(--muted)}
+.xte-val{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--white)}.xte-val.warn{color:var(--amber)}.xte-val.crit{color:var(--red)}
+.mark-adv{flex-shrink:0;display:none;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(61,220,132,0.1);border-top:2px solid var(--green)}
+.mark-adv.vis{display:flex}
+.ma-info{display:flex;flex-direction:column;gap:2px}
+.ma-dist{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums}
+.ma-lbl{font-family:var(--mono);font-size:9px;color:var(--green);letter-spacing:0.1em}
+.ma-btn{font-family:var(--mono);font-size:11px;font-weight:700;padding:10px 18px;border-radius:4px;border:2px solid var(--green);color:var(--green);background:transparent;cursor:pointer;touch-action:manipulation}
+.toolbar{flex-shrink:0;display:flex;background:var(--ink);border-top:1px solid var(--tealring);padding-bottom:var(--sb)}
+.tbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 4px;gap:2px;border-right:1px solid rgba(0,212,170,0.07);cursor:pointer;touch-action:manipulation;background:transparent;border-top:none;border-bottom:none;border-left:none;color:var(--muted);transition:color 0.15s,background 0.15s}
+.tbtn:last-child{border-right:none}.tbtn.on,.tbtn:active{background:var(--tealfade);color:var(--teal)}
+.tbtn svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tbtn-lbl{font-family:var(--cond);font-size:9px;letter-spacing:0.07em;text-transform:uppercase}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.84);z-index:200;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--hull);border:1px solid var(--tealring);border-radius:14px 14px 0 0;padding:16px 14px 30px;width:100%;max-width:500px;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.mhandle{width:32px;height:3px;border-radius:2px;background:var(--muted);margin:0 auto 14px}
+.mh3{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;margin-bottom:12px}
+.mtabs{display:flex;margin-bottom:12px;border-bottom:1px solid var(--tealring)}
+.mtab{font-family:var(--mono);font-size:9px;padding:5px 11px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;text-transform:uppercase}
+.mtab.on{color:var(--teal);border-bottom-color:var(--teal)}
+.tp{display:none}.tp.on{display:block}
+.frow{display:flex;flex-direction:column;gap:3px;margin-bottom:9px}
+.frow label{font-family:var(--mono);font-size:8px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
+.frow input,.frow select{background:var(--deep);border:1px solid var(--tealring);border-radius:4px;color:var(--white);padding:10px;font-family:var(--mono);font-size:13px;width:100%;-webkit-appearance:none}
+.frow input:focus,.frow select:focus{outline:none;border-color:var(--teal)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.mbtns{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+.mbtn{flex:1;font-family:var(--mono);font-size:9px;letter-spacing:0.07em;padding:11px 6px;border-radius:4px;border:1px solid;cursor:pointer;text-transform:uppercase;touch-action:manipulation;text-align:center;min-width:58px}
+.mbtn.pri{background:var(--teal);color:var(--ink);border-color:var(--teal);font-weight:700}
+.mbtn.sec{background:transparent;color:var(--teal);border-color:var(--tealring)}
+.mbtn.amb{background:transparent;color:var(--amber);border-color:rgba(245,166,35,0.3)}
+.mbtn.can{background:transparent;color:var(--muted);border-color:rgba(58,85,112,0.4)}
+.wpt-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px;max-height:180px;overflow-y:auto}
+.wpt-item{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:8px 9px;display:flex;align-items:center;gap:7px}
+.wpt-item.cur{border-color:var(--teal);background:var(--tealfade)}
+.wpt-seq{font-family:var(--mono);font-size:9px;color:var(--muted);min-width:14px}
+.wpt-lab{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal);min-width:24px}
+.wpt-co{font-family:var(--mono);font-size:9px;color:var(--muted);flex:1;line-height:1.5}
+.wpt-rnd{font-family:var(--cond);font-size:9px;padding:2px 7px;border-radius:10px;border:1px solid var(--tealring);color:var(--muted);cursor:pointer;touch-action:manipulation;background:transparent}
+.wpt-rnd.port{border-color:rgba(232,64,64,0.4);color:var(--red)}.wpt-rnd.stbd{border-color:rgba(61,220,132,0.4);color:var(--green)}
+.wpt-del{color:var(--muted);padding:2px 6px;cursor:pointer;border:none;background:transparent;font-size:13px}
+.polar-tbl{width:100%;border-collapse:collapse}
+.polar-tbl th{font-family:var(--mono);font-size:8px;color:var(--muted);padding:3px;text-align:center;border-bottom:1px solid var(--tealring)}
+.polar-tbl td{padding:2px}
+.polar-tbl input{width:100%;background:var(--deep);border:1px solid rgba(0,212,170,0.1);border-radius:3px;color:var(--white);padding:6px 3px;font-family:var(--mono);font-size:12px;text-align:center;-webkit-appearance:none}
+.polar-tbl input:focus{outline:none;border-color:var(--teal)}
+.seq-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.seq-btn{padding:12px 8px;border-radius:6px;border:1px solid var(--tealring);background:var(--deep);color:var(--teal);font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;text-align:center;touch-action:manipulation}
+.seq-btn.on{background:var(--tealfade);border-color:var(--teal)}
+.seq-sub{font-size:8px;font-weight:400;color:var(--muted);display:block;margin-top:2px}
+.wsrc-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.wsrc{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:9px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;touch-action:manipulation}
+.wsrc.on{border-color:var(--teal);background:var(--tealfade)}
+.wsrc-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.wsrc.on .wsrc-dot{background:var(--teal)}
+.wsrc-name{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--white)}
+.wsrc-info{font-family:var(--cond);font-size:11px;color:var(--muted);margin-top:1px}
+.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.edit-popup{position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:300;display:none;align-items:center;justify-content:center;padding:20px}
+.edit-popup.open{display:flex}
+.edit-box{background:var(--hull);border:1px solid var(--tealring);border-radius:10px;padding:18px 16px;width:100%;max-width:340px}
+.edit-box h4{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;margin-bottom:14px}
+.edit-btns{display:flex;gap:6px;margin-top:12px}
+.telem-chart{width:100%;height:120px;display:block;margin-bottom:8px}
+.telem-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9px}
+.telem-table th{color:var(--muted);padding:3px 4px;text-align:right;border-bottom:1px solid var(--tealring);letter-spacing:0.06em;font-size:8px}
+.telem-table th:first-child{text-align:left}
+.telem-table td{padding:3px 4px;text-align:right;border-bottom:1px solid rgba(0,212,170,0.05);color:var(--white)}
+.telem-table td:first-child{text-align:left;color:var(--muted)}
+.telem-table tr:hover td{background:var(--tealfade)}
+.telem-table tr.hi td{color:var(--green)}.telem-table tr.warn td{color:var(--amber)}.telem-table tr.crit td{color:var(--red)}
+.telem-wrap{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-bottom:8px}
+.telem-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.tstat{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:7px 8px;text-align:center}
+.tstat-v{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--teal)}
+.tstat-l{font-family:var(--cond);font-size:9px;color:var(--muted);letter-spacing:0.08em}
+.ysel{display:flex;gap:4px;margin-bottom:7px;flex-wrap:wrap}
+.ysel button{font-family:var(--mono);font-size:8px;padding:3px 8px;border-radius:3px;border:1px solid var(--tealring);color:var(--muted);background:transparent;cursor:pointer;touch-action:manipulation}
+.ysel button.on{background:var(--teal);color:var(--ink);border-color:var(--teal)}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--hull);border:1px solid var(--tealring);border-radius:6px;padding:7px 16px;font-family:var(--mono);font-size:10px;color:var(--teal);opacity:0;pointer-events:none;transition:all 0.2s;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="hdr">
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 CLEAN BASELINE</div>
+  <div class="pills">
+    <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
+    <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
+    <div class="pill" id="pWND"><div class="pdot"></div>WND</div>
+  </div>
+  <div class="mode-tog">
+    <button class="mtog on" id="mBtnS" onclick="setMode('start')">START</button>
+    <button class="mtog" id="mBtnR" onclick="setMode('race')">RACE</button>
+  </div>
+</div>
+<div class="gun-bar" id="gunBar">
+  <div class="gun-phase" id="gunPhase">PREP</div>
+  <div class="gun-time" id="gunTime">5:00</div>
+  <div class="gun-btns">
+    <button class="gun-btn" id="btnSync">SYNC</button>
+    <button class="gun-btn" onclick="stopGun()">&#x2715;</button>
+  </div>
+</div>
+
+<!-- START MODE -->
+<div class="mode-start" id="modeStart">
+  <div class="line-chart">
+    <canvas id="cvLC"></canvas>
+    <div class="lc-hint" id="lcHint">COURSE &#8594; SET START LINE PINS</div>
+  </div>
+  <div class="time-strip">
+    <div class="ts"><div class="tsv hi" id="tsTTL">--:--</div><div class="tsl">TTL</div><div class="tss">time to line</div></div>
+    <div class="ts"><div class="tsv warn" id="tsBURN">--:--</div><div class="tsl">BURN</div><div class="tss" id="tsBurnSub">&#177; time</div></div>
+    <div class="ts"><div class="tsv" id="tsCOMMIT">--:--</div><div class="tsl">COMMIT</div><div class="tss">go for line</div></div>
+  </div>
+  <div class="wind-row">
+    <div class="wr-main">
+      <div class="wr-dir" id="wrDir">---</div>
+      <div class="wr-spd" id="wrSpd">--kt</div>
+      <div class="wr-lbl">TWD / TWS</div>
+      <div class="wr-age" id="wrAge"></div>
+    </div>
+    <div class="wr-graph"><canvas id="cvShift"></canvas></div>
+    <div class="wr-trend">
+      <div class="wtv steady" id="wtvEl">--</div>
+      <div class="wtl" id="wtlEl">SHIFT</div>
+      <div class="wtn" id="wtnEl"></div>
+    </div>
+  </div>
+  <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:5px 14px;background:var(--ink);border-bottom:1px solid var(--tealring)">
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums" id="sHDG">---</span>
+      <span style="font-family:var(--cond);font-size:11px;color:var(--muted);letter-spacing:0.1em">HDG&deg;</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums" id="sSOG">0.0</span>
+      <span style="font-family:var(--cond);font-size:11px;color:var(--muted);letter-spacing:0.1em">SOG kt</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums" id="sTWA">---</span>
+      <span style="font-family:var(--cond);font-size:11px;color:var(--muted);letter-spacing:0.1em">TWA&deg;</span>
+    </div>
+  </div>
+  <div class="cts-pair">
+    <div class="cts-cell">
+      <div class="cts-sub">APPROACH</div>
+      <div class="cts-hdg" id="ctsApp">---&deg;</div>
+      <div class="cts-tack none" id="ctsTApp">--</div>
+      <div class="cts-spd" id="ctsSApp">to FAV end</div>
+    </div>
+    <div class="cts-cell">
+      <div class="cts-sub">POST-START</div>
+      <div class="cts-hdg" id="ctsPost">---&deg;</div>
+      <div class="cts-tack none" id="ctsTPost">--</div>
+      <div class="cts-spd" id="ctsSPost">to Mark 1</div>
+    </div>
+  </div>
+</div>
+
+<!-- RACE MODE -->
+<div class="mode-race gone" id="modeRace">
+  <div class="hero-cts">
+    <div class="hero-num none" id="heroNum">---&deg;</div>
+    <div class="hero-sub none" id="heroSub">SET COURSE &amp; WIND</div>
+  </div>
+  <div class="race-row">
+    <div class="rr"><div class="rv hi" id="rHDG">---</div><div class="rl">HDG &deg;</div></div>
+    <div class="rr"><div class="rv" id="rSOG">0.0</div><div class="rl">SOG kt</div></div>
+    <div class="rr"><div class="rv" id="rTWA">---</div><div class="rl">TWA &deg;</div></div>
+    <div class="rr"><div class="rv" id="rVMG">--</div><div class="rl">VMG kt</div></div>
+  </div>
+  <div class="chart-wrap" id="chartWrap">
+    <canvas id="cvTiles"></canvas>
+    <canvas id="cvMain"></canvas>
+    <button class="map-btn" id="mapBtn" onclick="toggleMap()">MAP</button>
+    <div class="wind-badge">
+      <canvas id="cvWind" width="48" height="48"></canvas>
+      <div class="wb-row"><span id="wbSpd">--kt</span><span id="wbDir">---&deg;</span></div>
+      <div class="wb-trend" id="wbTrend">NO DATA</div>
+      <div class="wb-age" id="wbAge"></div>
+    </div>
+    <div class="leg-chip" id="legChip"></div>
+    <div class="xte-chip" id="xteChip"><div class="xte-lbl">XTE</div><div class="xte-val" id="xteVal">--m</div></div>
+  </div>
+  <div class="mark-adv" id="markAdv">
+    <div class="ma-info">
+      <div class="ma-dist" id="maDistV">--m</div>
+      <div class="ma-lbl" id="maLblV">APPROACHING MARK</div>
+    </div>
+    <button class="ma-btn" onclick="advanceMark()">ROUNDED &#10140;</button>
+  </div>
+</div>
+
+<!-- SENSOR PANEL — slides up above toolbar -->
+<div id="sensorPanel" style="display:none;flex-direction:column;background:var(--hull);border-top:1px solid var(--tealring);padding:10px 12px;gap:8px;flex-shrink:0">
+  <div style="display:flex;gap:6px;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:6px">
+      <div class="pill" id="sp_GPS"><div class="pdot"></div>GPS</div>
+      <div class="pill" id="sp_HDG"><div class="pdot"></div>HDG</div>
+      <div class="pill" id="sp_WND"><div class="pdot"></div>WND</div>
+    </div>
+    <button class="mbtn sec" style="flex:none;padding:5px 10px;font-size:8px" onclick="toggleSensors()" id="sensOnBtn">SENSORS ON</button>
+  </div>
+  <div style="display:flex;gap:6px">
+    <button class="mbtn sec" style="flex:1;padding:8px 6px" id="calBtn" onclick="calibrateIMU()">CALIBRATE IMU</button>
+    <button class="mbtn sec" style="flex:1;padding:8px 6px" id="telemTogBtn" onclick="toggleTelem()">START LOG</button>
+  </div>
+  <div style="font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center" id="imuCalStatus">IMU not calibrated</div>
+</div>
+<div class="toolbar">
+  <button class="tbtn" id="btnSensors" onclick="openSensorsPanel()">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4"/><path d="M17.7 6.3a8 8 0 0 1 0 11.4"/><path d="M3.5 3.5a14 14 0 0 0 0 17"/><path d="M20.5 3.5a14 14 0 0 1 0 17"/></svg>
+    <span class="tbtn-lbl">Sensors</span>
+  </button>
+  <button class="tbtn" id="btnWind" onclick="openModal('mWind')">
+    <svg viewBox="0 0 24 24"><path d="M17.7 7.7a2.5 2.5 0 1 1 1.8 4.3H2"/><path d="M9.6 4.6A2 2 0 1 1 11 8H2"/><path d="M12.6 19.4A2 2 0 1 0 14 16H2"/></svg>
+    <span class="tbtn-lbl">Wind</span>
+  </button>
+  <button class="tbtn" id="btnCourse" onclick="openModal('mCourse')">
+    <svg viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    <span class="tbtn-lbl">Course</span>
+  </button>
+  <button class="tbtn" id="btnPolar" onclick="openModal('mPolar')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+    <span class="tbtn-lbl">Polar</span>
+  </button>
+  <button class="tbtn" id="btnTimer" onclick="openModal('mTimer')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="M22 6l-3-3"/><line x1="12" y1="5" x2="12" y2="2"/></svg>
+    <span class="tbtn-lbl">Start</span>
+  </button>
+  <button class="tbtn" id="btnTelem" onclick="openTelemModal()">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span class="tbtn-lbl">Log</span>
+  </button>
+</div>
+</div>
+
+<!-- COURSE MODAL -->
+<div class="modal-bg" id="mCourse"><div class="modal">
+  <div class="mhandle"></div><div class="mh3">Course Setup</div>
+  <div class="mtabs">
+    <button class="mtab on" onclick="mTab('mCourse','line')">Start Line</button>
+    <button class="mtab" onclick="mTab('mCourse','marks')">RC Marks</button>
+    <button class="mtab" onclick="mTab('mCourse','finish')">Finish</button>
+  </div>
+  <div class="tp on" id="mCourse-line">
+    <div class="fg2"><div class="frow"><label>Pin A Lat</label><input type="number" id="cALat" step="0.0001" placeholder="33.8632" value="33.8422"></div><div class="frow"><label>Pin A Lon</label><input type="number" id="cALon" step="0.0001" placeholder="-78.9821" value="-78.6103"></div></div>
+    <div class="fg2"><div class="frow"><label>Pin B Lat</label><input type="number" id="cBLat" step="0.0001" placeholder="33.8638" value="33.8393"></div><div class="frow"><label>Pin B Lon</label><input type="number" id="cBLon" step="0.0001" placeholder="-78.9798" value="-78.6054"></div></div>
+    <div class="frow"><label>Tack Duration (sec)</label><input type="number" id="cTackDur" value="20" min="5" max="60"></div>
+    <div class="mbtns">
+      <button class="mbtn sec" onclick="gpsToPin('A')">GPS&#8594;A</button>
+      <button class="mbtn sec" onclick="gpsToPin('B')">GPS&#8594;B</button>
+      <button class="mbtn can" onclick="clearLine()">Clear</button>
+    </div>
+  </div>
+  <div class="tp" id="mCourse-marks">
+    <div id="wptList" class="wpt-list"></div>
+    <div class="fg3"><div class="frow"><label>Label</label><input type="text" id="wLbl" placeholder="1" maxlength="4"></div><div class="frow"><label>Lat</label><input type="number" id="wLat" step="0.0001"></div><div class="frow"><label>Lon</label><input type="number" id="wLon" step="0.0001"></div></div>
+    <div class="mbtns">
+      <button class="mbtn pri" onclick="addWpt()">Add Mark</button>
+      <button class="mbtn sec" onclick="gpsToWpt()">GPS&#8594;Mark</button>
+      <button class="mbtn can" onclick="clearWpts()">Clear All</button>
+    </div>
+  </div>
+  <div class="tp" id="mCourse-finish">
+    <div class="frow"><label>Finish Gate</label><select id="finMode" onchange="toggleFinCustom()"><option value="start">Reuse start line</option><option value="custom">Custom gate</option></select></div>
+    <div id="finCustom" style="display:none">
+      <div class="fg2"><div class="frow"><label>Fin A Lat</label><input type="number" id="cFALat" step="0.0001"></div><div class="frow"><label>Fin A Lon</label><input type="number" id="cFALon" step="0.0001"></div></div>
+      <div class="fg2"><div class="frow"><label>Fin B Lat</label><input type="number" id="cFBLat" step="0.0001"></div><div class="frow"><label>Fin B Lon</label><input type="number" id="cFBLon" step="0.0001"></div></div>
+    </div>
+  </div>
+  <div class="mbtns">
+    <button class="mbtn pri" onclick="saveCourse()">Set Course</button>
+    <button class="mbtn amb" onclick="openModal('mDemo')">Demo</button>
+    <button class="mbtn can" onclick="closeModal('mCourse')">Cancel</button>
+  </div>
+</div></div>
+
+<!-- WIND MODAL -->
+<div class="modal-bg" id="mWind"><div class="modal">
+  <div class="mhandle"></div><div class="mh3">Wind Source</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">WIND SOURCES</span>
+    <button class="mbtn sec" style="flex:none;padding:5px 10px;font-size:8px" onclick="searchNearbyBuoys()">FIND NEARBY</button>
+  </div>
+  <div class="wsrc-list" id="wsrcList"></div>
+  <div id="buoySearchStatus" style="font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;padding:4px 0;display:none"></div>
+  <div class="fg2"><div class="frow"><label>Direction (deg)</label><input type="number" id="manTWD" placeholder="215" min="0" max="360" value="215"></div><div class="frow"><label>Speed (kt)</label><input type="number" id="manTWS" placeholder="12" min="0" max="60" value="12"></div></div>
+  <div class="mbtns">
+    <button class="mbtn pri" onclick="fetchSelWind()">Fetch Wind</button>
+    <button class="mbtn sec" onclick="setManualWind()">Use Manual</button>
+    <button class="mbtn can" onclick="closeModal('mWind')">Cancel</button>
+  </div>
+</div></div>
+
+<!-- POLAR MODAL -->
+<div class="modal-bg" id="mPolar"><div class="modal">
+  <div class="mhandle"></div><div class="mh3">Boat Polar</div>
+  <div class="frow" style="margin-bottom:8px"><label>Preset</label><select id="polarPreset" onchange="loadPolarPreset()"><option value="">— custom —</option><option value="compac35">Com-Pac 35 (default)</option><option value="j24">J/24</option><option value="laser">Laser / ILCA</option><option value="c40">Cruiser 40ft</option></select></div>
+  <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:7px">BSP knots · no spinnaker</div>
+  <table class="polar-tbl"><thead><tr><th>TWA</th><th>6kt</th><th>10kt</th><th>15kt</th><th>20kt</th></tr></thead><tbody id="polarBody"></tbody></table>
+  <div class="mbtns"><button class="mbtn pri" onclick="savePolar()">Save</button><button class="mbtn can" onclick="closeModal('mPolar')">Cancel</button></div>
+</div></div>
+
+<!-- TIMER MODAL -->
+<div class="modal-bg" id="mTimer"><div class="modal">
+  <div class="mhandle"></div><div class="mh3">Start Sequence</div>
+  <div class="seq-grid">
+    <button class="seq-btn on" id="sq5" onclick="selSeq(5)">5-4-1-GO<span class="seq-sub">ISAF Standard</span></button>
+    <button class="seq-btn" id="sq3" onclick="selSeq(3)">3-1-GO<span class="seq-sub">Short course</span></button>
+    <button class="seq-btn" id="sq10" onclick="selSeq(10)">10-5-1-GO<span class="seq-sub">Fleet race</span></button>
+    <button class="seq-btn" id="sq0" onclick="selSeq(0)">Custom<span class="seq-sub">Set minutes</span></button>
+  </div>
+  <div class="frow" id="customMinRow" style="display:none"><label>Minutes to gun</label><input type="number" id="customMins" value="5" min="1" max="60"></div>
+  <div class="mbtns">
+    <button class="mbtn pri" onclick="startGun()">Start Sequence</button>
+    <button class="mbtn sec" onclick="syncGun()">Sync to Gun</button>
+    <button class="mbtn can" onclick="closeModal('mTimer')">Cancel</button>
+  </div>
+</div></div>
+
+<!-- DEMO MODAL -->
+<div class="modal-bg" id="mDemo"><div class="modal">
+  <div class="mhandle"></div><div class="mh3">Demo / Simulation</div>
+  <div class="demo-grid">
+    <div class="frow"><label>Boat Lat</label><input type="number" id="dLat" value="33.8615" step="0.0001"></div>
+    <div class="frow"><label>Boat Lon</label><input type="number" id="dLon" value="-78.9810" step="0.0001"></div>
+    <div class="frow"><label>Heading (deg)</label><input type="number" id="dHdg" value="340" min="0" max="360"></div>
+    <div class="frow"><label>SOG (kt)</label><input type="number" id="dSog" value="4.8" step="0.1"></div>
+    <div class="frow"><label>Wind Dir (deg)</label><input type="number" id="dTwd" value="215" min="0" max="360"></div>
+    <div class="frow"><label>Wind Spd (kt)</label><input type="number" id="dTws" value="12" step="0.5"></div>
+  </div>
+  <div class="frow"><label>Animate</label><select id="dAnim"><option value="1">Yes — sail toward mark</option><option value="0">No — fixed position</option></select></div>
+  <div class="mbtns">
+    <button class="mbtn pri" onclick="startDemo()">Start Demo</button>
+    <button class="mbtn amb" onclick="loadLR()">Little River Preset</button>
+    <button class="mbtn can" onclick="closeModal('mDemo')">Cancel</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<!-- TELEMETRY MODAL -->
+<div class="modal-bg" id="mTelem"><div class="modal">
+  <div class="mhandle"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="mh3" style="margin:0">TELEMETRY LOG</div>
+    <div style="display:flex;gap:5px">
+      <button class="mbtn sec" style="padding:5px 9px;font-size:8px;flex:none" onclick="telemExportCSV()">CSV</button>
+      <button class="mbtn sec" style="padding:5px 9px;font-size:8px;flex:none" onclick="telemExportJSON()">JSON</button>
+      <button class="mbtn amb" style="padding:5px 9px;font-size:8px;flex:none" onclick="telemClear()">Clear</button>
+    </div>
+  </div>
+  <div class="telem-stat" id="telemStats">
+    <div class="tstat"><div class="tstat-v" id="tsCnt">0</div><div class="tstat-l">SAMPLES</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsAvgSOG">--</div><div class="tstat-l">AVG SOG</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsAvgEff">--%</div><div class="tstat-l">AVG EFF</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsMaxSOG">--</div><div class="tstat-l">MAX SOG</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsDist">--</div><div class="tstat-l">DIST nm</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsElapsed">--</div><div class="tstat-l">ELAPSED</div></div>
+  </div>
+  <div class="ysel" id="telemYSel">
+    <button class="on" onclick="telemSetY('sog')">SOG</button>
+    <button onclick="telemSetY('vmg')">VMG</button>
+    <button onclick="telemSetY('twd')">TWD</button>
+    <button onclick="telemSetY('hdg')">HDG</button>
+    <button onclick="telemSetY('eff')">EFF%</button>
+  </div>
+  <canvas class="telem-chart" id="cvTelem"></canvas>
+  <div class="telem-wrap"><table class="telem-table">
+    <thead><tr><th>TIME</th><th>HDG</th><th>SOG</th><th>TWD</th><th>TWA</th><th>VMG</th><th>EFF%</th><th>LEG</th></tr></thead>
+    <tbody id="telemBody"></tbody>
+  </table></div>
+</div></div>
+
+<!-- EDIT MARK POPUP -->
+<div class="edit-popup" id="editPopup">
+  <div class="edit-box">
+    <h4 id="editTitle">Edit Mark</h4>
+    <div class="fg2">
+      <div class="frow"><label>Lat</label><input type="number" id="editLat" step="0.0001"></div>
+      <div class="frow"><label>Lon</label><input type="number" id="editLon" step="0.0001"></div>
+    </div>
+    <div class="frow" id="editRndRow" style="display:none">
+      <label>Rounding</label>
+      <select id="editRnd"><option value="port">Port</option><option value="stbd">Starboard</option><option value="none">None</option></select>
+    </div>
+    <div class="edit-btns">
+      <button class="mbtn pri" style="flex:2" onclick="saveEditMark()">Update</button>
+      <button class="mbtn sec" onclick="gpsToEdit()">GPS</button>
+      <button class="mbtn can" onclick="closeEdit()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+// ╔══════════════════════════════════════════════════════╗
+// ║  TACTICIAN v5  ·  Start + Race dual mode            ║
+// ║  A* routing · wind sources · RAF loop               ║
+// ╚══════════════════════════════════════════════════════╝
+
+// ── KALMAN ───────────────────────────────────────────────
+class K1D{constructor(Q=0.05,R=8){this.Q=Q;this.R=R;this.P=10;this.x=null}
+update(z){if(this.x===null){this.x=z;return z}this.P+=this.Q;const K=this.P/(this.P+this.R);let d=z-this.x;if(d>180)d-=360;if(d<-180)d+=360;this.x=((this.x+K*d)%360+360)%360;this.P*=(1-K);return this.x}
+reset(){this.x=null;this.P=10}}
+class KLin{constructor(Q=0.02,R=2){this.Q=Q;this.R=R;this.P=5;this.x=null}
+update(z){if(this.x===null){this.x=z;return z}this.P+=this.Q;const K=this.P/(this.P+this.R);this.x+=K*(z-this.x);this.P*=(1-K);return this.x}
+reset(){this.x=null;this.P=5}}
+// Heading buffer — 5-reading rolling average before Kalman
+const _hdgBuf=[];function smoothHdg(raw){_hdgBuf.push(raw);if(_hdgBuf.length>5)_hdgBuf.shift();if(_hdgBuf.length<2)return raw;let s=0,ref=_hdgBuf[0];_hdgBuf.forEach(h=>{let d=h-ref;if(d>180)d-=360;if(d<-180)d+=360;s+=d;});return((ref+s/_hdgBuf.length)%360+360)%360;}
+// Position Kalman — smooths lat/lon independently
+// Simple EMA position smoother — alpha=0.3 means 30% new, 70% old
+// Avoids Kalman miscalibration on decimal degree scale
+class EMAPos{constructor(alpha=0.25){this.a=alpha;this.x=null}
+update(z){if(this.x===null){this.x=z;return z}this.x=this.x*(1-this.a)+z*this.a;return this.x}
+reset(){this.x=null}}
+const kfH=new K1D(0.05,8),kfS=new KLin(0.02,2),kfW=new K1D(0.02,6);
+const kfLat=new EMAPos(0.15),kfLon=new EMAPos(0.15);
+
+// ── STATE ─────────────────────────────────────────────────
+const NAV={lat:null,lon:null,hdg:null,sog:0,cog:null,
+           pLat:null,pLon:null,pT:null,track:[]};
+const WIND={twd:null,tws:null,hist:[],fetchedAt:null};
+const CRS={pinA:null,pinB:null,finA:null,finB:null,
+           wpts:[],activeMark:-1,tackDur:20};
+const RACE={on:false,epoch:null};
+const VIEW={scale:1,ox:0,oy:0,map:true,drag:false,
+            lx:0,ly:0,pd:null,bs:1,box:0,boy:0,locked:false};
+const POLAR_TWS=[6,10,15,20];
+let polarTable={},polarAngles=[];
+let dirty=true,tileCache={};
+let demoInt=null,demoT=0;
+let sensorsOn=false,gpsW=null,absOri=false;
+// IMU calibration reference
+const IMU_CAL={alpha:null,beta:null,gamma:null,calibrated:false};
+const IMU_CUR={alpha:null,beta:null,gamma:null,rollRate:null,pitchRate:null,peakG:0};
+let imuAccBuf=[];  // accumulate accel readings between samples
+
+// Telemetry
+const TELEM={
+  active:false,
+  startTime:null,
+  samples:[],
+  meta:{},
+  yAxis:'sog'
+};
+let seqSel=5,gunInt=null,rafId=null;
+let appMode='start';
+let optPath=[];
+let windSrcIdx=0;
+
+// ── HARDENING / ERROR GUARDS ─────────────────────────────
+// These wrappers preserve behavior while preventing one bad render/path calculation
+// from killing the whole UI loop on mobile Safari.
+function reportErr(scope,err){
+  console.error('[TACTICIAN]',scope,err);
+  try{toast(scope+' error — see console');}catch(_){}
+}
+function safeRun(scope,fn,fallback){
+  try{return fn();}
+  catch(err){reportErr(scope,err);return fallback;}
+}
+
+// ── WIND SOURCES ──────────────────────────────────────────
+const WSRCS=[
+  {id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'},
+  {id:'41004',name:'NOAA Buoy 41004',info:'SE of Charleston · 40nm offshore'},
+  {id:'41013',name:'NOAA Buoy 41013',info:'Frying Pan Shoals · 30nm SW'},
+  {id:'41047',name:'NOAA Buoy 41047',info:'NE Cape Fear · 45nm SE'},
+  {id:'manual',name:'Manual Entry',info:'Enter direction and speed below'}
+];
+// Dynamic buoy list — starts with defaults, updated by search
+// Dynamic source list is held directly in WSRCS after nearby-buoy searches.
+
+async function searchNearbyBuoys(){
+  const statusEl=G('buoySearchStatus');
+  statusEl.style.display='block';
+  statusEl.style.color='var(--amber)';
+  statusEl.textContent='Searching NOAA stations…';
+  // Use boat position or course center
+  const la=NAV.lat||(CRS.pinA?CRS.pinA.lat:33.84);
+  const lo=NAV.lon||(CRS.pinA?CRS.pinA.lon:-78.61);
+  try{
+    // NOAA Tides and Currents metadata API — stations within radius
+    const url=`https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=meteo&units=english`;
+    const resp=await fetch(url);
+    const data=await resp.json();
+    if(!data.stations){throw new Error('no stations');}
+    // Filter to wind-reporting stations within 150nm
+    const R=6371;
+    const nearby=data.stations.filter(s=>{
+      if(!s.lat||!s.lng)return false;
+      const dLat=(s.lat-la)*Math.PI/180,dLon=(s.lng-lo)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(la*Math.PI/180)*Math.cos(s.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+      s._dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*0.539957; // nm
+      return s._dist<150;
+    }).sort((a,b)=>a._dist-b._dist).slice(0,8);
+    if(!nearby.length){statusEl.style.color='var(--red)';statusEl.textContent='No stations found within 150nm';return;}
+    // Build dynamic source list — keep Open-Meteo and Manual, replace buoys
+    const buoySrcs=nearby.map(s=>({
+      id:s.id,
+      name:s.name||s.id,
+      info:`NOAA · ${s._dist.toFixed(0)}nm away`,
+      lat:s.lat,lon:s.lng
+    }));
+    // Rebuild WSRCS: OpenMeteo + found buoys + Manual
+    WSRCS.length=0;
+    WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
+    buoySrcs.forEach(b=>WSRCS.push(b));
+    WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
+    // Don't reset to 0 if user has manual wind locked
+    if(!WSRCS[windSrcIdx]||WSRCS[windSrcIdx].id!=='manual')windSrcIdx=0;
+    saveState();
+    renderWsrcList();
+    statusEl.style.color='var(--green)';
+    statusEl.textContent='Found '+buoySrcs.length+' stations nearby';
+  }catch(e){
+    // Fallback: try NDBC buoy list instead
+    try{
+      await searchNDBCFallback(la,lo,statusEl);
+    }catch(e2){
+      statusEl.style.color='var(--red)';
+      statusEl.textContent='Search failed — check connection';
+    }
+  }
+}
+
+async function searchNDBCFallback(la,lo,statusEl){
+  // Use a curated list of NDBC buoys for the SE US coast
+  // Filter by proximity to provided coordinates
+  const seCoast=[
+    {id:'41002',name:'South Hatteras',lat:31.759,lon:-74.936},
+    {id:'41004',name:'EDISTO',lat:32.501,lon:-79.099},
+    {id:'41008',name:'GRAYS REEF',lat:31.402,lon:-80.869},
+    {id:'41009',name:'CANAVERAL 20NM E',lat:28.519,lon:-80.166},
+    {id:'41010',name:'CANAVERAL 120NM E',lat:28.878,lon:-78.485},
+    {id:'41012',name:'ST AUGUSTINE',lat:30.041,lon:-80.533},
+    {id:'41013',name:'FRYING PAN SHOALS',lat:33.436,lon:-77.743},
+    {id:'41025',name:'DIAMOND SHOALS',lat:35.006,lon:-75.402},
+    {id:'41035',name:'OFFSHORE WILMINGTON',lat:34.487,lon:-77.281},
+    {id:'41036',name:'OFFSHORE CHARLESTON',lat:32.887,lon:-76.949},
+    {id:'41047',name:'NE CAPE FEAR',lat:34.281,lon:-77.282},
+    {id:'41048',name:'WEST BERMUDA',lat:31.845,lon:-69.592},
+    {id:'BFTN7',name:'BEAUFORT NC',lat:34.718,lon:-76.671},
+    {id:'CLKN7',name:'CAPE LOOKOUT',lat:34.622,lon:-76.526},
+    {id:'MROS1',name:'MORRIS ISLAND SC',lat:32.673,lon:-79.913},
+    {id:'NFBM6',name:'NAPLES FL',lat:26.132,lon:-81.808},
+    {id:'SAUF1',name:'ST AUGUSTINE FL',lat:29.857,lon:-81.265},
+    {id:'SAPN7',name:'WRIGHTSVILLE BCH NC',lat:34.213,lon:-77.792},
+    {id:'JNOS1',name:'NORTH INLET SC',lat:33.351,lon:-79.183},
+    {id:'41029',name:'CAPERS',lat:32.813,lon:-79.634},
+  ];
+  const R=6371;
+  const nearby=seCoast.map(s=>{
+    const dLat=(s.lat-la)*Math.PI/180,dLon=(s.lon-lo)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(la*Math.PI/180)*Math.cos(s.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+    s._dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*0.539957;
+    return s;
+  }).filter(s=>s._dist<200).sort((a,b)=>a._dist-b._dist).slice(0,8);
+  if(!nearby.length){throw new Error('none nearby');}
+  WSRCS.length=0;
+  WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
+  nearby.forEach(s=>WSRCS.push({id:s.id,name:s.name,info:`NDBC · ${s._dist.toFixed(0)}nm away`}));
+  WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
+  if(!WSRCS[windSrcIdx]||WSRCS[windSrcIdx].id!=='manual')windSrcIdx=0;
+  renderWsrcList();
+  statusEl.style.color='var(--green)';
+  statusEl.textContent='Found '+nearby.length+' NDBC stations nearby';
+}
+
+function renderWsrcList(){
+  const el=G('wsrcList');el.innerHTML='';
+  WSRCS.forEach((s,i)=>{
+    const d=document.createElement('div');
+    d.className='wsrc'+(i===windSrcIdx?' on':'');
+    d.innerHTML=`<div class="wsrc-dot"></div><div><div class="wsrc-name">${s.name}</div><div class="wsrc-info">${s.info}</div></div>`;
+    d.onclick=()=>{windSrcIdx=i;renderWsrcList();};
+    el.appendChild(d);
+  });
+}
+async function fetchSelWind(){
+  const s=WSRCS[windSrcIdx];closeModal('mWind');
+  if(s.id==='manual'){setManualWind();return;}
+  G('btnWind').classList.add('on');
+  try{
+    if(s.id==='openmeteo'){await fetchOpenMeteo();}
+    else{await fetchNDBC(s.id,s.name);}
+  }catch(e){pill('pWND','warn');toast('Wind fetch failed');}
+  G('btnWind').classList.remove('on');
+}
+async function fetchOpenMeteo(){
+  const la=NAV.lat||33.86,lo=NAV.lon||-78.98;
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${la.toFixed(4)}&longitude=${lo.toFixed(4)}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kn&forecast_days=1`;
+  const d=await(await fetch(u)).json();
+  if(d.current)setWind(d.current.wind_direction_10m,d.current.wind_speed_10m,'Open-Meteo');
+}
+async function fetchNDBC(id,name){
+  const url=`https://www.ndbc.noaa.gov/data/latest_obs/${id}.txt`;
+  try{
+    const txt=await(await fetch(url)).text();
+    let wdir=null,wspd=null;
+    txt.split('\n').forEach(l=>{
+      const p=l.trim().split(/\s+/);
+      if(p[0]==='WDIR'&&p[1]!=='MM')wdir=parseFloat(p[1]);
+      if(p[0]==='WSPD'&&p[1]!=='MM')wspd=parseFloat(p[1])*1.94384;
+    });
+    if(wdir!==null&&wspd!==null)setWind(wdir,wspd,name);
+    else throw new Error('no data');
+  }catch{
+    toast(`${name} unavailable, trying Open-Meteo`);
+    await fetchOpenMeteo();
+  }
+}
+function setWind(twd,tws,src){
+  // Sanity check — reject bad data
+  if(isNaN(twd)||isNaN(tws)||tws<0||tws>60||twd<0||twd>360){
+    toast('Bad wind data — ignored');return;
+  }
+  // If we have history, reject single reading that jumps >40deg from recent avg
+  if(WIND.hist.length>=3){
+    const recent=WIND.hist.slice(-3);
+    const avg=recent.reduce((s,e)=>s+e.twd,0)/recent.length;
+    let diff=Math.abs(twd-avg);if(diff>180)diff=360-diff;
+    if(diff>40&&src!=='Manual'&&src!=='Demo'){
+      toast(`Wind jump ${Math.round(diff)}° ignored`);return;
+    }
+  }
+  // Manual and Demo bypass Kalman — set directly and reset filter
+  if(src==='Manual'||src==='Demo'){
+    kfW.reset();kfW.x=twd;WIND.twd=twd;
+  }else{
+    WIND.twd=kfW.update(twd);
+  }
+  WIND.tws=tws;WIND.fetchedAt=Date.now();
+  WIND.hist.push({t:Date.now(),twd,tws});if(WIND.hist.length>30)WIND.hist.shift();
+  pill('pWND','ok');toast('Wind '+Math.round(twd)+'° @ '+tws.toFixed(1)+'kt ('+src+')');
+  dirty=true;saveState();
+}
+function setManualWind(){
+  const twd=parseFloat(G('manTWD').value),tws=parseFloat(G('manTWS').value);
+  if(isNaN(twd)||isNaN(tws)){toast('Enter direction and speed');return;}
+  // Find manual entry index dynamically (position may shift after buoy search)
+  const manIdx=WSRCS.findIndex(s=>s.id==='manual');
+  windSrcIdx=manIdx>=0?manIdx:WSRCS.length-1;  // lock to manual
+  setWind(twd,tws,'Manual');closeModal('mWind');
+  renderWsrcList();  // show Manual as selected
+  setTimeout(refreshOptPath,50);  // recompute path with new wind
+}
+function windAge(){
+  if(!WIND.fetchedAt)return'';
+  const m=Math.round((Date.now()-WIND.fetchedAt)/60000);
+  if(m<1)return'just now';if(m===1)return'1 min ago';return`${m} min ago`;
+}
+function isWindStale(){return WIND.fetchedAt&&(Date.now()-WIND.fetchedAt)>10*60*1000;}
+setInterval(()=>{const cur=WSRCS[windSrcIdx];if(WIND.fetchedAt&&cur&&cur.id!=='manual')fetchSelWind();},5*60*1000);
+setInterval(()=>{refreshOptPath();dirty=true;},10*1000); // recompute A* every 10s
+
+// ── POLARS ────────────────────────────────────────────────
+const PRESETS={
+  compac35:{rows:[[0,0.0,0.0,0.0,0.0],[15,0.0,0.0,0.0,0.0],[30,1.5,1.5,1.5,1.5],[45,3.7,5.0,5.8,6.1],[60,4.3,5.6,6.3,6.6],[75,4.8,6.0,6.7,6.9],[90,4.9,6.1,6.8,7.0],[120,4.6,5.9,6.6,6.8],[150,4.0,5.3,6.1,6.5],[180,3.6,4.8,5.6,6.0]]},
+  j24:{rows:[[40,3.8,5.4,6.1,6.3,6.2],[52,4.1,5.8,6.5,6.7,6.6],[70,4.4,5.6,6.3,6.5,6.4],[90,4.2,5.4,6.1,6.3,6.2],[110,4.0,5.6,6.8,7.0,6.9],[135,3.6,5.2,6.5,6.7,6.6],[150,3.2,4.8,6.0,6.2,6.1]]},
+  laser:{rows:[[40,3.0,4.2,4.8,4.6,4.4],[52,3.3,4.6,5.1,4.9,4.7],[70,3.5,4.4,4.9,4.7,4.5],[90,3.3,4.2,4.7,4.5,4.3],[110,3.1,4.4,5.2,5.0,4.8],[135,2.8,4.0,4.9,4.7,4.5],[150,2.5,3.7,4.5,4.3,4.1]]},
+  c40:{rows:[[42,4.5,6.2,7.0,7.3,7.2],[52,4.9,6.6,7.4,7.7,7.6],[70,5.1,6.5,7.3,7.8,7.8],[90,4.9,6.4,7.2,7.8,7.9],[110,4.6,6.5,7.7,8.1,8.1],[135,4.2,6.0,7.5,8.0,8.0],[150,3.8,5.5,7.0,7.6,7.7]]}
+};
+function buildPolarDOM(rows){const tb=G('polarBody');tb.innerHTML='';rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px">${r[0]}&deg;</td>`;for(let i=1;i<=4;i++)tr.innerHTML+=`<td><input type="number" step="0.1" min="0" max="20" data-twa="${r[0]}" data-ti="${i-1}" value="${r[i]||''}"></td>`;tb.appendChild(tr);});}
+function loadPolarPreset(){const k=G('polarPreset').value;if(!k||!PRESETS[k])buildPolarDOM([0,15,30,45,60,75,90,120,150,180].map(a=>[a,'','','','']));else buildPolarDOM(PRESETS[k].rows);}
+function commitPolar(){const tbl={};document.querySelectorAll('#polarBody input').forEach(i=>{const a=parseInt(i.dataset.twa),ti=parseInt(i.dataset.ti);if(!tbl[a])tbl[a]=[0,0,0,0];tbl[a][ti]=parseFloat(i.value)||0;});polarTable=tbl;polarAngles=POLAR_TWS.map((_,ti)=>{let best=-Infinity,ang=45;Object.entries(tbl).forEach(([a,s])=>{const aa=parseInt(a);if(aa>90||aa<30)return;const v=(s[ti]||0)*Math.cos(aa*Math.PI/180);if(v>best){best=v;ang=aa;}});return ang;});saveState();}
+function savePolar(){commitPolar();closeModal('mPolar');toast('Polar saved');}
+function pBSP(twa,tws){
+  if(!Object.keys(polarTable).length)return NAV.sog||4;
+  const angs=Object.keys(polarTable).map(Number).sort((a,b)=>a-b);
+  const at=Math.abs(twa);
+  let ti0=0,ti1=0,tf=0;
+  if(tws<=POLAR_TWS[0]){ti0=0;ti1=0;tf=0;}
+  else if(tws>=POLAR_TWS[3]){ti0=3;ti1=3;tf=0;}
+  else{for(let i=0;i<3;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){ti0=i;ti1=i+1;tf=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);break;}}}
+  let lo=angs[0],hi=angs[angs.length-1];
+  for(let i=0;i<angs.length-1;i++){if(at>=angs[i]&&at<=angs[i+1]){lo=angs[i];hi=angs[i+1];break;}}
+  const af=lo===hi?0:(at-lo)/(hi-lo);
+  const s=(a,ti)=>(polarTable[a]&&polarTable[a][ti]!=null)?polarTable[a][ti]:0;
+  return(s(lo,ti0)*(1-tf)+s(lo,ti1)*tf)*(1-af)+(s(hi,ti0)*(1-tf)+s(hi,ti1)*tf)*af;
+}
+function optAng(tws){
+  if(!polarAngles.length||!tws)return 42;
+  if(tws<=POLAR_TWS[0])return polarAngles[0];
+  if(tws>=POLAR_TWS[3])return polarAngles[3];
+  for(let i=0;i<3;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){const t=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);return polarAngles[i]*(1-t)+polarAngles[i+1]*t;}}
+  return 42;
+}
+function optDownwindAng(tws){
+  // Best downwind VMG angle (TWA from bow, 90-180 range)
+  // Computed from polar: maximize bsp * cos(180 - twa)
+  const angs=Object.keys(polarTable).map(Number).sort((a,b)=>a-b)
+    .filter(a=>a>=90);
+  if(!angs.length)return 150;
+  let best=-Infinity,bestAng=150;
+  angs.forEach(a=>{
+    const b=pBSP(a,tws)*Math.cos((180-a)*Math.PI/180);
+    if(b>best){best=b;bestAng=a;}
+  });
+  return bestAng;
+}
+
+// ── LEG CLASSIFIER ───────────────────────────────────────
+function classifyLeg(mb){
+  if(WIND.twd===null)return'upwind';
+  // angDiff(wind_from, mark_bearing):
+  // abs~0   = mark is toward wind source = UPWIND
+  // abs~180 = mark is downwind           = DOWNWIND
+  const a=Math.abs(angDiff(WIND.twd,mb));
+  if(a<70)return'upwind';if(a>110)return'downwind';return'reach';
+}
+function legBearing(){
+  // Use previous mark → current mark bearing for leg classification
+  // More stable than live boat position which varies during leg
+  const i=CRS.activeMark;
+  if(i<0||i>=CRS.wpts.length)return null;
+  const tgt=CRS.wpts[i];
+  if(i===0){
+    // First leg: start midpoint → mark 1
+    if(CRS.pinA&&CRS.pinB){
+      const mid=midLL(CRS.pinA,CRS.pinB);
+      return brng(mid.lat,mid.lon,tgt.lat,tgt.lon);
+    }
+  }else{
+    // Subsequent legs: previous mark → current mark
+    const prev=CRS.wpts[i-1];
+    return brng(prev.lat,prev.lon,tgt.lat,tgt.lon);
+  }
+  // Fallback to live boat position
+  if(NAV.lat!==null)return brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);
+  return null;
+}
+
+// ── TACTICS ──────────────────────────────────────────────
+function tactics(){
+  const tgt=activeMark();if(!tgt||WIND.twd===null||NAV.lat===null)return null;
+  const mb=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);  // live bearing for display
+  const lb=legBearing()??mb;                         // stable bearing for leg type
+  const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
+
+  // Lateral component toward mark: positive means moving toward mark's side
+  // Uses perpendicular to rhumb line (90deg clockwise from mark direction)
+  function lateralToMark(hdg,bsp,markBrng){
+    const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
+    const px=Math.cos(markBrng*Math.PI/180),py=-Math.sin(markBrng*Math.PI/180);
+    return vx*px+vy*py;
+  }
+
+  if(leg==='upwind'){
+    const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
+    const bsp_s=pBSP(angDiff(WIND.twd,sH),tws);
+    const bsp_p=pBSP(angDiff(WIND.twd,pH),tws);
+    const vmg_s=bsp_s*Math.cos(opt*Math.PI/180);
+    const vmg_p=bsp_p*Math.cos(opt*Math.PI/180);
+    const lat_s=lateralToMark(sH,bsp_s,lb);
+    const lat_p=lateralToMark(pH,bsp_p,lb);
+    const best=lat_s>=lat_p?'stbd':'port';
+    const bH=best==='stbd'?sH:pH;
+    const bV=best==='stbd'?vmg_s:vmg_p;
+    const eff=Math.max(vmg_s,vmg_p)>0?bV/Math.max(vmg_s,vmg_p)*100:0;
+    return{leg,best,bestHdg:bH,bestVMG:bV,eff,sH,pH,
+           layS:normA(WIND.twd-opt+180),layP:normA(WIND.twd+opt+180),
+           mb,shift:shiftNote()};
+  }
+  if(leg==='downwind'){
+    const optD=optDownwindAng(tws);  // optimal downwind TWA e.g. 164°
+    const sG=normA(WIND.twd+optD),pG=normA(WIND.twd-optD);
+    const bsp_s=pBSP(optD,tws),bsp_p=pBSP(optD,tws);
+    // Downwind VMG = bsp * cos(180 - optD), always positive
+    const vmg=bsp_s*Math.cos((180-optD)*Math.PI/180);
+    const lat_s=lateralToMark(sG,bsp_s,lb);
+    const lat_p=lateralToMark(pG,bsp_p,lb);
+    const best=lat_s>=lat_p?'stbd':'port';
+    const bH=best==='stbd'?sG:pG;
+    return{leg,best,bestHdg:bH,bestVMG:Math.max(0,vmg),eff:72,sG,pG,mb,shift:shiftNote()};
+  }
+  // Reach: direct bearing, real VMG
+  const twa=angDiff(WIND.twd,mb),spd=pBSP(twa,tws);
+  const vmg_reach=spd*Math.cos(angDiff(mb,lb)*Math.PI/180);
+  const sd=shiftDeg();
+  const note=Math.abs(sd)<2?'ON TRACK':sd<0?'LIFTED — SAIL HIGH':'HEADED — SAIL LOW';
+  return{leg,best:'reach',bestHdg:mb,bestVMG:Math.max(0,vmg_reach),eff:78,mb,note,shift:shiftNote()};
+}
+
+// Post-start CTS — best tack to Mark 1 from current position
+function postStartCTS(){
+  if(!CRS.wpts.length||WIND.twd===null||NAV.lat===null)return null;
+  const m1=CRS.wpts[0];
+  const mb=brng(NAV.lat,NAV.lon,m1.lat,m1.lon);
+  const lb=(CRS.pinA&&CRS.pinB)?brng(midLL(CRS.pinA,CRS.pinB).lat,midLL(CRS.pinA,CRS.pinB).lon,m1.lat,m1.lon):mb;
+  const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
+  function lat2mark(hdg,bsp){
+    const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
+    const px=Math.cos(lb*Math.PI/180),py=-Math.sin(lb*Math.PI/180);
+    return vx*px+vy*py;
+  }
+  if(leg==='upwind'){
+    const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
+    const bs=pBSP(angDiff(WIND.twd,sH),tws),bp=pBSP(angDiff(WIND.twd,pH),tws);
+    const vmg_s=bs*Math.cos(opt*Math.PI/180),vmg_p=bp*Math.cos(opt*Math.PI/180);
+    const best=lat2mark(sH,bs)>=lat2mark(pH,bp)?'stbd':'port';
+    return{hdg:best==='stbd'?sH:pH,tack:best,spd:best==='stbd'?vmg_s:vmg_p,leg};
+  }
+  const spd=pBSP(angDiff(WIND.twd,mb),tws);
+  return{hdg:mb,tack:'reach',spd:Math.max(0,spd),leg};
+}
+
+
+// ── POLAR MULTI-TACK / MULTI-GYBE PLANNER ────────────────
+// Deterministic sailing-aware route extension. This does NOT try random
+// headings. It uses VMG-optimal polar angles, alternates boards only when
+// the layline is still far away, then finishes on the layline to the mark.
+// Notes:
+//   • With steady wind and no boundaries, extra tacks are rarely faster.
+//   • This planner adds practical long-leg rhythm tacks for visibility and
+//     future GA/A* hooks while keeping the older one-maneuver planner as a
+//     fallback.
+function projectLL(la,lo,hdg,distM){
+  const R=6371000,br=hdg*Math.PI/180,lat1=la*Math.PI/180,lon1=lo*Math.PI/180,d=distM/R;
+  const lat2=Math.asin(Math.sin(lat1)*Math.cos(d)+Math.cos(lat1)*Math.sin(d)*Math.cos(br));
+  const lon2=lon1+Math.atan2(Math.sin(br)*Math.sin(d)*Math.cos(lat1),Math.cos(d)-Math.sin(lat1)*Math.sin(lat2));
+  return{lat:lat2*180/Math.PI,lon:((lon2*180/Math.PI+540)%360)-180};
+}
+function legSecondsByPolar(dM,hdg,tws){
+  let bsp=pBSP(angDiff(WIND.twd,hdg),tws);
+  // Guard against no-go / missing polar rows. Use a low but nonzero fallback
+  // only to prevent route scoring from exploding the UI.
+  if(!isFinite(bsp)||bsp<0.2)bsp=Math.max(0.2,NAV.sog||2.5);
+  return dM/(bsp*0.514444);
+}
+function multiTackMaxBoardM(totalM){
+  // Long enough to avoid silly zig-zags, short enough to show a useful
+  // multi-board ladder on long legs. Later this can become a user setting.
+  if(totalM<1852)return totalM;
+  return Math.max(900,Math.min(2500,totalM/4));
+}
+function computePolarMultiTackPath(fLat,fLon,toLat,toLon){
+  if(WIND.twd===null||!Object.keys(polarTable).length)return null;
+  const mb=brng(fLat,fLon,toLat,toLon),leg=classifyLeg(mb),tws=WIND.tws||10;
+  if(leg==='reach')return null;
+
+  const isUpwind=leg==='upwind';
+  const maneuver=isUpwind?'tack':'gybe';
+  const opt=isUpwind?optAng(tws):optDownwindAng(tws);
+  const hdgFor=side=>{
+    if(isUpwind)return side==='stbd'?normA(WIND.twd-opt):normA(WIND.twd+opt);
+    return side==='stbd'?normA(WIND.twd+opt):normA(WIND.twd-opt);
+  };
+  const totalM=haversine(fLat,fLon,toLat,toLon);
+  const maxBoardM=multiTackMaxBoardM(totalM);
+  const maxManeuvers=totalM>7408?8:totalM>3704?6:4; // >4nm, >2nm, else
+  const minBoardM=80;
+
+  function routeFrom(startSide){
+    let cur={lat:fLat,lon:fLon,type:'start'},side=startSide,time=0;
+    const path=[cur];
+    for(let i=0;i<=maxManeuvers;i++){
+      const hCur=hdgFor(side),nextSide=side==='stbd'?'port':'stbd',hNext=hdgFor(nextSide);
+      const lay=findTackPoint(cur.lat,cur.lon,hCur,toLat,toLon,hNext);
+      if(lay){
+        const dLay=haversine(cur.lat,cur.lon,lay.lat,lay.lon);
+        // If layline is close enough, go there, maneuver once, then finish.
+        if(dLay<=maxBoardM||i===maxManeuvers){
+          if(dLay>minBoardM){
+            time+=legSecondsByPolar(dLay,hCur,tws)+CRS.tackDur;
+            path.push({lat:lay.lat,lon:lay.lon,type:maneuver,side});
+            cur={lat:lay.lat,lon:lay.lon};
+            side=nextSide;
+          }
+          const dFin=haversine(cur.lat,cur.lon,toLat,toLon);
+          time+=legSecondsByPolar(dFin,hdgFor(side),tws);
+          path.push({lat:toLat,lon:toLon,type:'mark'});
+          return{time,path};
+        }
+      }
+      // Layline still far away: sail one max board, maneuver, alternate side.
+      const nxt=projectLL(cur.lat,cur.lon,hCur,maxBoardM);
+      time+=legSecondsByPolar(maxBoardM,hCur,tws)+CRS.tackDur;
+      path.push({lat:nxt.lat,lon:nxt.lon,type:maneuver,side});
+      cur={lat:nxt.lat,lon:nxt.lon};
+      side=nextSide;
+      if(haversine(cur.lat,cur.lon,toLat,toLon)>totalM*2.5)return null; // route blew up
+    }
+    return null;
+  }
+
+  const routes=['stbd','port'].map(routeFrom).filter(Boolean);
+  if(!routes.length)return null;
+  routes.sort((a,b)=>a.time-b.time);
+  // If the multi route is only direct/one-maneuver, it is still valid; the
+  // legacy planner remains available as a fallback in refreshOptPath().
+  routes[0].path.meta={planner:'polar-multitack-alpha',eta:routes[0].time,leg};
+  return routes[0].path;
+}
+
+// GA hook — intentionally not live yet. A genetic algorithm can later optimize
+// an array of board durations/sides against the same ETA scorer, but should run
+// in simulation/offline first, not inside the real-time render loop.
+function computeGeneticRouteCandidate(/* fLat,fLon,toLat,toLon */){return null;}
+
+// ── LEGACY ONE-MANEUVER OPTIMAL PATH ─────────────────────
+function computeOptPath(fLat,fLon,toLat,toLon){
+  if(WIND.twd===null||!Object.keys(polarTable).length)
+    return[{lat:fLat,lon:fLon,type:'start'},{lat:toLat,lon:toLon,type:'mark'}];
+  const mb=brng(fLat,fLon,toLat,toLon);
+  const leg=classifyLeg(mb),tws=WIND.tws||10,opt=optAng(tws),td=CRS.tackDur;
+  if(leg==='reach')return[{lat:fLat,lon:fLon,type:'start'},{lat:toLat,lon:toLon,type:'mark'}];
+  const isUpwind=leg==='upwind';
+  const h1=isUpwind?normA(WIND.twd-opt):normA(WIND.twd+(180-opt));
+  const h2=isUpwind?normA(WIND.twd+opt):normA(WIND.twd-(180-opt));
+  const v1=pBSP(angDiff(WIND.twd,h1),tws)*Math.cos(isUpwind?opt*(Math.PI/180):(180-opt)*(Math.PI/180));
+  const v2=pBSP(angDiff(WIND.twd,h2),tws)*Math.cos(isUpwind?opt*(Math.PI/180):(180-opt)*(Math.PI/180));
+  const paths=[];
+  [[h1,h2,v1,v2,'stbd'],[h2,h1,v2,v1,'port']].forEach(([ha,hb,va,vb,startSide])=>{
+    const tp=findTackPoint(fLat,fLon,ha,toLat,toLon,hb);
+    if(!tp)return;
+    const d1=haversine(fLat,fLon,tp.lat,tp.lon);
+    const d2=haversine(tp.lat,tp.lon,toLat,toLon);
+    if(d1<10||d2<10)return;
+    const tTotal=d1/(va*0.514444)+d2/(vb*0.514444)+td;
+    const type=isUpwind?'tack':'gybe';
+    paths.push({time:tTotal,path:[
+      {lat:fLat,lon:fLon,type:'start'},
+      {lat:tp.lat,lon:tp.lon,type,side:startSide},
+      {lat:toLat,lon:toLon,type:'mark'}
+    ]});
+  });
+  if(!paths.length)return[{lat:fLat,lon:fLon,type:'start'},{lat:toLat,lon:toLon,type:'mark'}];
+  // For downwind only: compare against straight line — gybe only wins if faster
+  // Upwind: never sail straight into wind. Reach: already handled above.
+  if(!isUpwind){
+    const dStraight=haversine(fLat,fLon,toLat,toLon);
+    const vStraight=pBSP(Math.abs(angDiff(WIND.twd,mb)),tws);
+    const tStraight=dStraight/(vStraight*0.514444);
+    paths.push({time:tStraight,path:[
+      {lat:fLat,lon:fLon,type:'start'},
+      {lat:toLat,lon:toLon,type:'mark'}
+    ]});
+  }
+  paths.sort((a,b)=>a.time-b.time);
+  return paths[0].path;
+}
+
+function findTackPoint(la1,lo1,h1,la2,lo2,h2){
+  const ref={lat:la1,lon:lo1};
+  const B=ll2xy(ref,{lat:la2,lon:lo2});
+  const d1={x:Math.sin(h1*Math.PI/180),y:Math.cos(h1*Math.PI/180)};
+  const d2={x:Math.sin(h2*Math.PI/180),y:Math.cos(h2*Math.PI/180)};
+  // Solve A+t*d1 = B+s*d2 => t*d1 - s*d2 = B
+  const det=d1.x*(-d2.y)-(-d2.x)*d1.y;
+  if(Math.abs(det)<0.001)return null;
+  const t=((B.x)*(-d2.y)-(-d2.x)*(B.y))/det;
+  if(t<20)return null;
+  const R=6371000,la1r=la1*Math.PI/180;
+  const iLat=la1+(t*d1.y)/R*180/Math.PI;
+  const iLon=lo1+(t*d1.x)/(R*Math.cos(la1r))*180/Math.PI;
+  const dMark=haversine(iLat,iLon,la2,lo2);
+  const dTotal=haversine(la1,lo1,la2,lo2);
+  if(dMark>dTotal*1.9||dMark<10)return null;
+  return{lat:iLat,lon:iLon};
+}
+
+function refreshOptPath(){
+  return safeRun('refreshOptPath',()=>{
+    const tgt=activeMark();
+    if(tgt&&NAV.lat!==null&&NAV.lon!==null){
+      // Try the new deterministic polar multi-tack planner first. If it cannot
+      // produce a sane route, fall back to the known-good one-maneuver planner.
+      optPath=computePolarMultiTackPath(NAV.lat,NAV.lon,tgt.lat,tgt.lon)||
+              computeOptPath(NAV.lat,NAV.lon,tgt.lat,tgt.lon);
+    }else optPath=[];
+    return optPath;
+  },[]);
+}
+
+// ── START LINE ANALYSIS ──────────────────────────────────
+function startMetrics(){
+  if(!CRS.pinA||!CRS.pinB||NAV.lat===null)return null;
+  const B=ll2xy(CRS.pinA,CRS.pinB),P=ll2xy(CRS.pinA,{lat:NAV.lat,lon:NAV.lon});
+  const len=Math.hypot(B.x,B.y);if(len<3)return null;
+  const tRaw=(P.x*B.x+P.y*B.y)/(len*len),t=Math.max(0,Math.min(1,tRaw));
+  const C={x:B.x*t,y:B.y*t},dV={x:C.x-P.x,y:C.y-P.y},distM=Math.hypot(dV.x,dV.y);
+  const side=Math.sign(B.x*P.y-B.y*P.x)||1;
+  let fav=null,bias=0,favEnd=null;
+  if(WIND.twd!==null){
+    const up={x:Math.sin(WIND.twd*Math.PI/180),y:Math.cos(WIND.twd*Math.PI/180)};
+    const mid={x:B.x/2,y:B.y/2};
+    const aP=-mid.x*up.x-mid.y*up.y,bP=(B.x-mid.x)*up.x+(B.y-mid.y)*up.y;
+    fav=aP>=bP?'A':'B';favEnd=fav==='A'?CRS.pinA:CRS.pinB;bias=Math.abs(aP-bP);
+  }
+  const crs=NAV.cog??NAV.hdg,sogMS=(NAV.sog||0)*0.514444;
+  let closingMS=0;
+  if(distM>0.5&&crs!==null){
+    const v={x:Math.sin(crs*Math.PI/180)*sogMS,y:Math.cos(crs*Math.PI/180)*sogMS};
+    const u={x:dV.x/distM,y:dV.y/distM};
+    closingMS=v.x*u.x+v.y*u.y;
+  }
+  const ttl=closingMS>0.1?distM/closingMS:Infinity;
+  const gunRem=RACE.on&&RACE.epoch?Math.max(0,(RACE.epoch-Date.now())/1000):Infinity;
+  const burn=isFinite(gunRem)&&isFinite(ttl)?gunRem-ttl:Infinity;
+  let approachSpd=NAV.sog||4,distToFav=distM;
+  if(favEnd){
+    const FP=ll2xy(CRS.pinA,favEnd);distToFav=Math.hypot(FP.x-P.x,FP.y-P.y);
+    if(Object.keys(polarTable).length){
+      const fb=brng(NAV.lat,NAV.lon,favEnd.lat,favEnd.lon);
+      approachSpd=Math.max(1,pBSP(angDiff(WIND.twd??0,fb),WIND.tws||10));
+    }
+  }
+  const approachMS=approachSpd*0.514444;
+  const commitIn=isFinite(gunRem)?gunRem-(distToFav+approachMS*(CRS.tackDur+8))/approachMS:Infinity;
+  const isOver=side>0&&distM<2;
+  let approachHdg=null,approachTack=null;
+  if(favEnd&&WIND.twd!==null){
+    approachHdg=brng(NAV.lat,NAV.lon,favEnd.lat,favEnd.lon);
+    approachTack=angDiff(WIND.twd,approachHdg)>0?'PORT':'STBD';
+  }
+  return{distM,ttl,burn,gunRem,closingMS,fav,bias,favEnd,
+         pctAlong:tRaw*100,side,approachSpd,commitIn,isOver,
+         approachHdg,approachTack};
+}
+
+// ── WIND ANALYSIS ─────────────────────────────────────────
+function shiftDeg(){
+  const h=WIND.hist;if(h.length<4)return 0;
+  const av=a=>a.reduce((s,e)=>s+e.twd,0)/a.length;
+  return av(h.slice(-3))-av(h.slice(0,3));
+}
+function shiftNote(){
+  const d=shiftDeg();if(Math.abs(d)<2)return'STEADY';
+  const onPort=NAV.hdg!==null&&angDiff(WIND.twd??0,NAV.hdg)>0;
+  if(onPort)return d<0?'LIFTED — HOLD':'HEADED — TACK NOW';
+  return d>0?'LIFTED — HOLD':'HEADED — TACK NOW';
+}
+function windTrend(){
+  const h=WIND.hist;if(h.length<3)return{t:'NO DATA',d:0};
+  const n=h.length;let sx=0,sy=0,sxy=0,sx2=0;
+  for(let i=0;i<n;i++){sx+=i;sy+=h[i].twd;sxy+=i*h[i].twd;sx2+=i*i;}
+  const slope=(n*sxy-sx*sy)/(n*sx2-sx*sx)||0,deg=slope*n;
+  if(Math.abs(deg)<1.5)return{t:'STEADY',d:0};
+  return{t:deg<0?'LEFT':'RIGHT',d:Math.abs(deg).toFixed(1)};
+}
+
+// ── XTE ──────────────────────────────────────────────────
+function computeXTE(){
+  const tgt=activeMark();if(!tgt||NAV.lat===null)return null;
+  const i=CRS.activeMark;
+  const prev=i>0?CRS.wpts[i-1]:(CRS.pinA?midLL(CRS.pinA,CRS.pinB):null);
+  if(!prev)return null;
+  const A=ll2xy(prev,tgt),B=ll2xy(prev,{lat:NAV.lat,lon:NAV.lon});
+  const len=Math.hypot(A.x,A.y);if(len<10)return 0;
+  return(A.x*B.y-A.y*B.x)/len;
+}
+
+// ── MARK / COURSE ─────────────────────────────────────────
+function activeMark(){const i=CRS.activeMark;if(i<0||i>=CRS.wpts.length)return null;return CRS.wpts[i];}
+function distToMark(){const t=activeMark();if(!t||NAV.lat===null)return Infinity;return haversine(NAV.lat,NAV.lon,t.lat,t.lon);}
+function advanceMark(){
+  if(CRS.activeMark<CRS.wpts.length-1){
+    CRS.activeMark++;
+    const w=CRS.wpts[CRS.activeMark];
+    toast(`Mark ${w.label} · LEAVE ${w.rounding.toUpperCase()}`);
+  }else toast('FINISH — Race complete!');
+  dirty=true;saveState();refreshOptPath();
+}
+function saveCourse(){
+  return safeRun('saveCourse',()=>{
+    const v=id=>{const n=parseFloat(G(id).value);return isNaN(n)?null:n;};
+    const aL=v('cALat'),aO=v('cALon'),bL=v('cBLat'),bO=v('cBLon');
+    if(!aL||!bL){toast('Need both start pins');return;}
+    CRS.pinA={lat:aL,lon:aO};CRS.pinB={lat:bL,lon:bO};
+    CRS.tackDur=parseInt(G('cTackDur').value)||20;
+    const fm=G('finMode').value;
+    if(fm==='custom'){const fa=v('cFALat'),fo=v('cFALon'),fb=v('cFBLat'),fbo=v('cFBLon');if(fa&&fb){CRS.finA={lat:fa,lon:fo};CRS.finB={lat:fb,lon:fbo};}}
+    else{CRS.finA=null;CRS.finB=null;}
+    if(CRS.wpts.length>0&&CRS.activeMark<0)CRS.activeMark=0;
+    if(!NAV.lat){const m=midLL(CRS.pinA,CRS.pinB);NAV.lat=m.lat-0.005;NAV.lon=m.lon;}
+    closeModal('mCourse');toast('Course set');dirty=true;saveState();refreshOptPath();
+  });
+}
+function gpsToPin(w){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}const id=w==='A'?['cALat','cALon']:['cBLat','cBLon'];G(id[0]).value=NAV.lat.toFixed(6);G(id[1]).value=NAV.lon.toFixed(6);toast('GPS → Pin '+w);}
+function clearLine(){CRS.pinA=null;CRS.pinB=null;toast('Line cleared');dirty=true;}
+function addWpt(){const lbl=G('wLbl').value.trim()||`${CRS.wpts.length+1}`,lat=parseFloat(G('wLat').value),lon=parseFloat(G('wLon').value);if(isNaN(lat)||isNaN(lon)){toast('Need lat/lon');return;}CRS.wpts.push({label:lbl,lat,lon,rounding:'port'});if(CRS.activeMark<0)CRS.activeMark=0;['wLbl','wLat','wLon'].forEach(id=>G(id).value='');renderWptList();saveState();dirty=true;toast(`Mark ${lbl} added`);}
+function gpsToWpt(){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}G('wLat').value=NAV.lat.toFixed(6);G('wLon').value=NAV.lon.toFixed(6);toast('GPS loaded');}
+function clearWpts(){CRS.wpts=[];CRS.activeMark=-1;renderWptList();saveState();dirty=true;toast('Marks cleared');}
+function toggleRnd(i){const r=CRS.wpts[i].rounding;CRS.wpts[i].rounding=r==='port'?'stbd':r==='stbd'?'none':'port';renderWptList();saveState();}
+function deleteWpt(i){CRS.wpts.splice(i,1);if(CRS.activeMark>=CRS.wpts.length)CRS.activeMark=CRS.wpts.length-1;renderWptList();saveState();dirty=true;}
+function setActiveMark(i){CRS.activeMark=i;renderWptList();saveState();dirty=true;refreshOptPath();toast('Active mark → '+CRS.wpts[i].label);}
+function renderWptList(){const el=G('wptList');el.innerHTML='';
+if(CRS.wpts.length>0){const hint=document.createElement('div');hint.style.cssText='font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em';hint.textContent='TAP ROW TO SET ACTIVE MARK';el.appendChild(hint);}
+CRS.wpts.forEach((w,i)=>{const d=document.createElement('div');d.className='wpt-item'+(i===CRS.activeMark?' cur':'');
+d.innerHTML=`<span class="wpt-seq">${i+1}</span><span class="wpt-lab">${w.label}</span><span class="wpt-co">${w.lat.toFixed(4)}, ${w.lon.toFixed(4)}</span><button class="wpt-rnd ${w.rounding}" onclick="event.stopPropagation();toggleRnd(${i})">${w.rounding.toUpperCase()}</button><button class="wpt-del" onclick="event.stopPropagation();deleteWpt(${i})">&#x2715;</button>`;
+d.onclick=()=>setActiveMark(i);el.appendChild(d);});
+}
+function toggleFinCustom(){G('finCustom').style.display=G('finMode').value==='custom'?'block':'none';}
+
+// ── DEMO ──────────────────────────────────────────────────
+function loadLR(){
+  // Little River Inlet sausage course — wind 215°
+  G('dLat').value='33.840754';G('dLon').value='-78.607820';
+  G('dHdg').value='257';G('dSog').value='4.8';
+  G('dTwd').value='215';G('dTws').value='12';
+  CRS.pinA={lat:33.8422,lon:-78.6103};
+  CRS.pinB={lat:33.8393,lon:-78.6054};
+  CRS.wpts=[{label:'1',lat:33.8271,lon:-78.6193,rounding:'port'}];
+  CRS.finA=null;CRS.finB=null;CRS.activeMark=0;CRS.tackDur=20;
+  renderWptList();toast('Little River sausage loaded — tap Start Demo');
+}
+function startDemo(){
+  if(demoInt)clearInterval(demoInt);
+  const lat=parseFloat(G('dLat').value)||33.8615;
+  const lon=parseFloat(G('dLon').value)||-78.9810;
+  const hdg=parseFloat(G('dHdg').value)||340;
+  const sog=parseFloat(G('dSog').value)||4.8;
+  const twd=parseFloat(G('dTwd').value)||215;
+  const tws=parseFloat(G('dTws').value)||12;
+  const anim=G('dAnim').value==='1';
+  NAV.lat=lat;NAV.lon=lon;NAV.hdg=hdg;NAV.cog=hdg;NAV.sog=sog;NAV.track=[];
+  kfH.x=hdg;kfS.x=sog;
+  setWind(twd,tws,'Demo');
+  if(!Object.keys(polarTable).length){G('polarPreset').value='compac35';loadPolarPreset();commitPolar();}
+  ['pGPS','pHDG','pWND'].forEach(p=>pill(p,'ok'));
+  if(CRS.wpts.length>0&&CRS.activeMark<0)CRS.activeMark=0;
+  VIEW.locked=false;demoT=0;
+  if(anim){
+    demoInt=setInterval(()=>{
+      demoT+=0.02;
+      NAV.hdg=kfH.update(hdg+Math.sin(demoT)*8);
+      NAV.lat+=0.0000085+Math.cos(demoT*0.3)*0.000002;
+      NAV.lon+=Math.sin(demoT*0.5)*0.000004;
+      NAV.sog=kfS.update(sog+Math.sin(demoT)*0.6);
+      const rt=twd+Math.sin(demoT*0.12)*7;
+      WIND.twd=kfW.update(rt);WIND.tws=tws+Math.sin(demoT*0.2)*1.5;
+      WIND.hist.push({t:Date.now(),twd:rt,tws:WIND.tws});
+      if(WIND.hist.length>30)WIND.hist.shift();
+      NAV.track.push({lat:NAV.lat,lon:NAV.lon,t:Date.now()});
+      if(NAV.track.length>300)NAV.track.shift();
+      dirty=true;
+    },200);
+  }
+  closeModal('mDemo');refreshOptPath();dirty=true;
+  toast(anim?'Demo running':'Demo — fixed position');
+}
+
+// ── TELEMETRY ENGINE ─────────────────────────────────────
+function toggleTelem(){
+  if(TELEM.active){telemStop();G('telemTogBtn').textContent='START LOG';G('telemTogBtn').className='mbtn sec';}
+  else{telemStart();G('telemTogBtn').textContent='STOP LOG';G('telemTogBtn').className='mbtn amb';}
+}
+function openTelemModal(){
+  renderTelemModal();openModal('mTelem');
+}
+function telemStart(){
+  if(TELEM.active)return;
+  TELEM.active=true;
+  TELEM.startTime=Date.now();
+  TELEM.samples=[];
+  TELEM.meta={
+    startTime:new Date().toISOString(),
+    wind:{twd:WIND.twd,tws:WIND.tws},
+    course:{
+      pinA:CRS.pinA,pinB:CRS.pinB,
+      wpts:CRS.wpts.map(w=>({label:w.label,lat:w.lat,lon:w.lon,rounding:w.rounding})),
+      finA:CRS.finA,finB:CRS.finB
+    }
+  };
+  G('btnTelem').classList.add('on');
+  toast('Telemetry recording');
+}
+function telemStop(){
+  TELEM.active=false;
+  G('btnTelem').classList.remove('on');
+}
+function telemClear(){
+  if(TELEM.samples.length>0){toast('Tap Clear again to confirm');if(!TELEM._clearPending){TELEM._clearPending=true;setTimeout(()=>TELEM._clearPending=false,3000);return;}TELEM._clearPending=false;}
+  TELEM.samples=[];TELEM.startTime=null;TELEM.active=false;
+  G('btnTelem').classList.remove('on');
+  renderTelemModal();toast('Log cleared');
+}
+let _telemLast=0;
+function telemSample(){
+  if(!TELEM.active||NAV.lat===null)return;
+  if(NAV.sog<0.5)return; // only log while moving
+  const now=Date.now();
+  if(now-_telemLast<5000)return; // 5s interval
+  _telemLast=now;
+  const tac=tactics();
+  const bsp=WIND.twd!=null&&NAV.hdg!=null?pBSP(Math.abs(angDiff(WIND.twd,NAV.hdg)),WIND.tws||10):0;
+  const eff=bsp>0.1&&tac?Math.round(tac.bestVMG/bsp*100):null;
+  const avgG=imuAccBuf.length?imuAccBuf.reduce((a,b)=>a+b,0)/imuAccBuf.length:null;
+  const sample={
+    t:now,
+    elapsed:Math.round((now-TELEM.startTime)/1000),
+    lat:NAV.lat,lon:NAV.lon,
+    sog:parseFloat(NAV.sog.toFixed(2)),
+    cog:NAV.cog!=null?Math.round(NAV.cog):null,
+    hdg:NAV.hdg!=null?Math.round(NAV.hdg):null,
+    twd:WIND.twd!=null?Math.round(WIND.twd):null,
+    tws:WIND.tws!=null?parseFloat(WIND.tws.toFixed(1)):null,
+    twa:WIND.twd!=null&&NAV.hdg!=null?Math.round(angDiff(WIND.twd,NAV.hdg)):null,
+    bsp_polar:parseFloat(bsp.toFixed(2)),
+    vmg:tac?parseFloat(tac.bestVMG.toFixed(2)):null,
+    eff_pct:eff,
+    xte:parseFloat((computeXTE()||0).toFixed(1)),
+    mark:CRS.activeMark>=0&&CRS.wpts[CRS.activeMark]?CRS.wpts[CRS.activeMark].label:null,
+    leg:tac?tac.leg:null,
+    roll:imuRoll()!=null?parseFloat(imuRoll().toFixed(1)):null,
+    pitch:imuPitch()!=null?parseFloat(imuPitch().toFixed(1)):null,
+    roll_rate:IMU_CUR.rollRate!=null?parseFloat(IMU_CUR.rollRate.toFixed(2)):null,
+    pitch_rate:IMU_CUR.pitchRate!=null?parseFloat(IMU_CUR.pitchRate.toFixed(2)):null,
+    peak_g:parseFloat(IMU_CUR.peakG.toFixed(3))
+  };
+  TELEM.samples.push(sample);
+  IMU_CUR.peakG=0;imuAccBuf=[];  // reset per-sample accumulators
+  dirty=true;
+}
+setInterval(telemSample,1000); // check every second, logs every 5s
+
+function telemSetY(y){
+  TELEM.yAxis=y;
+  document.querySelectorAll('.ysel button').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+  renderTelemChart();
+}
+
+function telemStats(){
+  const s=TELEM.samples;
+  if(!s.length)return;
+  G('tsCnt').textContent=s.length;
+  const sogs=s.map(x=>x.sog).filter(Boolean);
+  G('tsAvgSOG').textContent=sogs.length?(sogs.reduce((a,b)=>a+b,0)/sogs.length).toFixed(1)+'kt':'--';
+  G('tsMaxSOG').textContent=sogs.length?Math.max(...sogs).toFixed(1)+'kt':'--';
+  const effs=s.map(x=>x.eff_pct).filter(x=>x!=null);
+  G('tsAvgEff').textContent=effs.length?Math.round(effs.reduce((a,b)=>a+b,0)/effs.length)+'%':'--%';
+  // Distance sailed
+  let dist=0;
+  for(let i=1;i<s.length;i++)dist+=haversine(s[i-1].lat,s[i-1].lon,s[i].lat,s[i].lon);
+  G('tsDist').textContent=(dist/1852).toFixed(2);
+  const elapsed=s.length?(s[s.length-1].elapsed):0;
+  G('tsElapsed').textContent=fmtT(elapsed);
+}
+
+function renderTelemChart(){
+  const cv=G('cvTelem'),s=TELEM.samples;
+  const W=cv.clientWidth||300,H=120;
+  cv.width=W*devicePixelRatio;cv.height=H*devicePixelRatio;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  const x=cv.getContext('2d');x.scale(devicePixelRatio,devicePixelRatio);
+  x.fillStyle='#050d18';x.fillRect(0,0,W,H);
+  if(!s.length){x.fillStyle='rgba(0,212,170,0.2)';x.font='9px var(--mono)';x.textAlign='center';x.textBaseline='middle';x.fillText('NO DATA YET',W/2,H/2);return;}
+  const key=TELEM.yAxis;
+  const vals=s.map(p=>p[key]).filter(v=>v!=null);
+  if(!vals.length)return;
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const range=mx-mn||1;
+  const sc=v=>(H-8)-(v-mn)/range*(H-16)+4;
+  // Grid line at zero or midpoint
+  x.strokeStyle='rgba(0,212,170,0.08)';x.lineWidth=1;x.beginPath();x.moveTo(0,sc((mn+mx)/2));x.lineTo(W,sc((mn+mx)/2));x.stroke();
+  // Color by efficiency
+  const pts=s.filter(p=>p[key]!=null);
+  if(pts.length<2)return;
+  for(let i=1;i<pts.length;i++){
+    const eff=pts[i].eff_pct;
+    const col=eff==null?'#3a5570':eff>=90?'#3ddc84':eff>=70?'#f5a623':'#e84040';
+    const px0=(i-1)/(pts.length-1)*W,px1=i/(pts.length-1)*W;
+    x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();
+    x.moveTo(px0,sc(pts[i-1][key]));x.lineTo(px1,sc(pts[i][key]));x.stroke();
+  }
+  // Min/max labels
+  x.fillStyle='rgba(0,212,170,0.5)';x.font='8px var(--mono)';
+  x.textAlign='left';x.textBaseline='top';x.fillText(mx.toFixed(1),2,2);
+  x.textBaseline='bottom';x.fillText(mn.toFixed(1),2,H-2);
+  x.textAlign='right';x.fillStyle='rgba(255,255,255,0.2)';
+  x.textBaseline='top';x.fillText(key.toUpperCase(),W-2,2);
+}
+
+function renderTelemTable(){
+  const tb=G('telemBody');tb.innerHTML='';
+  const s=[...TELEM.samples].reverse().slice(0,100); // show last 100
+  s.forEach(p=>{
+    const tr=document.createElement('tr');
+    const eff=p.eff_pct;
+    tr.className=eff==null?'':(eff>=90?'hi':eff>=70?'warn':'crit');
+    const t=new Date(p.t).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    tr.innerHTML=`<td>${t}</td><td>${p.hdg??'--'}</td><td>${p.sog??'--'}</td><td>${p.twd??'--'}</td><td>${p.twa??'--'}</td><td>${p.vmg??'--'}</td><td>${eff!=null?eff+'%':'--'}</td><td>${p.leg??'--'}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function renderTelemModal(){
+  telemStats();renderTelemChart();renderTelemTable();
+}
+
+function telemExportCSV(){
+  if(!TELEM.samples.length){toast('No data to export');return;}
+  const meta=TELEM.meta;
+  const hdrs=['time','elapsed_s','lat','lon','sog','cog','hdg','twd','tws','twa','bsp_polar','vmg','eff_pct','xte','mark','leg','roll','pitch','roll_rate','pitch_rate','peak_g'];
+  const rows=TELEM.samples.map(s=>[
+    new Date(s.t).toISOString(),s.elapsed,s.lat,s.lon,s.sog,s.cog,s.hdg,
+    s.twd,s.tws,s.twa,s.bsp_polar,s.vmg,s.eff_pct,s.xte,s.mark,s.leg,
+    s.roll,s.pitch,s.roll_rate,s.pitch_rate,s.peak_g
+  ].join(','));
+  // Add course info as comments at top
+  const wpts=(meta.course?.wpts||[]).map(function(w){return '# WPT '+w.label+': '+w.lat+','+w.lon+' '+w.rounding;}).join('\n');
+  const csvHead='# TACTICIAN SESSION '+(meta.startTime||'')+'\n'+'# Wind: '+(meta.wind&&meta.wind.twd!=null?meta.wind.twd:'--')+'deg @ '+(meta.wind&&meta.wind.tws!=null?meta.wind.tws:'--')+'kt';
+  const csv=csvHead+'\n'+wpts+'\n'+hdrs.join(',')+'\n'+rows.join('\n');
+  dlFile('tactician_'+Date.now()+'.csv',csv,'text/csv');
+  toast('CSV exported');
+}
+
+function telemExportJSON(){
+  if(!TELEM.samples.length){toast('No data to export');return;}
+  const out=JSON.stringify({meta:TELEM.meta,samples:TELEM.samples},null,2);
+  dlFile('tactician_'+Date.now()+'.json',out,'application/json');
+  toast('JSON exported');
+}
+
+function dlFile(name,data,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([data],{type}));
+  a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+
+// ── MODE ──────────────────────────────────────────────────
+function setMode(m){
+  appMode=m;
+  G('modeStart').classList.toggle('gone',m!=='start');
+  G('modeRace').classList.toggle('gone',m!=='race');
+  G('mBtnS').classList.toggle('on',m==='start');
+  G('mBtnR').classList.toggle('on',m==='race');
+  dirty=true;
+}
+
+// ── GUN ───────────────────────────────────────────────────
+function selSeq(n){seqSel=n;['sq5','sq3','sq10','sq0'].forEach(id=>G(id).classList.remove('on'));const m={5:'sq5',3:'sq3',10:'sq10',0:'sq0'};if(m[n])G(m[n]).classList.add('on');G('customMinRow').style.display=n===0?'block':'none';}
+function startGun(){const m=seqSel===0?parseInt(G('customMins').value)||5:seqSel;RACE.epoch=Date.now()+m*60000;RACE.on=true;G('gunBar').classList.add('vis');if(gunInt)clearInterval(gunInt);gunInt=setInterval(tickGun,200);tickGun();G('btnTimer').classList.add('on');closeModal('mTimer');}
+function syncGun(){if(!RACE.on||!RACE.epoch)return;const rem=RACE.epoch-Date.now();RACE.epoch=Date.now()+Math.round(rem/60000)*60000;closeModal('mTimer');toast('Synced');}
+function stopGun(){if(gunInt)clearInterval(gunInt);RACE.on=false;RACE.epoch=null;G('gunBar').className='gun-bar';G('btnTimer').classList.remove('on');}
+function tickGun(){
+  if(!RACE.on||!RACE.epoch)return;
+  const rem=RACE.epoch-Date.now(),bar=G('gunBar');
+  if(rem<=0){
+    G('gunTime').textContent='GO!';G('gunPhase').textContent='RACING';
+    bar.className='gun-bar vis go';
+    if(rem<-4000){stopGun();setMode('race');}
+    return;
+  }
+  const ts=Math.ceil(rem/1000),m=Math.floor(ts/60),s=ts%60;
+  G('gunTime').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  bar.className='gun-bar vis '+(ts<=60?'final':'prep');
+  G('gunPhase').textContent=ts>60?`${Math.ceil(ts/60)} MIN`:(ts<=10?'FINAL!':'1 MIN');
+  dirty=true;
+}
+G('btnSync').onclick=()=>{if(!RACE.on||!RACE.epoch)return;const rem=RACE.epoch-Date.now();RACE.epoch=Date.now()+Math.round(rem/60000)*60000;toast('Synced');};
+
+// ── SENSORS ───────────────────────────────────────────────
+async function toggleSensors(){if(sensorsOn)stopSensors();else await startSensors();}
+function openSensorsPanel(){
+  // Toggle a small sensors panel instead of just toggling sensors
+  const panel=G('sensorPanel');
+  if(panel.style.display==='flex'){panel.style.display='none';return;}
+  panel.style.display='flex';
+}
+async function startSensors(){
+  G('btnSensors').classList.add('on');
+  if('geolocation'in navigator)gpsW=navigator.geolocation.watchPosition(onGPS,()=>pill('pGPS','warn'),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+  else pill('pGPS','warn');
+  if(window.DeviceOrientationEvent){
+    if(typeof DeviceOrientationEvent.requestPermission==='function'){
+      try{const r=await DeviceOrientationEvent.requestPermission();if(r==='granted')listenOri();else pill('pHDG','warn');}
+      catch{pill('pHDG','warn');}
+    }else listenOri();
+  }else pill('pHDG','warn');
+  sensorsOn=true;toast('Sensors on');
+}
+function stopSensors(){if(gpsW!=null)navigator.geolocation.clearWatch(gpsW);window.removeEventListener('deviceorientationabsolute',onOriA,true);window.removeEventListener('deviceorientation',onOriR,true);absOri=false;sensorsOn=false;G('btnSensors').classList.remove('on');['pGPS','pHDG'].forEach(p=>pill(p,''));kfH.reset();kfS.reset();kfLat.reset();kfLon.reset();_hdgBuf.length=0;toast('Sensors off');}
+function listenOri(){
+  window.addEventListener('deviceorientationabsolute',onOriA,true);
+  window.addEventListener('deviceorientation',onOriR,true);
+  // DeviceMotion for roll/pitch rates and acceleration
+  if(window.DeviceMotionEvent){
+    if(typeof DeviceMotionEvent.requestPermission==='function'){
+      DeviceMotionEvent.requestPermission().then(r=>{if(r==='granted')window.addEventListener('devicemotion',onMotion,true);}).catch(()=>{});
+    }else{
+      window.addEventListener('devicemotion',onMotion,true);
+    }
+  }
+}
+function onMotion(e){
+  const rr=e.rotationRate,ag=e.accelerationIncludingGravity;
+  if(rr){IMU_CUR.rollRate=rr.gamma??0;IMU_CUR.pitchRate=rr.beta??0;}
+  if(ag){const g=Math.hypot(ag.x??0,ag.y??0,ag.z??0)/9.81;if(g>IMU_CUR.peakG)IMU_CUR.peakG=g;imuAccBuf.push(g);}
+}
+function calibrateIMU(){
+  if(!IMU_CUR.alpha&&NAV.hdg===null){toast('Need heading first — tap Sensors');return;}
+  // Use current device orientation as zero reference
+  IMU_CAL.alpha=IMU_CUR.alpha??0;
+  IMU_CAL.beta=IMU_CUR.beta??0;
+  IMU_CAL.gamma=IMU_CUR.gamma??0;
+  IMU_CAL.calibrated=true;
+  G('calBtn').style.background='var(--green)';
+  G('calBtn').style.color='var(--ink)';
+  G('calBtn').textContent='IMU CAL ✓';
+  toast('IMU calibrated — mount reference set');
+  saveState();
+}
+function imuRoll(){if(!IMU_CAL.calibrated)return null;return(IMU_CUR.gamma??0)-IMU_CAL.gamma;}
+function imuPitch(){if(!IMU_CAL.calibrated)return null;return(IMU_CUR.beta??0)-IMU_CAL.beta;}
+function onOriA(e){if(e.alpha==null)return;absOri=true;
+  IMU_CUR.alpha=e.alpha;IMU_CUR.beta=e.beta;IMU_CUR.gamma=e.gamma;
+  NAV.hdg=kfH.update(smoothHdg((360-e.alpha+360)%360));pill('pHDG','ok');dirty=true;}
+function onOriR(e){if(absOri)return;
+  IMU_CUR.alpha=e.alpha;IMU_CUR.beta=e.beta;IMU_CUR.gamma=e.gamma;
+  let r=null;if(e.webkitCompassHeading!=null)r=e.webkitCompassHeading;
+  else if(e.alpha!=null)r=(360-e.alpha+360)%360;
+  if(r!=null){NAV.hdg=kfH.update(smoothHdg(r));pill('pHDG','ok');dirty=true;}}
+function onGPS(p){
+  const t=Date.now(),rawLat=p.coords.latitude,rawLon=p.coords.longitude;
+  const lat=kfLat.update(rawLat),lon=kfLon.update(rawLon);
+  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);if(dt>=2&&dt<60){const rawSog=d/dt*3600*0.539957;if(rawSog<20)NAV.sog=kfS.update(d<3?0:rawSog);}NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
+  NAV.lat=lat;NAV.lon=lon;NAV.pLat=lat;NAV.pLon=lon;NAV.pT=t;
+  NAV.track.push({lat,lon,t});if(NAV.track.length>300)NAV.track.shift();
+  pill('pGPS','ok');dirty=true;refreshOptPath();
+}
+
+// ── LOCALSTORAGE ──────────────────────────────────────────
+const LS='tactician_v5';
+function saveState(){try{const srcs=WSRCS.filter(s=>s.id!=='openmeteo'&&s.id!=='manual');localStorage.setItem(LS,JSON.stringify({pinA:CRS.pinA,pinB:CRS.pinB,finA:CRS.finA,finB:CRS.finB,wpts:CRS.wpts,activeMark:CRS.activeMark,tackDur:CRS.tackDur,twd:WIND.twd,tws:WIND.tws,polar:polarTable,polarAngles,windSrcIdx,dynSrcs:srcs,imuCal:IMU_CAL}));}catch(e){}}
+function loadState(){
+  try{
+    const raw=localStorage.getItem(LS);if(!raw)return;const p=JSON.parse(raw);
+    if(p.pinA)CRS.pinA=p.pinA;if(p.pinB)CRS.pinB=p.pinB;
+    if(p.finA)CRS.finA=p.finA;if(p.finB)CRS.finB=p.finB;
+    if(p.wpts)CRS.wpts=p.wpts;if(p.activeMark!=null)CRS.activeMark=p.activeMark;
+    if(p.tackDur)CRS.tackDur=p.tackDur;
+    if(p.twd!=null)WIND.twd=p.twd;if(p.tws!=null)WIND.tws=p.tws;
+    if(p.polar){polarTable=p.polar;const angs=Object.keys(p.polar).map(Number).sort((a,b)=>a-b);buildPolarDOM(angs.map(a=>[a,...p.polar[a]]));}
+    if(p.polarAngles)polarAngles=p.polarAngles;
+    if(p.dynSrcs&&p.dynSrcs.length){
+      WSRCS.length=0;
+      WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
+      p.dynSrcs.forEach(s=>WSRCS.push(s));
+      WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
+    }
+    if(p.windSrcIdx!=null)windSrcIdx=p.windSrcIdx;
+    if(p.imuCal&&p.imuCal.calibrated){Object.assign(IMU_CAL,p.imuCal);
+      setTimeout(()=>{const cb=G('calBtn');if(cb){cb.style.background='var(--green)';cb.style.color='var(--ink)';cb.textContent='IMU CAL ✓';}},500);}
+    renderWptList();dirty=true;toast('Session restored');
+  }catch(e){}
+}
+
+// ── CANVAS / TILES ────────────────────────────────────────
+const cvT=G('cvTiles'),ctxT=cvT.getContext('2d');
+const cvM=G('cvMain'),ctxM=cvM.getContext('2d');
+function resizeCvs(){const w=cvM.parentElement.clientWidth,h=cvM.parentElement.clientHeight;[cvT,cvM].forEach(c=>{c.width=w*devicePixelRatio;c.height=h*devicePixelRatio;c.style.width=w+'px';c.style.height=h+'px';});dirty=true;}
+new ResizeObserver(resizeCvs).observe(G('chartWrap'));resizeCvs();
+
+const TILE='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+function ll2tile(lat,lon,z){const n=2**z,x=Math.floor((lon+180)/360*n),lr=lat*Math.PI/180,y=Math.floor((1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n);return{x,y,z};}
+function tile2ll(x,y,z){const n=2**z,lon=x/n*360-180,lr=Math.atan(Math.sinh(Math.PI*(1-2*y/n)));return{lat:lr*180/Math.PI,lon};}
+function getTile(z,x,y){const k=`${z}/${x}/${y}`;if(tileCache[k])return tileCache[k];const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{tileCache[k].ok=true;dirty=true;};img.onerror=()=>{tileCache[k].err=true;};img.src=TILE.replace('{z}',z).replace('{x}',x).replace('{y}',y);return tileCache[k]={img,ok:false,err:false};}
+
+function renderTiles(b,W,H){
+  if(!VIEW.map)return;
+  ctxT.save();ctxT.scale(devicePixelRatio,devicePixelRatio);ctxT.clearRect(0,0,W,H);
+  const z=Math.min(16,Math.max(7,Math.round(12+Math.log2(VIEW.scale))));
+  const cL=(b.n+b.s)/2,cO=(b.e+b.w)/2,ref=ll2tile(cL,cO,z);
+  const dtX=360/2**z,tL=tile2ll(ref.x,ref.y,z).lat,bL=tile2ll(ref.x,ref.y+1,z).lat;
+  const dtY=Math.abs(tL-bL);
+  const pxX=W/(b.e-b.w)*VIEW.scale,pxY=H/(b.n-b.s)*VIEW.scale;
+  const twX=dtX*pxX,twY=dtY*pxY;
+  for(let tx=ref.x-3;tx<=ref.x+3;tx++){for(let ty=ref.y-3;ty<=ref.y+3;ty++){
+    const o=tile2ll(tx,ty,z);
+    const sx=(o.lon-b.w)/(b.e-b.w)*W*VIEW.scale+VIEW.ox*W*VIEW.scale;
+    const sy=(1-(o.lat-b.s)/(b.n-b.s))*H*VIEW.scale+VIEW.oy*H*VIEW.scale;
+    const t=getTile(z,tx,ty);
+    if(t.ok){ctxT.globalAlpha=0.48;ctxT.drawImage(t.img,sx,sy,twX+1,twY+1);ctxT.globalAlpha=1;}
+  }}
+  ctxT.restore();
+}
+function toggleMap(){VIEW.map=!VIEW.map;G('mapBtn').classList.toggle('on',VIEW.map);G('mapBtn').textContent=VIEW.map?'MAP ON':'MAP';dirty=true;}
+
+// Touch
+function tDst(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);}
+cvM.addEventListener('touchstart',e=>{e.preventDefault();VIEW.locked=true;if(e.touches.length===2){VIEW.pd=tDst(e.touches);VIEW.bs=VIEW.scale;VIEW.box=VIEW.ox;VIEW.boy=VIEW.oy;}else{VIEW.drag=true;VIEW.lx=e.touches[0].clientX;VIEW.ly=e.touches[0].clientY;}},{passive:false});
+cvM.addEventListener('touchmove',e=>{e.preventDefault();if(e.touches.length===2&&VIEW.pd){const nd=tDst(e.touches),sf=nd/VIEW.pd,ns=Math.max(0.3,Math.min(32,VIEW.bs*sf));const r=cvM.getBoundingClientRect(),mx=((e.touches[0].clientX+e.touches[1].clientX)/2-r.left)/r.width,my=((e.touches[0].clientY+e.touches[1].clientY)/2-r.top)/r.height;VIEW.ox=mx-(mx-VIEW.box)*(ns/VIEW.bs);VIEW.oy=my-(my-VIEW.boy)*(ns/VIEW.bs);VIEW.scale=ns;dirty=true;}else if(e.touches.length===1&&VIEW.drag){VIEW.ox+=(e.touches[0].clientX-VIEW.lx)/cvM.clientWidth;VIEW.oy+=(e.touches[0].clientY-VIEW.ly)/cvM.clientHeight;VIEW.lx=e.touches[0].clientX;VIEW.ly=e.touches[0].clientY;dirty=true;}},{passive:false});
+cvM.addEventListener('touchend',e=>{if(e.touches.length<2)VIEW.pd=null;if(e.touches.length===0)VIEW.drag=false;},{passive:true});
+let lastTap=0;cvM.addEventListener('touchend',e=>{const n=Date.now();if(n-lastTap<280){VIEW.scale=1;VIEW.ox=0;VIEW.oy=0;VIEW.locked=false;dirty=true;}lastTap=n;},{passive:true});
+
+// Tap on chart to edit marks
+cvM.addEventListener('touchend',e=>{
+  if(e.touches.length>0)return; // only on final lift
+  if(Date.now()-lastTap<320)return; // ignore double-tap
+  const touch=e.changedTouches[0];
+  const rect=cvM.getBoundingClientRect();
+  const tx=touch.clientX-rect.left,ty=touch.clientY-rect.top;
+  const b=getBounds();if(!b)return;
+  const W=cvM.clientWidth,H=cvM.clientHeight;
+  // Check all interactive points
+  const hits=[];
+  function chk(lat,lon,type,idx){
+    if(lat==null)return;
+    const p=proj(lat,lon,b,W,H);
+    const dist=Math.hypot(p.x-tx,p.y-ty);
+    if(dist<28)hits.push({dist,type,idx});
+  }
+  if(CRS.pinA)chk(CRS.pinA.lat,CRS.pinA.lon,'pinA');
+  if(CRS.pinB)chk(CRS.pinB.lat,CRS.pinB.lon,'pinB');
+  if(CRS.finA&&CRS.finA!==CRS.pinA)chk(CRS.finA.lat,CRS.finA.lon,'finA');
+  if(CRS.finB&&CRS.finB!==CRS.pinB)chk(CRS.finB.lat,CRS.finB.lon,'finB');
+  CRS.wpts.forEach((w,i)=>chk(w.lat,w.lon,'wpt',i));
+  if(hits.length===0)return;
+  hits.sort((a,b)=>a.dist-b.dist);
+  const h=hits[0];
+  openEdit(h.type,h.idx);
+},{passive:true});
+
+// Bounds + projection
+function getBounds(){
+  const pts=[];if(CRS.pinA)pts.push(CRS.pinA);if(CRS.pinB)pts.push(CRS.pinB);
+  CRS.wpts.forEach(w=>pts.push(w));if(CRS.finA)pts.push(CRS.finA);if(CRS.finB)pts.push(CRS.finB);
+  if(NAV.lat)pts.push({lat:NAV.lat,lon:NAV.lon});if(!pts.length)return null;
+  let s=Infinity,n=-Infinity,w=Infinity,e=-Infinity;
+  pts.forEach(p=>{s=Math.min(s,p.lat);n=Math.max(n,p.lat);w=Math.min(w,p.lon);e=Math.max(e,p.lon);});
+  const pLa=Math.max((n-s)*0.35,0.005),pLo=Math.max((e-w)*0.35,0.006);
+  return{s:s-pLa,n:n+pLa,w:w-pLo,e:e+pLo};
+}
+let _lastBoundsKey='';
+function autoFit(b){
+  if(!b||VIEW.locked)return;
+  const k=`${b.s.toFixed(4)},${b.n.toFixed(4)},${b.w.toFixed(4)},${b.e.toFixed(4)}`;
+  if(k===_lastBoundsKey)return;
+  _lastBoundsKey=k;VIEW.scale=1;VIEW.ox=0;VIEW.oy=0;
+}
+function proj(lat,lon,b,W,H){
+  const rx=(lon-b.w)/(b.e-b.w),ry=1-(lat-b.s)/(b.n-b.s);
+  return{x:(rx*VIEW.scale+VIEW.ox*VIEW.scale)*W,y:(ry*VIEW.scale+VIEW.oy*VIEW.scale)*H};
+}
+function sr(base){return Math.max(base,base*Math.sqrt(VIEW.scale)*0.7);}
+
+// ── RAF LOOP ──────────────────────────────────────────────
+function rafLoop(){
+  if(dirty){
+    dirty=false;
+    safeRun('renderFrame',renderFrame);
+  }
+  requestAnimationFrame(rafLoop);
+}
+function updateSensorPanel(){
+  // Keep sensor panel pills in sync
+  ['GPS','HDG','WND'].forEach(k=>{
+    const src=G('p'+k),dst=G('sp_'+k);
+    if(dst&&src)dst.className=src.className;
+  });
+  // IMU cal status
+  const cs=G('imuCalStatus');
+  if(cs){
+    if(IMU_CAL.calibrated){cs.textContent='IMU calibrated ✓  roll:'+( imuRoll()!=null?imuRoll().toFixed(1)+'°':'--')+' pitch:'+(imuPitch()!=null?imuPitch().toFixed(1)+'°':'--');cs.style.color='var(--green)';}
+    else{cs.textContent='IMU not calibrated — lock mount then tap Calibrate';cs.style.color='var(--muted)';}
+  }
+  // Sensors on/off button
+  const sb=G('sensOnBtn');
+  if(sb){sb.textContent=sensorsOn?'SENSORS OFF':'SENSORS ON';sb.className=sensorsOn?'mbtn amb':'mbtn sec';}
+  // Telem log button
+  const tb=G('telemTogBtn');
+  if(tb){
+    tb.textContent=TELEM.active?'STOP LOG ■':'START LOG ▶';
+    tb.className=TELEM.active?'mbtn amb':'mbtn sec';
+    G('btnTelem').classList.toggle('on',TELEM.active);
+  }
+}
+function renderFrame(){
+  updateStartUI();
+  updateRaceUI();
+  updateSensorPanel();
+  if(appMode==='race')renderChart();
+  if(appMode==='start'){drawLineChart();drawShiftGraph();}
+  drawWindRose();
+}
+
+// ── START MODE UI ─────────────────────────────────────────
+function updateStartUI(){
+  if(appMode!=='start')return;
+  const m=startMetrics();
+  // TTL
+  if(m&&isFinite(m.ttl)){G('tsTTL').textContent=fmtT(m.ttl);G('tsTTL').className='tsv hi';}
+  else{G('tsTTL').textContent='--:--';G('tsTTL').className='tsv hi';}
+  // BURN
+  if(m&&isFinite(m.burn)){
+    const bv=(m.burn>=0?'+':'')+fmtT(m.burn);
+    G('tsBURN').textContent=bv;
+    G('tsBURN').className='tsv '+(m.burn<0?'crit':m.burn<15?'warn':'ok');
+    G('tsBurnSub').textContent=m.burn>=0?'time to kill':'LATE';
+  }else{G('tsBURN').textContent='NO TMR';G('tsBURN').className='tsv warn';G('tsBurnSub').textContent='start timer';}
+  // COMMIT
+  if(m&&RACE.on&&isFinite(m.commitIn)){
+    const cv=m.commitIn<=0?'GO NOW':fmtT(m.commitIn);
+    G('tsCOMMIT').textContent=cv;
+    G('tsCOMMIT').className='tsv '+(m.commitIn<=0?'crit':m.commitIn<20?'warn':'hi');
+  }else if(m&&m.isOver){G('tsCOMMIT').textContent='OCS!';G('tsCOMMIT').className='tsv crit';}
+  else{G('tsCOMMIT').textContent='--:--';G('tsCOMMIT').className='tsv';}
+  // Wind row
+  // HDG strip
+  G('sHDG').textContent=NAV.hdg!=null?Math.round(NAV.hdg)+'°':'---';
+  G('sSOG').textContent=NAV.sog.toFixed(1);
+  G('sTWA').textContent=(WIND.twd!=null&&NAV.hdg!=null)?Math.round(Math.abs(angDiff(WIND.twd,NAV.hdg)))+'°':'---';
+  G('wrDir').textContent=WIND.twd!=null?Math.round(WIND.twd)+'°':'---';
+  G('wrSpd').textContent=WIND.tws!=null?WIND.tws.toFixed(1)+'kt':'--kt';
+  const age=windAge();const stale=isWindStale();
+  G('wrAge').textContent=age;G('wrAge').className='wr-age'+(stale?' stale':'');
+  const tr=windTrend(),tv=G('wtvEl'),tl=G('wtlEl'),tn=G('wtnEl');
+  if(tr.t==='NO DATA'||tr.t==='STEADY'){tv.textContent='STEADY';tv.className='wtv steady';tl.textContent='SHIFT';}
+  else if(tr.t==='LEFT'){tv.textContent=`\u2190${tr.d}\u00b0`;tv.className='wtv lift';tl.textContent='LEFT';}
+  else{tv.textContent=`\u2192${tr.d}\u00b0`;tv.className='wtv hdr';tl.textContent='RIGHT';}
+  const sn=shiftNote();tn.textContent=sn==='STEADY'?'':sn;
+  // Approach CTS
+  if(m&&m.approachHdg!=null){
+    G('ctsApp').textContent=Math.round(m.approachHdg)+'°';
+    const at=G('ctsTApp');at.textContent=`${m.approachTack} TACK`;
+    at.className='cts-tack '+(m.approachTack==='PORT'?'port':'stbd');
+    G('ctsSApp').textContent=`${m.approachSpd.toFixed(1)}kt to FAV ${m.fav}`;
+  }else{G('ctsApp').textContent='---°';G('ctsTApp').textContent='--';G('ctsTApp').className='cts-tack none';G('ctsSApp').textContent='set pins & wind';}
+  // Post-start CTS
+  const ps=postStartCTS();
+  if(ps){
+    G('ctsPost').textContent=Math.round(ps.hdg)+'°';
+    const pt=G('ctsTPost');
+    if(ps.tack==='reach'){pt.textContent='REACH';pt.className='cts-tack none';}
+    else{pt.textContent=`${ps.tack==='stbd'?'STBD':'PORT'} TACK`;pt.className='cts-tack '+(ps.tack==='stbd'?'stbd':'port');}
+    G('ctsSPost').textContent=`${ps.spd.toFixed(1)}kt to Mark 1`;
+  }else{G('ctsPost').textContent='---°';G('ctsTPost').textContent='--';G('ctsTPost').className='cts-tack none';G('ctsSPost').textContent='set marks & wind';}
+}
+
+// ── RACE MODE UI ──────────────────────────────────────────
+function updateRaceUI(){
+  if(appMode!=='race')return;
+  const tac=tactics();
+  // Hero CTS
+  const hn=G('heroNum'),hs=G('heroSub');
+  if(!tac){hn.textContent='---°';hn.className='hero-num none';hs.textContent='SET COURSE & WIND';hs.className='hero-sub';}
+  else{
+    hn.textContent=Math.round(tac.bestHdg)+'°';
+    hn.className='hero-num '+tac.best;
+        let sub='';
+    if(tac.leg==='upwind')sub=(tac.best==='stbd'?'\u25ba STBD':'\u25c4 PORT')+' TACK \u00b7 VMG '+tac.bestVMG.toFixed(1)+'kt';
+    else if(tac.leg==='downwind')sub=(tac.best==='stbd'?'\u25ba STBD':'\u25c4 PORT')+' GYBE \u00b7 VMG '+tac.bestVMG.toFixed(1)+'kt';
+    else sub='REACH \u00b7 '+(tac.note||'');
+    const shift=tac.shift&&tac.shift!=='STEADY'?' \u00b7 '+tac.shift:'';
+    hs.textContent=sub+shift;
+    hs.className='hero-sub '+(tac.shift&&tac.shift.includes('LIFTED')?'lift':tac.shift&&tac.shift.includes('HEADED')?'hdr':tac.best);
+  }
+  // Secondary
+  G('rHDG').textContent=NAV.hdg!=null?Math.round(NAV.hdg)+'°':'---';
+  G('rSOG').textContent=NAV.sog.toFixed(1);
+  G('rTWA').textContent=(WIND.twd!=null&&NAV.hdg!=null)?Math.round(angDiff(WIND.twd,NAV.hdg))+'°':'---';
+  G('rVMG').textContent=tac?tac.bestVMG.toFixed(1):'--';
+  // Wind badge
+  G('wbSpd').textContent=WIND.tws!=null?Math.round(WIND.tws)+'kt':'--kt';
+  G('wbDir').textContent=WIND.twd!=null?Math.round(WIND.twd)+'°':'---°';
+  const stale=isWindStale(),age=windAge();
+  G('wbAge').textContent=age;G('wbAge').className='wb-age'+(stale?' stale':'');
+  const tr=windTrend(),te=G('wbTrend');
+  if(tr.t==='NO DATA'||tr.t==='STEADY'){te.textContent=tr.t;te.className='wb-trend';}
+  else if(tr.t==='LEFT'){te.textContent=`\u2190${tr.d}° LEFT`;te.className='wb-trend lift';}
+  else{te.textContent=`\u2192${tr.d}° RIGHT`;te.className='wb-trend hdr';}
+  // Leg chip
+  const lc=G('legChip'),tm=activeMark();
+  if(tac&&tm){const d=distToMark();lc.textContent=`TO ${tm.label} \u00b7 ${(d/1852).toFixed(2)}nm \u00b7 ${tac.leg.toUpperCase()}`;lc.style.display='block';}
+  else lc.style.display='none';
+  // XTE
+  const x=computeXTE(),xteM=x!=null?Math.round(Math.abs(x)):null;
+  const xc=G('xteChip'),xv=G('xteVal');
+  if(xteM!=null){xv.textContent=xteM+'m '+(x>0?'R':'L');xv.className='xte-val'+(xteM>100?' crit':xteM>50?' warn':'');xc.style.display='block';}
+  else xc.style.display='none';
+  // Mark advance
+  const ma=G('markAdv'),d=distToMark(),tm2=activeMark();
+  if(d<200&&tm2){
+    ma.classList.add('vis');
+    G('maDistV').textContent=Math.round(d)+'m';
+    G('maLblV').textContent=`MARK ${tm2.label} \u00b7 LEAVE TO ${tm2.rounding.toUpperCase()}`;
+  }else ma.classList.remove('vis');
+}
+
+// ── LINE CHART (start mode mini chart) ───────────────────
+function drawLineChart(){
+  const c=G('cvLC'),W=c.parentElement.clientWidth,H=130;
+  c.width=W*devicePixelRatio;c.height=H*devicePixelRatio;
+  c.style.width=W+'px';c.style.height=H+'px';
+  const x=c.getContext('2d');x.scale(devicePixelRatio,devicePixelRatio);
+  x.clearRect(0,0,W,H);
+  const hint=G('lcHint');
+  if(!CRS.pinA||!CRS.pinB){
+    x.fillStyle='rgba(3,8,15,0.95)';x.fillRect(0,0,W,H);
+    hint.style.display='block';return;
+  }
+  hint.style.display='none';
+  // Dark background
+  x.fillStyle='#050d18';x.fillRect(0,0,W,H);
+  // Determine bounding box for the line schematic
+  const pts=[CRS.pinA,CRS.pinB];
+  if(NAV.lat)pts.push({lat:NAV.lat,lon:NAV.lon});
+  let minLat=Infinity,maxLat=-Infinity,minLon=Infinity,maxLon=-Infinity;
+  pts.forEach(p=>{minLat=Math.min(minLat,p.lat);maxLat=Math.max(maxLat,p.lat);minLon=Math.min(minLon,p.lon);maxLon=Math.max(maxLon,p.lon);});
+  const pLa=Math.max((maxLat-minLat)*1.2,0.003),pLo=Math.max((maxLon-minLon)*1.2,0.004);
+  const b={s:minLat-pLa,n:maxLat+pLa,w:minLon-pLo,e:maxLon+pLo};
+  const lp=(lat,lon)=>({x:(lon-b.w)/(b.e-b.w)*W,y:(1-(lat-b.s)/(b.n-b.s))*H});
+  // Wind arrows
+  if(WIND.twd!=null){
+    const wr=(WIND.twd-90)*Math.PI/180;
+    x.strokeStyle='rgba(245,166,35,0.2)';x.lineWidth=1;
+    for(let i=0;i<5;i++){
+      const ax=W*0.15+i*(W*0.18),ay=H*0.25;
+      x.beginPath();x.moveTo(ax,ay);x.lineTo(ax+Math.cos(wr)*20,ay+Math.sin(wr)*20);x.stroke();
+    }
+    x.fillStyle='rgba(245,166,35,0.35)';x.font='9px var(--mono)';x.textAlign='left';x.textBaseline='top';
+    x.fillText(`W ${Math.round(WIND.twd)}°`,6,4);
+  }
+  // Line A-B
+  const A=lp(CRS.pinA.lat,CRS.pinA.lon),B=lp(CRS.pinB.lat,CRS.pinB.lon);
+  x.strokeStyle='rgba(245,166,35,0.85)';x.lineWidth=3;
+  x.beginPath();x.moveTo(A.x,A.y);x.lineTo(B.x,B.y);x.stroke();
+  // Pins
+  const sm=startMetrics();
+  [[A,'A'],[B,'B']].forEach(([pt,lbl])=>{
+    const isFav=sm&&sm.fav===lbl;
+    x.fillStyle='#f5a623';x.beginPath();x.arc(pt.x,pt.y,9,0,2*Math.PI);x.fill();
+    x.strokeStyle='rgba(0,0,0,0.4)';x.lineWidth=1;x.stroke();
+    x.fillStyle='#000';x.font='bold 9px var(--mono)';x.textAlign='center';x.textBaseline='middle';x.fillText(lbl,pt.x,pt.y+0.5);
+    if(isFav){x.strokeStyle='rgba(61,220,132,0.9)';x.lineWidth=3;x.beginPath();x.arc(pt.x,pt.y,14,0,2*Math.PI);x.stroke();
+      x.fillStyle='rgba(61,220,132,0.8)';x.font='bold 9px var(--mono)';x.textAlign='center';x.textBaseline='top';x.fillText(`FAV +${Math.round(sm.bias)}m`,pt.x,pt.y+16);}
+  });
+  // Boat
+  if(sm&&NAV.lat!=null){
+    const bx=A.x+(B.x-A.x)*Math.max(0.04,Math.min(0.96,sm.pctAlong/100));
+    const by=A.y+(B.y-A.y)*Math.max(0.04,Math.min(0.96,sm.pctAlong/100));
+    const bc=sm.isOver?'#e84040':(sm.burn<0?'#e84040':sm.burn<15?'#f5a623':'#00d4aa');
+    // Boat position vs line — offset by actual distance
+    const distPx=Math.min(sm.distM*3,60);
+    const lineAngle=Math.atan2(B.y-A.y,B.x-A.x);
+    const perpAngle=lineAngle+Math.PI/2;
+    const boatX=bx+Math.cos(perpAngle)*distPx*(sm.side>0?1:-1);
+    const boatY=by+Math.sin(perpAngle)*distPx*(sm.side>0?1:-1);
+    // Drop line
+    x.strokeStyle=bc+'88';x.lineWidth=1.5;x.setLineDash([3,3]);
+    x.beginPath();x.moveTo(boatX,boatY);x.lineTo(bx,by);x.stroke();x.setLineDash([]);
+    // Boat glyph
+    const hdgR=(NAV.hdg??0)*Math.PI/180;
+    x.save();x.translate(boatX,boatY);x.rotate(hdgR);
+    x.shadowColor=bc;x.shadowBlur=10;x.fillStyle=bc;
+    x.beginPath();x.moveTo(0,-11);x.quadraticCurveTo(5,0,4,8);x.lineTo(0,6);x.lineTo(-4,8);x.quadraticCurveTo(-5,0,0,-11);x.closePath();x.fill();
+    x.shadowBlur=0;x.restore();
+    if(sm.isOver){x.fillStyle='rgba(232,64,64,0.9)';x.font='bold 11px var(--mono)';x.textAlign='center';x.textBaseline='top';x.fillText('\u26a0 OCS',W/2,4);}
+  }
+  // Approach vector
+  if(sm&&sm.approachHdg!=null&&NAV.lat!=null){
+    const bp=lp(NAV.lat,NAV.lon);
+    const favP=sm.fav==='A'?A:B;
+    x.strokeStyle='rgba(0,212,170,0.3)';x.lineWidth=1.5;x.setLineDash([4,4]);
+    x.beginPath();x.moveTo(bp.x,bp.y);x.lineTo(favP.x,favP.y);x.stroke();x.setLineDash([]);
+  }
+}
+
+// ── SHIFT GRAPH ───────────────────────────────────────────
+function drawShiftGraph(){
+  const c=G('cvShift'),W=c.parentElement.clientWidth,H=44;
+  c.width=W*devicePixelRatio;c.height=H*devicePixelRatio;
+  c.style.width=W+'px';c.style.height=H+'px';
+  const x=c.getContext('2d');x.scale(devicePixelRatio,devicePixelRatio);x.clearRect(0,0,W,H);
+  const h=WIND.hist;
+  if(h.length<2){x.fillStyle='rgba(58,85,112,0.5)';x.font='8px var(--mono)';x.textAlign='center';x.textBaseline='middle';x.fillText('NO WIND HISTORY',W/2,H/2);return;}
+  const twds=h.map(e=>e.twd),mn=Math.min(...twds)-3,mx=Math.max(...twds)+3;
+  const sc=v=>(H-6)-(v-mn)/(mx-mn)*(H-8)+3;
+  const avg=twds.reduce((a,b)=>a+b,0)/twds.length;
+  x.strokeStyle='rgba(0,212,170,0.1)';x.lineWidth=1;x.beginPath();x.moveTo(0,sc(avg));x.lineTo(W,sc(avg));x.stroke();
+  const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(245,166,35,0.18)');g.addColorStop(1,'rgba(245,166,35,0)');
+  x.fillStyle=g;x.beginPath();x.moveTo(0,H);
+  h.forEach((e,i)=>{const px=i/(h.length-1)*W;i===0?x.lineTo(px,sc(e.twd)):x.lineTo(px,sc(e.twd));});
+  x.lineTo(W,H);x.closePath();x.fill();
+  x.strokeStyle='rgba(245,166,35,0.85)';x.lineWidth=2;x.beginPath();
+  h.forEach((e,i)=>{const px=i/(h.length-1)*W;i===0?x.moveTo(px,sc(e.twd)):x.lineTo(px,sc(e.twd));});
+  x.stroke();
+  const last=h[h.length-1];x.fillStyle='#f5a623';x.beginPath();x.arc(W,sc(last.twd),3,0,2*Math.PI);x.fill();
+}
+
+// ── WIND ROSE ─────────────────────────────────────────────
+function drawWindRose(){
+  const c=G('cvWind'),x=c.getContext('2d'),W=48,cx=24,cy=24,r=19;
+  x.clearRect(0,0,W,W);x.fillStyle='rgba(3,8,15,0.88)';x.beginPath();x.arc(cx,cy,r,0,2*Math.PI);x.fill();
+  x.strokeStyle='rgba(0,212,170,0.1)';x.lineWidth=1;x.beginPath();x.arc(cx,cy,r,0,2*Math.PI);x.stroke();
+  if(WIND.twd==null){x.fillStyle='rgba(58,85,112,0.8)';x.font='7px var(--mono)';x.textAlign='center';x.textBaseline='middle';x.fillText('NO WND',cx,cy);return;}
+  // Arrow points FROM wind source TOWARD center (where wind is coming from)
+  // rad = direction wind comes FROM, converted to canvas angle
+  const rad=(WIND.twd-90)*Math.PI/180;
+  const sx=cx+Math.cos(rad)*r*0.78,sy=cy+Math.sin(rad)*r*0.78; // start at source edge
+  x.strokeStyle='#f5a623';x.lineWidth=2;x.beginPath();x.moveTo(sx,sy);x.lineTo(cx,cy);x.stroke();
+  // Arrowhead at center pointing toward center (wind direction)
+  const aRad=rad+Math.PI; // flip: arrowhead points away from source = into wind
+  x.save();x.translate(cx,cy);x.rotate(aRad+Math.PI/2);x.fillStyle='#f5a623';
+  x.beginPath();x.moveTo(0,0);x.lineTo(-3,7);x.lineTo(3,7);x.closePath();x.fill();x.restore();
+  // Barbs along the shaft
+  const barbs=Math.min(Math.round((WIND.tws||0)/5),5);
+  for(let b=0;b<barbs;b++){const bt=0.18+b*0.14,bx=sx+(cx-sx)*bt,by=sy+(cy-sy)*bt,p=rad-Math.PI/2;x.strokeStyle='rgba(245,166,35,0.6)';x.lineWidth=1.5;x.beginPath();x.moveTo(bx,by);x.lineTo(bx+Math.cos(p)*6,by+Math.sin(p)*6);x.stroke();}
+}
+
+// ── RACE CHART ────────────────────────────────────────────
+function renderChart(){return safeRun('renderChart',renderChartCore);}
+function renderChartCore(){
+  const b=getBounds();autoFit(b);
+  const W=cvM.width/devicePixelRatio,H=cvM.height/devicePixelRatio;
+  if(b)renderTiles(b,W,H);
+  else{ctxT.save();ctxT.scale(devicePixelRatio,devicePixelRatio);ctxT.clearRect(0,0,W,H);ctxT.restore();}
+  ctxM.save();ctxM.scale(devicePixelRatio,devicePixelRatio);ctxM.clearRect(0,0,W,H);
+  if(!b){
+    ctxM.fillStyle='#050d18';ctxM.fillRect(0,0,W,H);
+    ctxM.fillStyle='rgba(0,212,170,0.13)';ctxM.font='700 14px var(--cond)';
+    ctxM.textAlign='center';ctxM.textBaseline='middle';
+    ctxM.fillText('COURSE \u2192 DEMO to begin',W/2,H/2);
+    ctxM.restore();return;
+  }
+  const pp=(la,lo)=>proj(la,lo,b,W,H);
+  ctxM.fillStyle='rgba(3,8,15,0.32)';ctxM.fillRect(0,0,W,H);
+  const tac=tactics();
+  const tmk=activeMark()||(CRS.wpts[0]??null);
+  // Wind corridor
+  if(WIND.twd!=null&&tmk){
+    const mk=pp(tmk.lat,tmk.lon),rad=(WIND.twd+180)*Math.PI/180,len=Math.max(W,H)*0.65,hw=44;
+    const px=Math.cos(rad),py=-Math.sin(rad),ox=-py,oy=px;
+    ctxM.save();const g=ctxM.createLinearGradient(mk.x,mk.y,mk.x+px*len,mk.y+py*len);
+    g.addColorStop(0,'rgba(0,212,170,0.05)');g.addColorStop(1,'rgba(0,212,170,0)');
+    ctxM.fillStyle=g;ctxM.beginPath();
+    ctxM.moveTo(mk.x+ox*hw,mk.y+oy*hw);ctxM.lineTo(mk.x+px*len+ox*hw,mk.y+py*len+oy*hw);
+    ctxM.lineTo(mk.x+px*len-ox*hw,mk.y+py*len-oy*hw);ctxM.lineTo(mk.x-ox*hw,mk.y-oy*hw);
+    ctxM.closePath();ctxM.fill();ctxM.restore();
+  }
+  // Laylines
+  if(tac&&tac.leg==='upwind'&&tmk){
+    const mk=pp(tmk.lat,tmk.lon),len=Math.max(W,H)*1.6;
+    ctxM.setLineDash([4,6]);ctxM.lineWidth=1.5;
+    ctxM.strokeStyle='rgba(61,220,132,0.2)';const sR=tac.layS*Math.PI/180;
+    ctxM.beginPath();ctxM.moveTo(mk.x,mk.y);ctxM.lineTo(mk.x+Math.sin(sR)*len,mk.y-Math.cos(sR)*len);ctxM.stroke();
+    ctxM.strokeStyle='rgba(232,64,64,0.2)';const pR=tac.layP*Math.PI/180;
+    ctxM.beginPath();ctxM.moveTo(mk.x,mk.y);ctxM.lineTo(mk.x+Math.sin(pR)*len,mk.y-Math.cos(pR)*len);ctxM.stroke();
+    ctxM.setLineDash([]);
+  }
+  // ── FULL COURSE OVERVIEW LINE ──
+  // Draw: start midpoint → mark1 → mark2 → ... → finish
+  {
+    const coursePts=[];
+    if(CRS.pinA&&CRS.pinB)coursePts.push({lat:(CRS.pinA.lat+CRS.pinB.lat)/2,lon:(CRS.pinA.lon+CRS.pinB.lon)/2,type:'start'});
+    CRS.wpts.forEach((w,i)=>coursePts.push({lat:w.lat,lon:w.lon,type:'wpt',idx:i}));
+    const fa=CRS.finA??CRS.pinA,fb2=CRS.finB??CRS.pinB;
+    if(fa&&fb2)coursePts.push({lat:(fa.lat+fb2.lat)/2,lon:(fa.lon+fb2.lon)/2,type:'finish'});
+    if(coursePts.length>1){
+      // Thin ghost line — full course
+      ctxM.strokeStyle='rgba(0,212,170,0.18)';ctxM.lineWidth=1.5;ctxM.setLineDash([4,6]);
+      ctxM.beginPath();
+      coursePts.forEach((p,i)=>{const pp2=pp(p.lat,p.lon);i===0?ctxM.moveTo(pp2.x,pp2.y):ctxM.lineTo(pp2.x,pp2.y);});
+      ctxM.stroke();ctxM.setLineDash([]);
+      // Label each leg with distance
+      for(let i=0;i<coursePts.length-1;i++){
+        const a=coursePts[i],b2=coursePts[i+1];
+        const pa=pp(a.lat,a.lon),pb=pp(b2.lat,b2.lon);
+        const mx=(pa.x+pb.x)/2,my=(pa.y+pb.y)/2;
+        const dist=haversine(a.lat,a.lon,b2.lat,b2.lon)/1852;
+        if(dist>0.05){
+          ctxM.fillStyle='rgba(0,212,170,0.45)';
+          ctxM.font='8px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';
+          ctxM.fillText(dist.toFixed(2)+'nm',mx,my);
+        }
+      }
+    }
+  }
+  // ── OPTIMAL PATH ──
+  if(optPath.length>1){
+    const col=tac?(tac.best==='stbd'?'#3ddc84':tac.best==='port'?'#e84040':'#4a9eff'):'#00d4aa';
+    ctxM.strokeStyle=col;ctxM.lineWidth=3.5;ctxM.setLineDash([11,5]);
+    ctxM.beginPath();optPath.forEach((pt,i)=>{const pp2=pp(pt.lat,pt.lon);i===0?ctxM.moveTo(pp2.x,pp2.y):ctxM.lineTo(pp2.x,pp2.y);});
+    ctxM.stroke();ctxM.setLineDash([]);
+    // T/G markers
+    optPath.filter(pt=>pt.type==='tack'||pt.type==='gybe').forEach(pt=>{
+      const pp2=pp(pt.lat,pt.lon),r2=sr(9);
+      ctxM.fillStyle=col;ctxM.strokeStyle=col==='#00d4aa'?'#03080f':'rgba(0,0,0,0.7)';ctxM.lineWidth=2;
+      ctxM.beginPath();ctxM.arc(pp2.x,pp2.y,r2,0,2*Math.PI);ctxM.fill();ctxM.stroke();
+      ctxM.fillStyle='#000';ctxM.font=`bold ${Math.max(8,Math.round(r2))}px var(--mono)`;
+      ctxM.textAlign='center';ctxM.textBaseline='middle';
+      ctxM.fillText(pt.type==='tack'?'T':'G',pp2.x,pp2.y+0.5);
+    });
+  }
+  // Telemetry colored dots (performance trail)
+  if(TELEM.samples.length>1){
+    TELEM.samples.forEach((s,i)=>{
+      if(!s.lat)return;
+      const pp2=pp(s.lat,s.lon);
+      const eff=s.eff_pct;
+      const col=eff==null?'rgba(58,85,112,0.6)':eff>=90?'rgba(61,220,132,0.8)':eff>=70?'rgba(245,166,35,0.8)':'rgba(232,64,64,0.8)';
+      ctxM.fillStyle=col;ctxM.beginPath();ctxM.arc(pp2.x,pp2.y,sr(3.5),0,2*Math.PI);ctxM.fill();
+    });
+  }
+  // Breadcrumbs
+  if(NAV.track.length>1){
+    ctxM.strokeStyle='rgba(0,212,170,0.22)';ctxM.lineWidth=2;
+    ctxM.beginPath();NAV.track.forEach((pt,i)=>{const pp2=pp(pt.lat,pt.lon);i===0?ctxM.moveTo(pp2.x,pp2.y):ctxM.lineTo(pp2.x,pp2.y);});ctxM.stroke();
+    ctxM.fillStyle='rgba(0,212,170,0.18)';
+    NAV.track.filter((_,i)=>i%8===0).forEach(pt=>{const pp2=pp(pt.lat,pt.lon);ctxM.beginPath();ctxM.arc(pp2.x,pp2.y,sr(1.5),0,2*Math.PI);ctxM.fill();});
+  }
+  // Start line
+  if(CRS.pinA&&CRS.pinB){
+    const a=pp(CRS.pinA.lat,CRS.pinA.lon),bpt=pp(CRS.pinB.lat,CRS.pinB.lon);
+    ctxM.strokeStyle='rgba(245,166,35,0.7)';ctxM.lineWidth=2.5;
+    ctxM.beginPath();ctxM.moveTo(a.x,a.y);ctxM.lineTo(bpt.x,bpt.y);ctxM.stroke();
+    drawBuoy(a.x,a.y,'square','#f5a623','A');drawBuoy(bpt.x,bpt.y,'circle','#f5a623','B');
+  }
+  // Marks
+  CRS.wpts.forEach((w,i)=>{
+    const wp=pp(w.lat,w.lon),isAct=i===CRS.activeMark,col2=isAct?'#00d4aa':'#ffdf00';
+    drawBuoy(wp.x,wp.y,'diamond',col2,w.label);
+    if(isAct){ctxM.strokeStyle='rgba(0,212,170,0.45)';ctxM.lineWidth=2;ctxM.beginPath();ctxM.arc(wp.x,wp.y,sr(16),0,2*Math.PI);ctxM.stroke();}
+    if(w.rounding!=='none'){
+      ctxM.fillStyle=w.rounding==='port'?'rgba(232,64,64,0.7)':'rgba(61,220,132,0.7)';
+      ctxM.font=`${Math.max(10,Math.round(sr(11)))}px sans-serif`;
+      ctxM.textAlign='center';ctxM.textBaseline='middle';
+      ctxM.fillText(w.rounding==='port'?'\u21ba':'\u21bb',wp.x+sr(12),wp.y-sr(12));
+    }
+  });
+  // Finish
+  const fa=CRS.finA??CRS.pinA,fb2=CRS.finB??CRS.pinB;
+  if(fa&&fb2&&CRS.activeMark===CRS.wpts.length-1){
+    const fpa=pp(fa.lat,fa.lon),fpb=pp(fb2.lat,fb2.lon);
+    ctxM.strokeStyle='rgba(74,158,255,0.8)';ctxM.lineWidth=2.5;ctxM.setLineDash([6,4]);
+    ctxM.beginPath();ctxM.moveTo(fpa.x,fpa.y);ctxM.lineTo(fpb.x,fpb.y);ctxM.stroke();ctxM.setLineDash([]);
+    ctxM.fillStyle='rgba(74,158,255,0.7)';ctxM.font='11px var(--cond)';
+    ctxM.textAlign='left';ctxM.textBaseline='bottom';ctxM.fillText('FINISH',Math.min(fpa.x,fpb.x),Math.min(fpa.y,fpb.y)-3);
+  }
+  // Boat
+  if(NAV.lat){const bp=pp(NAV.lat,NAV.lon);drawBoat(bp.x,bp.y,(NAV.hdg??NAV.cog??0)*Math.PI/180);}
+  // N + scale
+  ctxM.fillStyle='rgba(0,212,170,0.4)';ctxM.font='bold 10px var(--mono)';
+  ctxM.textAlign='left';ctxM.textBaseline='top';ctxM.fillText('N\u2191',7,7);
+  const lS=(b.n-b.s)/VIEW.scale,nmS=lS*60;
+  const bNM=nmS<0.2?0.05:nmS<0.8?0.1:nmS<3?0.5:1,bPx=(bNM/nmS)*H;
+  ctxM.strokeStyle='rgba(255,255,255,0.25)';ctxM.lineWidth=2;
+  ctxM.beginPath();ctxM.moveTo(7,H-18);ctxM.lineTo(7+bPx,H-18);ctxM.stroke();
+  ctxM.fillStyle='rgba(255,255,255,0.3)';ctxM.font='8px var(--mono)';ctxM.textBaseline='bottom';
+  ctxM.fillText(bNM.toFixed(2)+' NM',7,H-5);
+  ctxM.restore();
+}
+
+function drawBuoy(x,y,shape,col,lbl){
+  const r=sr(8);ctxM.fillStyle=col;ctxM.strokeStyle='rgba(0,0,0,0.45)';ctxM.lineWidth=1;
+  if(shape==='circle'){ctxM.beginPath();ctxM.arc(x,y,r,0,2*Math.PI);ctxM.fill();ctxM.stroke();}
+  else if(shape==='square'){ctxM.beginPath();ctxM.rect(x-r,y-r,r*2,r*2);ctxM.fill();ctxM.stroke();}
+  else{const s=r*1.2;ctxM.beginPath();ctxM.moveTo(x,y-s);ctxM.lineTo(x+s,y);ctxM.lineTo(x,y+s);ctxM.lineTo(x-s,y);ctxM.closePath();ctxM.fill();ctxM.stroke();}
+  ctxM.fillStyle='#000';ctxM.font=`bold ${Math.max(7,Math.round(r))}px var(--mono)`;ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(lbl,x,y+0.5);
+}
+function drawBoat(x,y,hdgRad){
+  const sc2=Math.max(1,Math.sqrt(VIEW.scale)*0.8);
+  ctxM.save();ctxM.translate(x,y);ctxM.rotate(hdgRad);ctxM.scale(sc2,sc2);
+  ctxM.shadowColor='#00d4aa';ctxM.shadowBlur=16;ctxM.fillStyle='#00d4aa';
+  ctxM.beginPath();ctxM.moveTo(0,-16);ctxM.quadraticCurveTo(7,0,5,13);ctxM.lineTo(0,10);ctxM.lineTo(-5,13);ctxM.quadraticCurveTo(-7,0,0,-16);ctxM.closePath();ctxM.fill();
+  ctxM.shadowBlur=0;ctxM.fillStyle='rgba(255,255,255,0.95)';ctxM.beginPath();ctxM.arc(0,-2,2.5,0,2*Math.PI);ctxM.fill();
+  ctxM.restore();
+}
+
+// ── MATH ──────────────────────────────────────────────────
+function normA(a){return((a%360)+360)%360}
+function angDiff(a,b){let d=normA(b-a);return d>180?d-360:d}
+function fmtT(s){if(!isFinite(s))return'--:--';const sg=s<0?'-':'';s=Math.abs(Math.round(s));return`${sg}${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
+function haversine(a,b,c,d){const R=6371000,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.PI/180,xx=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(xx),Math.sqrt(1-xx))}
+function brng(a,b,c,d){const dn=(d-b)*Math.PI/180,y=Math.sin(dn)*Math.cos(c*Math.PI/180),x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dn);return(Math.atan2(y,x)*180/Math.PI+360)%360}
+function midLL(a,b){return{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}}
+function ll2xy(ref,pt){const R=6371000,l0=ref.lat*Math.PI/180;return{x:(pt.lon-ref.lon)*Math.PI/180*R*Math.cos(l0),y:(pt.lat-ref.lat)*Math.PI/180*R}}
+
+// ── EDIT MARK ────────────────────────────────────────────
+let _editTarget=null; // {type:'pinA'|'pinB'|'finA'|'finB'|'wpt', idx?:number}
+function openEdit(type, idx){
+  _editTarget={type,idx};
+  const popup=G('editPopup'),rndRow=G('editRndRow');
+  let lat,lon,rnd=null,title='';
+  if(type==='pinA'){lat=CRS.pinA?.lat;lon=CRS.pinA?.lon;title='EDIT PIN A';}
+  else if(type==='pinB'){lat=CRS.pinB?.lat;lon=CRS.pinB?.lon;title='EDIT PIN B';}
+  else if(type==='finA'){lat=CRS.finA?.lat;lon=CRS.finA?.lon;title='EDIT FINISH A';}
+  else if(type==='finB'){lat=CRS.finB?.lat;lon=CRS.finB?.lon;title='EDIT FINISH B';}
+  else if(type==='wpt'){const w=CRS.wpts[idx];lat=w.lat;lon=w.lon;rnd=w.rounding;title='EDIT MARK '+w.label;}
+  G('editTitle').textContent=title;
+  G('editLat').value=lat?.toFixed(6)||'';
+  G('editLon').value=lon?.toFixed(6)||'';
+  rndRow.style.display=rnd!==null?'block':'none';
+  if(rnd!==null)G('editRnd').value=rnd;
+  popup.classList.add('open');
+}
+function closeEdit(){G('editPopup').classList.remove('open');_editTarget=null;}
+function gpsToEdit(){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS…':'Tap Sensors first');return;}G('editLat').value=NAV.lat.toFixed(6);G('editLon').value=NAV.lon.toFixed(6);}
+function saveEditMark(){
+  if(!_editTarget)return;
+  const lat=parseFloat(G('editLat').value),lon=parseFloat(G('editLon').value);
+  if(isNaN(lat)||isNaN(lon)){toast('Need lat/lon');return;}
+  const {type,idx}=_editTarget;
+  if(type==='pinA')CRS.pinA={lat,lon};
+  else if(type==='pinB')CRS.pinB={lat,lon};
+  else if(type==='finA')CRS.finA={lat,lon};
+  else if(type==='finB')CRS.finB={lat,lon};
+  else if(type==='wpt'){CRS.wpts[idx].lat=lat;CRS.wpts[idx].lon=lon;CRS.wpts[idx].rounding=G('editRnd').value;}
+  closeEdit();saveState();dirty=true;refreshOptPath();
+  toast('Mark updated');
+}
+
+// ── DOM HELPERS ───────────────────────────────────────────
+function G(id){return document.getElementById(id)}
+function pill(id,s){G(id).className='pill'+(s?' '+s:'')}
+function toast(msg){const t=G('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
+function openModal(id){if(id==='mWind')renderWsrcList();G(id).classList.add('open')}
+function closeModal(id){G(id).classList.remove('open')}
+function mTab(mid,tab){document.querySelectorAll(`#${mid} .tp`).forEach(p=>p.classList.remove('on'));document.querySelectorAll(`#${mid} .mtab`).forEach(t=>t.classList.remove('on'));G(`${mid}-${tab}`).classList.add('on');document.querySelectorAll(`#${mid} .mtab`).forEach(t=>{if(t.getAttribute('onclick')?.includes(`'${tab}'`))t.classList.add('on');});}
+document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')}));
+
+// ── INIT ──────────────────────────────────────────────────
+G('polarPreset').value='compac35';loadPolarPreset();commitPolar();
+loadState();
+G('mapBtn').classList.toggle('on',VIEW.map);
+G('mapBtn').textContent=VIEW.map?'MAP ON':'MAP';
+renderWsrcList();dirty=true;
+requestAnimationFrame(rafLoop);
+</script>
+</body>
+</html>
