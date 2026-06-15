@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 14:10</title>
+<title>TACTICIAN v06/15 14:38</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -221,7 +221,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 14:10</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 14:38</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -2022,7 +2022,7 @@ function loadState(){
     if(p.wpts)CRS.wpts=p.wpts;if(p.activeMark!=null)CRS.activeMark=p.activeMark;
     if(p.tackDur)CRS.tackDur=p.tackDur;
     if(p.minLogSOG!=null)CRS.minLogSOG=p.minLogSOG;
-    if(p.twd!=null){WIND.twd=p.twd;kfW.x=p.twd;pill('pWND','ok');}
+    if(p.twd!=null){WIND.twd=p.twd;kfW.x=p.twd;WIND.fetchedAt=WIND.fetchedAt||Date.now();pill('pWND','ok');}
     if(p.tws!=null)WIND.tws=p.tws;
     if(p.polar){polarTable=p.polar;const angs=Object.keys(p.polar).map(Number).sort((a,b)=>a-b);buildPolarDOM(angs.map(a=>[a,...p.polar[a]]));}
     if(p.polarAngles)polarAngles=p.polarAngles;
@@ -2391,6 +2391,8 @@ function drawWindRose(){
 
 // ── RACE CHART ────────────────────────────────────────────
 function renderChart(){
+  // Force resize if canvas hasn't been sized yet
+  if(cvM.width===0||cvM.height===0)resizeCvs();
   const b=getBounds();autoFit(b);
   const W=cvM.width/devicePixelRatio,H=cvM.height/devicePixelRatio;
   if(b)renderTiles(b,W,H);
@@ -2615,6 +2617,12 @@ loadState();
 G('mapBtn').classList.toggle('on',VIEW.map);
 G('mapBtn').textContent=VIEW.map?'MAP ON':'MAP';
 renderWsrcList();dirty=true;
+// Auto-fetch wind on startup if not manual
+setTimeout(()=>{
+  if(WSRCS[windSrcIdx]&&WSRCS[windSrcIdx].id!=='manual'&&WIND.twd===null){
+    fetchSelWind();
+  }
+},2000);
 requestAnimationFrame(rafLoop);
 </script>
 </body>
