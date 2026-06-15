@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 12:38</title>
+<title>TACTICIAN v06/15 12:54</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -162,6 +162,28 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .edit-box{background:var(--hull);border:1px solid var(--tealring);border-radius:10px;padding:18px 16px;width:100%;max-width:340px}
 .edit-box h4{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;margin-bottom:14px}
 .edit-btns{display:flex;gap:6px;margin-top:12px}
+.plan-scen{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.pscen{background:var(--deep);border:1px solid var(--tealring);border-radius:6px;padding:8px;position:relative}
+.pscen.best{border-color:var(--green);background:rgba(61,220,132,0.06)}
+.pscen-name{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-bottom:6px}
+.pscen-time{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--teal);line-height:1}
+.pscen-unit{font-family:var(--cond);font-size:9px;color:var(--muted)}
+.pscen-meta{font-family:var(--mono);font-size:8px;color:var(--muted);margin-top:4px}
+.pscen.best .pscen-time{color:var(--green)}
+.pbest-badge{position:absolute;top:5px;right:5px;font-family:var(--mono);font-size:7px;color:var(--green);letter-spacing:0.06em}
+.plan-legs{margin-bottom:10px}
+.plan-leg{display:grid;grid-template-columns:90px 1fr 1fr 1fr;gap:4px;padding:5px 0;border-bottom:1px solid rgba(0,212,170,0.07);align-items:center}
+.plan-leg:last-child{border-bottom:none}
+.pl-name{font-family:var(--mono);font-size:8px;color:var(--muted)}
+.pl-val{font-family:var(--mono);font-size:9px;text-align:center}
+.pl-val.up{color:var(--green)}.pl-val.dw{color:var(--blue)}.pl-val.rc{color:var(--amber)}
+.plan-shift{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:8px;margin-bottom:8px}
+.ps-title{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em;margin-bottom:6px}
+.ps-row{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.ps-wind{font-family:var(--mono);font-size:9px;color:var(--white)}
+.ps-rec{font-family:var(--cond);font-size:10px;font-weight:700}
+.ps-time{font-family:var(--mono);font-size:9px;color:var(--muted)}
+.plan-note{font-family:var(--mono);font-size:8px;color:var(--teal);line-height:1.6;padding:6px;background:var(--tealfade);border-radius:4px;margin-bottom:6px}
 .telem-chart{width:100%;height:120px;display:block;margin-bottom:8px}
 .telem-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9px}
 .telem-table th{color:var(--muted);padding:3px 4px;text-align:right;border-bottom:1px solid var(--tealring);letter-spacing:0.06em;font-size:8px}
@@ -185,7 +207,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 12:38</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 12:54</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -345,6 +367,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
     <button class="mtab on" onclick="mTab('mCourse','line')">Start Line</button>
     <button class="mtab" onclick="mTab('mCourse','marks')">RC Marks</button>
     <button class="mtab" onclick="mTab('mCourse','finish')">Finish</button>
+    <button class="mtab" onclick="mTab('mCourse','plan');runPlan()">Plan</button>
   </div>
   <div class="tp on" id="mCourse-line">
     <div class="fg2"><div class="frow"><label>Pin A Lat</label><input type="number" id="cALat" step="0.0001" placeholder="33.8632" value="33.8422"></div><div class="frow"><label>Pin A Lon</label><input type="number" id="cALon" step="0.0001" placeholder="-78.9821" value="-78.6103"></div></div>
@@ -366,6 +389,13 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
       <button class="mbtn pri" onclick="addWpt()">Add Mark</button>
       <button class="mbtn sec" onclick="gpsToWpt()">GPS&#8594;Mark</button>
       <button class="mbtn can" onclick="clearWpts()">Clear All</button>
+    </div>
+  </div>
+  <div class="tp" id="mCourse-plan">
+    <div id="planContent" style="min-height:120px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:20px">
+        Set course and wind then tap Plan tab to generate scenarios.
+      </div>
     </div>
   </div>
   <div class="tp" id="mCourse-finish">
@@ -1136,6 +1166,176 @@ function startDemo(){
   }
   closeModal('mDemo');refreshOptPath();dirty=true;
   toast(anim?'Demo running':'Demo — fixed position');
+}
+
+// ── RACE PLANNING ENGINE ─────────────────────────────────
+function planLeg(fromLat,fromLon,toLat,toLon,wind,tws,firstTack){
+  // Returns {time_s, tacks, gybes, cts1, cts2, leg, vmg, dist_nm}
+  const mb=brng(fromLat,fromLon,toLat,toLon);
+  const dist=haversine(fromLat,fromLon,toLat,toLon);
+  const dist_nm=dist/1852;
+  const opt=optAng(tws);
+  const optD=optDownwindAng(tws);
+  const leg=classifyLeg(mb);
+  const td=CRS.tackDur||20;
+
+  if(leg==='reach'){
+    const twa=angDiff(wind,mb);
+    const bsp=pBSP(Math.abs(twa),tws);
+    const time_s=dist/(bsp*0.514444);
+    return{time_s,tacks:0,gybes:0,cts1:Math.round(mb),cts2:null,leg,vmg:bsp,dist_nm};
+  }
+  if(leg==='upwind'){
+    const sH=normA(wind-opt),pH=normA(wind+opt);
+    const bsp=pBSP(opt,tws);
+    const vmg=bsp*Math.cos(opt*Math.PI/180);
+    // Two-tack solution: leg time = dist/vmg + tack penalty
+    const h1=firstTack==='port'?pH:sH;
+    const h2=firstTack==='port'?sH:pH;
+    const time_s=dist/(vmg*0.514444)+td;
+    return{time_s,tacks:1,gybes:0,cts1:Math.round(h1),cts2:Math.round(h2),leg,vmg,dist_nm};
+  }
+  if(leg==='downwind'){
+    const sG=normA(wind+optD),pG=normA(wind-optD);
+    const bsp=pBSP(optD,tws);
+    const vmg=bsp*Math.cos((180-optD)*Math.PI/180);
+    // Gybe selection based on lateral
+    const lat_s=lateralToMark(sG,bsp,mb);
+    const lat_p=lateralToMark(pG,bsp,mb);
+    const g1=lat_s>=lat_p?'stbd':'port';
+    const h1=g1==='stbd'?sG:pG;
+    const h2=g1==='stbd'?pG:sG;
+    const time_s=dist/(vmg*0.514444)+td;
+    return{time_s,tacks:0,gybes:1,cts1:Math.round(h1),cts2:Math.round(h2),leg,vmg,dist_nm};
+  }
+  return{time_s:999,tacks:0,gybes:0,cts1:Math.round(mb),cts2:null,leg:'unknown',vmg:0,dist_nm};
+}
+
+function planCourse(firstTack,wind,tws){
+  // Walk the full course leg by leg
+  if(!CRS.pinA||!CRS.pinB||!CRS.wpts.length)return null;
+  const mid=midLL(CRS.pinA,CRS.pinB);
+  const pts=[{lat:mid.lat,lon:mid.lon,label:'Start'}];
+  CRS.wpts.forEach(w=>pts.push({lat:w.lat,lon:w.lon,label:'M'+w.label}));
+  const fin=CRS.finA?midLL(CRS.finA,CRS.finB):mid;
+  pts.push({lat:fin.lat,lon:fin.lon,label:'Finish'});
+
+  let totalTime=0,totalTacks=0,totalGybes=0,totalDist=0;
+  const legs=[];
+  let curTack=firstTack;
+
+  for(let i=0;i<pts.length-1;i++){
+    const leg=planLeg(pts[i].lat,pts[i].lon,pts[i+1].lat,pts[i+1].lon,wind,tws,curTack);
+    leg.from=pts[i].label;leg.to=pts[i+1].label;
+    legs.push(leg);
+    totalTime+=leg.time_s;
+    totalTacks+=leg.tacks;
+    totalGybes+=leg.gybes;
+    totalDist+=leg.dist_nm;
+    // After upwind tack, flip for next leg's starting tack preference
+    if(leg.leg==='upwind')curTack=curTack==='port'?'stbd':'port';
+  }
+  return{totalTime,totalTacks,totalGybes,totalDist,legs,firstTack,wind,tws};
+}
+
+function planSplit(wind,tws){
+  // Split tack — extra tack on upwind, uses midpoint
+  const base=planCourse('port',wind,tws);
+  if(!base)return null;
+  const r={...base};
+  // Add one extra tack to upwind legs
+  const extra=r.legs.filter(l=>l.leg==='upwind').length;
+  r.totalTacks+=extra;
+  r.totalTime+=extra*(CRS.tackDur||20);
+  r.firstTack='split';
+  return r;
+}
+
+function runPlan(){
+  const el=G('planContent');
+  if(!CRS.pinA||!CRS.wpts.length||WIND.twd===null){
+    el.innerHTML='<div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:20px">Set course and wind first.</div>';
+    return;
+  }
+  const tws=WIND.tws||12;
+  const scenarios=[
+    planCourse('port',WIND.twd,tws),
+    planCourse('stbd',WIND.twd,tws),
+    planSplit(WIND.twd,tws)
+  ].filter(Boolean);
+  const names=['PORT FIRST','STBD FIRST','SPLIT'];
+  const bestTime=Math.min(...scenarios.map(s=>s.totalTime));
+
+  // Wind shift sensitivity ±10°, ±20°
+  const shifts=[-20,-10,0,10,20];
+  const shiftRows=shifts.map(d=>{
+    const w=normA(WIND.twd+d);
+    const sp=planCourse('port',w,tws);
+    const ss=planCourse('stbd',w,tws);
+    if(!sp||!ss)return null;
+    const best=sp.totalTime<=ss.totalTime?{t:sp.totalTime,r:'PORT'}:{t:ss.totalTime,r:'STBD'};
+    return{d,w,best};
+  }).filter(Boolean);
+
+  // Favored end
+  const sm=startMetrics();
+
+  // Build HTML
+  let html='';
+
+  // Scenario cards
+  html+='<div class="plan-scen">';
+  scenarios.forEach((sc,i)=>{
+    const isBest=sc.totalTime===bestTime;
+    html+=`<div class="pscen${isBest?' best':''}">`;
+    if(isBest)html+='<div class="pbest-badge">FASTEST</div>';
+    html+=`<div class="pscen-name">${names[i]}</div>`;
+    html+=`<div class="pscen-time">${fmtT(sc.totalTime)}</div>`;
+    html+=`<div class="pscen-unit">est time</div>`;
+    html+=`<div class="pscen-meta">${sc.totalTacks} tack${sc.totalTacks!==1?'s':''} · ${sc.totalGybes} gybe${sc.totalGybes!==1?'s':''} · ${sc.totalDist.toFixed(1)}nm</div>`;
+    html+='</div>';
+  });
+  html+='</div>';
+
+  // Best scenario leg breakdown
+  const best=scenarios.find(s=>s.totalTime===bestTime);
+  html+='<div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em;margin-bottom:5px">'+names[scenarios.indexOf(best)]+' — LEG DETAIL</div>';
+  html+='<div class="plan-legs">';
+  html+='<div class="plan-leg"><span class="pl-name">LEG</span><span class="pl-val" style="color:var(--muted)">CTS</span><span class="pl-val" style="color:var(--muted)">VMG</span><span class="pl-val" style="color:var(--muted)">TIME</span></div>';
+  best.legs.forEach(l=>{
+    const cls=l.leg==='upwind'?'up':l.leg==='downwind'?'dw':'rc';
+    const cts=l.cts2?l.cts1+'°→'+l.cts2+'°':l.cts1+'°';
+    html+=`<div class="plan-leg">`;
+    html+=`<span class="pl-name">${l.from}→${l.to}</span>`;
+    html+=`<span class="pl-val ${cls}">${cts}</span>`;
+    html+=`<span class="pl-val ${cls}">${l.vmg.toFixed(1)}kt</span>`;
+    html+=`<span class="pl-val">${fmtT(l.time_s)}</span>`;
+    html+='</div>';
+  });
+  html+='</div>';
+
+  // Strategy note
+  html+='<div class="plan-note">';
+  if(sm&&sm.fav)html+='> FAV END: Pin '+sm.fav+' +'+Math.round(sm.bias)+'m  ';
+  html+='> FIRST TACK: '+best.firstTack.toUpperCase()+'  ';
+  const sn=shiftNote();if(sn&&sn!=='STEADY')html+='> '+sn;
+  html+='</div>';
+
+  // Wind shift sensitivity
+  html+='<div class="plan-shift"><div class="ps-title">WIND SHIFT SENSITIVITY</div>';
+  shiftRows.forEach(r=>{
+    const isNow=r.d===0;
+    const diffS=r.best.t-shiftRows.find(x=>x.d===0).best.t;
+    const diffStr=diffS===0?'':(diffS>0?' (+'+Math.round(diffS)+'s)':' ('+Math.round(diffS)+'s)');
+    html+=`<div class="ps-row">`;
+    html+=`<span class="ps-wind">${isNow?'▶ ':'  '}${Math.round(r.w)}°${r.d!==0?' ('+( r.d>0?'+':'')+r.d+'°)':' NOW'}</span>`;
+    html+=`<span class="ps-rec" style="color:${r.best.r==='PORT'?'var(--red)':'var(--green)'}">${r.best.r}</span>`;
+    html+=`<span class="ps-time">${fmtT(r.best.t)}${diffStr}</span>`;
+    html+='</div>';
+  });
+  html+='</div>';
+
+  el.innerHTML=html;
 }
 
 // ── TELEMETRY ENGINE ─────────────────────────────────────
