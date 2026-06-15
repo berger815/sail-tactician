@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 16:00</title>
+<title>TACTICIAN v06/15 16:07</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -221,7 +221,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 16:00</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 16:07</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -681,7 +681,7 @@ async function searchNearbyBuoys(){
     const buoySrcs=nearby.map(s=>({
       id:s.id,
       name:s.name||s.id,
-      info:`NOAA · ${s._dist.toFixed(0)}nm away`,
+      info:'NOAA · '+s._dist.toFixed(0)+'nm away',
       lat:s.lat,lon:s.lng
     }));
     // Rebuild WSRCS: OpenMeteo + found buoys + Manual
@@ -741,7 +741,7 @@ async function searchNDBCFallback(la,lo,statusEl){
   if(!nearby.length){throw new Error('none nearby');}
   WSRCS.length=0;
   WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
-  nearby.forEach(s=>WSRCS.push({id:s.id,name:s.name,info:`NDBC · ${s._dist.toFixed(0)}nm away`}));
+  nearby.forEach(s=>WSRCS.push({id:s.id,name:s.name,info:'NDBC · '+s._dist.toFixed(0)+'nm away'}));
   WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
   if(!WSRCS[windSrcIdx]||WSRCS[windSrcIdx].id!=='manual')windSrcIdx=0;
   renderWsrcList();
@@ -754,7 +754,7 @@ function renderWsrcList(){
   WSRCS.forEach((s,i)=>{
     const d=document.createElement('div');
     d.className='wsrc'+(i===windSrcIdx?' on':'');
-    d.innerHTML=`<div class="wsrc-dot"></div><div><div class="wsrc-name">${s.name}</div><div class="wsrc-info">${s.info}</div></div>`;
+    d.innerHTML='<div class="wsrc-dot"></div><div><div class="wsrc-name">'+s.name+'</div><div class="wsrc-info">'+s.info+'</div></div>';
     d.onclick=()=>{windSrcIdx=i;renderWsrcList();};
     el.appendChild(d);
   });
@@ -788,7 +788,7 @@ async function fetchNDBC(id,name){
     if(wdir!==null&&wspd!==null)setWind(wdir,wspd,name);
     else throw new Error('no data');
   }catch{
-    toast(`${name} unavailable, trying Open-Meteo`);
+    toast(name+' unavailable, trying Open-Meteo');
     await fetchOpenMeteo();
   }
 }
@@ -803,7 +803,7 @@ function setWind(twd,tws,src){
     const avg=recent.reduce((s,e)=>s+e.twd,0)/recent.length;
     let diff=Math.abs(twd-avg);if(diff>180)diff=360-diff;
     if(diff>40&&src!=='Manual'&&src!=='Demo'){
-      toast(`Wind jump ${Math.round(diff)}° ignored`);return;
+      toast('Wind jump '+Math.round(diff)+'\u00b0 ignored');return;
     }
   }
   // Manual and Demo bypass Kalman — set directly and reset filter
@@ -830,7 +830,7 @@ function setManualWind(){
 function windAge(){
   if(!WIND.fetchedAt)return'';
   const m=Math.round((Date.now()-WIND.fetchedAt)/60000);
-  if(m<1)return'just now';if(m===1)return'1 min ago';return`${m} min ago`;
+  if(m<1)return'just now';if(m===1)return'1 min ago';returnm+' min ago';
 }
 function isWindStale(){return WIND.fetchedAt&&(Date.now()-WIND.fetchedAt)>10*60*1000;}
 setInterval(()=>{const cur=WSRCS[windSrcIdx];if(WIND.fetchedAt&&cur&&cur.id!=='manual')fetchSelWind();},5*60*1000);
@@ -843,7 +843,7 @@ const PRESETS={
   laser:{rows:[[40,3.0,4.2,4.8,4.6,4.4],[52,3.3,4.6,5.1,4.9,4.7],[70,3.5,4.4,4.9,4.7,4.5],[90,3.3,4.2,4.7,4.5,4.3],[110,3.1,4.4,5.2,5.0,4.8],[135,2.8,4.0,4.9,4.7,4.5],[150,2.5,3.7,4.5,4.3,4.1]]},
   c40:{rows:[[42,4.5,6.2,7.0,7.3,7.2],[52,4.9,6.6,7.4,7.7,7.6],[70,5.1,6.5,7.3,7.8,7.8],[90,4.9,6.4,7.2,7.8,7.9],[110,4.6,6.5,7.7,8.1,8.1],[135,4.2,6.0,7.5,8.0,8.0],[150,3.8,5.5,7.0,7.6,7.7]]}
 };
-function buildPolarDOM(rows){const tb=G('polarBody');tb.innerHTML='';rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px">${r[0]}&deg;</td>`;for(let i=1;i<=4;i++)tr.innerHTML+=`<td><input type="number" step="0.1" min="0" max="20" data-twa="${r[0]}" data-ti="${i-1}" value="${r[i]||''}"></td>`;tb.appendChild(tr);});}
+function buildPolarDOM(rows){const tb=G('polarBody');tb.innerHTML='';rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML='<td style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px">'+r[0]+'&deg;</td>';for(let i=1;i<=4;i++)tr.innerHTML+='<td><input type="number" step="0.1" min="0" max="20" data-twa="'+r[0]+'" data-ti="'+(i-1)+'" value="'+(r[i]||'')+'">'+'</td>';tb.appendChild(tr);});}
 function loadPolarPreset(){const k=G('polarPreset').value;if(!k||!PRESETS[k])buildPolarDOM([0,15,30,45,60,75,90,120,150,180].map(a=>[a,'','','','']));else buildPolarDOM(PRESETS[k].rows);}
 function commitPolar(){const tbl={};document.querySelectorAll('#polarBody input').forEach(i=>{const a=parseInt(i.dataset.twa),ti=parseInt(i.dataset.ti);if(!tbl[a])tbl[a]=[0,0,0,0];tbl[a][ti]=parseFloat(i.value)||0;});polarTable=tbl;polarAngles=POLAR_TWS.map((_,ti)=>{let best=-Infinity,ang=45;Object.entries(tbl).forEach(([a,s])=>{const aa=parseInt(a);if(aa>90||aa<30)return;const v=(s[ti]||0)*Math.cos(aa*Math.PI/180);if(v>best){best=v;ang=aa;}});return ang;});saveState();}
 function savePolar(){commitPolar();closeModal('mPolar');toast('Polar saved');}
@@ -1380,7 +1380,7 @@ function advanceMark(){
   if(CRS.activeMark<CRS.wpts.length-1){
     CRS.activeMark++;
     const w=CRS.wpts[CRS.activeMark];
-    toast(`Mark ${w.label} · LEAVE ${w.rounding.toUpperCase()}`);
+    toast('Mark '+w.label+' · LEAVE '+w.rounding.toUpperCase());
   }else toast('FINISH — Race complete!');
   dirty=true;saveState();refreshOptPath();
 }
@@ -1400,7 +1400,7 @@ function saveCourse(){
 }
 function gpsToPin(w){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}const id=w==='A'?['cALat','cALon']:['cBLat','cBLon'];G(id[0]).value=NAV.lat.toFixed(6);G(id[1]).value=NAV.lon.toFixed(6);toast('GPS → Pin '+w);}
 function clearLine(){CRS.pinA=null;CRS.pinB=null;toast('Line cleared');dirty=true;}
-function addWpt(){const lbl=G('wLbl').value.trim()||`${CRS.wpts.length+1}`,lat=parseFloat(G('wLat').value),lon=parseFloat(G('wLon').value);if(isNaN(lat)||isNaN(lon)){toast('Need lat/lon');return;}CRS.wpts.push({label:lbl,lat,lon,rounding:'port'});if(CRS.activeMark<0)CRS.activeMark=0;['wLbl','wLat','wLon'].forEach(id=>G(id).value='');renderWptList();saveState();dirty=true;toast(`Mark ${lbl} added`);}
+function addWpt(){const lbl=G('wLbl').value.trim()||(CRS.wpts.length+1),lat=parseFloat(G('wLat').value),lon=parseFloat(G('wLon').value);if(isNaN(lat)||isNaN(lon)){toast('Need lat/lon');return;}CRS.wpts.push({label:lbl,lat,lon,rounding:'port'});if(CRS.activeMark<0)CRS.activeMark=0;['wLbl','wLat','wLon'].forEach(id=>G(id).value='');renderWptList();saveState();dirty=true;toast('Mark '+lbl+' added');}
 function gpsToWpt(){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}G('wLat').value=NAV.lat.toFixed(6);G('wLon').value=NAV.lon.toFixed(6);toast('GPS loaded');}
 function clearWpts(){CRS.wpts=[];CRS.activeMark=-1;renderWptList();saveState();dirty=true;toast('Marks cleared');}
 function toggleRnd(i){const r=CRS.wpts[i].rounding;CRS.wpts[i].rounding=r==='port'?'stbd':r==='stbd'?'none':'port';renderWptList();saveState();}
@@ -1409,7 +1409,7 @@ function setActiveMark(i){CRS.activeMark=i;renderWptList();saveState();dirty=tru
 function renderWptList(){const el=G('wptList');el.innerHTML='';
 if(CRS.wpts.length>0){const hint=document.createElement('div');hint.style.cssText='font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em';hint.textContent='TAP ROW TO SET ACTIVE MARK';el.appendChild(hint);}
 CRS.wpts.forEach((w,i)=>{const d=document.createElement('div');d.className='wpt-item'+(i===CRS.activeMark?' cur':'');
-d.innerHTML=`<span class="wpt-seq">${i+1}</span><span class="wpt-lab">${w.label}</span><span class="wpt-co">${w.lat.toFixed(4)}, ${w.lon.toFixed(4)}</span><button class="wpt-rnd ${w.rounding}" onclick="event.stopPropagation();toggleRnd(${i})">${w.rounding.toUpperCase()}</button><button class="wpt-del" onclick="event.stopPropagation();deleteWpt(${i})">&#x2715;</button>`;
+d.innerHTML='<span class="wpt-seq">'+(i+1)+'</span><span class="wpt-lab">'+w.label+'</span><span class="wpt-co">'+w.lat.toFixed(4)+', '+w.lon.toFixed(4)+'</span><button class="wpt-rnd '+w.rounding+'" onclick="event.stopPropagation();toggleRnd('+i+')">'+w.rounding.toUpperCase()+'</button><button class="wpt-del" onclick="event.stopPropagation();deleteWpt('+i+')">&#x2715;</button>';
 d.onclick=()=>setActiveMark(i);el.appendChild(d);});
 }
 function toggleFinCustom(){G('finCustom').style.display=G('finMode').value==='custom'?'block':'none';}
@@ -1943,9 +1943,9 @@ function tickGun(){
     return;
   }
   const ts=Math.ceil(rem/1000),m=Math.floor(ts/60),s=ts%60;
-  G('gunTime').textContent=`${m}:${String(s).padStart(2,'0')}`;
+  G('gunTime').textContent=m+':'+String(s).padStart(2,'0');
   bar.className='gun-bar vis '+(ts<=60?'final':'prep');
-  G('gunPhase').textContent=ts>60?`${Math.ceil(ts/60)} MIN`:(ts<=10?'FINAL!':'1 MIN');
+  G('gunPhase').textContent=ts>60?Math.ceil(ts/60)+' MIN':(ts<=10?'FINAL!':'1 MIN');
   dirty=true;
 }
 G('btnSync').onclick=()=>{if(!RACE.on||!RACE.epoch)return;const rem=RACE.epoch-Date.now();RACE.epoch=Date.now()+Math.round(rem/60000)*60000;toast('Synced');};
@@ -2069,7 +2069,7 @@ new IntersectionObserver((entries)=>{
 const TILE='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 function ll2tile(lat,lon,z){const n=2**z,x=Math.floor((lon+180)/360*n),lr=lat*Math.PI/180,y=Math.floor((1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n);return{x,y,z};}
 function tile2ll(x,y,z){const n=2**z,lon=x/n*360-180,lr=Math.atan(Math.sinh(Math.PI*(1-2*y/n)));return{lat:lr*180/Math.PI,lon};}
-function getTile(z,x,y){const k=`${z}/${x}/${y}`;if(tileCache[k])return tileCache[k];const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{tileCache[k].ok=true;dirty=true;};img.onerror=()=>{tileCache[k].err=true;};img.src=TILE.replace('{z}',z).replace('{x}',x).replace('{y}',y);return tileCache[k]={img,ok:false,err:false};}
+function getTile(z,x,y){const k=z+'/'+x+'/'+y;if(tileCache[k])return tileCache[k];const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{tileCache[k].ok=true;dirty=true;};img.onerror=()=>{tileCache[k].err=true;};img.src=TILE.replace('{z}',z).replace('{x}',x).replace('{y}',y);return tileCache[k]={img,ok:false,err:false};}
 
 function renderTiles(b,W,H){
   if(!VIEW.map)return;
@@ -2139,7 +2139,7 @@ function getBounds(){
 let _lastBoundsKey='';
 function autoFit(b){
   if(!b||VIEW.locked)return;
-  const k=`${b.s.toFixed(4)},${b.n.toFixed(4)},${b.w.toFixed(4)},${b.e.toFixed(4)}`;
+  const k=b.s.toFixed(4)+','+b.n.toFixed(4)+','+b.w.toFixed(4)+','+b.e.toFixed(4);
   if(k===_lastBoundsKey)return;
   _lastBoundsKey=k;VIEW.scale=1;VIEW.ox=0;VIEW.oy=0;
 }
@@ -2218,15 +2218,15 @@ function updateStartUI(){
   G('wrAge').textContent=age;G('wrAge').className='wr-age'+(stale?' stale':'');
   const tr=windTrend(),tv=G('wtvEl'),tl=G('wtlEl'),tn=G('wtnEl');
   if(tr.t==='NO DATA'||tr.t==='STEADY'){tv.textContent='STEADY';tv.className='wtv steady';tl.textContent='SHIFT';}
-  else if(tr.t==='LEFT'){tv.textContent=`\u2190${tr.d}\u00b0`;tv.className='wtv lift';tl.textContent='LEFT';}
-  else{tv.textContent=`\u2192${tr.d}\u00b0`;tv.className='wtv hdr';tl.textContent='RIGHT';}
+  else if(tr.t==='LEFT'){tv.textContent='\u2190'+tr.d+'\u00b0';tv.className='wtv lift';tl.textContent='LEFT';}
+  else{tv.textContent='\u2192'+tr.d+'\u00b0';tv.className='wtv hdr';tl.textContent='RIGHT';}
   const sn=shiftNote();tn.textContent=sn==='STEADY'?'':sn;
   // Approach CTS
   if(m&&m.approachHdg!=null){
     G('ctsApp').textContent=Math.round(m.approachHdg)+'°';
-    const at=G('ctsTApp');at.textContent=`${m.approachTack} TACK`;
+    const at=G('ctsTApp');at.textContent=m.approachTack+' TACK';
     at.className='cts-tack '+(m.approachTack==='PORT'?'port':'stbd');
-    G('ctsSApp').textContent=`${m.approachSpd.toFixed(1)}kt to FAV ${m.fav}`;
+    G('ctsSApp').textContent=m.approachSpd.toFixed(1)+'kt to FAV '+m.fav;
   }else{G('ctsApp').textContent='---°';G('ctsTApp').textContent='--';G('ctsTApp').className='cts-tack none';G('ctsSApp').textContent='set pins & wind';}
   // Post-start CTS
   const ps=postStartCTS();
@@ -2234,8 +2234,8 @@ function updateStartUI(){
     G('ctsPost').textContent=Math.round(ps.hdg)+'°';
     const pt=G('ctsTPost');
     if(ps.tack==='reach'){pt.textContent='REACH';pt.className='cts-tack none';}
-    else{pt.textContent=`${ps.tack==='stbd'?'STBD':'PORT'} TACK`;pt.className='cts-tack '+(ps.tack==='stbd'?'stbd':'port');}
-    G('ctsSPost').textContent=`${ps.spd.toFixed(1)}kt to Mark 1`;
+    else{pt.textContent=(ps.tack==='stbd'?'STBD':'PORT')+' TACK';pt.className='cts-tack '+(ps.tack==='stbd'?'stbd':'port');}
+    G('ctsSPost').textContent=ps.spd.toFixed(1)+'kt to Mark 1';
   }else{G('ctsPost').textContent='---°';G('ctsTPost').textContent='--';G('ctsTPost').className='cts-tack none';G('ctsSPost').textContent='set marks & wind';}
 }
 
@@ -2269,11 +2269,11 @@ function updateRaceUI(){
   G('wbAge').textContent=age;G('wbAge').className='wb-age'+(stale?' stale':'');
   const tr=windTrend(),te=G('wbTrend');
   if(tr.t==='NO DATA'||tr.t==='STEADY'){te.textContent=tr.t;te.className='wb-trend';}
-  else if(tr.t==='LEFT'){te.textContent=`\u2190${tr.d}° LEFT`;te.className='wb-trend lift';}
-  else{te.textContent=`\u2192${tr.d}° RIGHT`;te.className='wb-trend hdr';}
+  else if(tr.t==='LEFT'){te.textContent='\u2190'+tr.d+'\u00b0 LEFT';te.className='wb-trend lift';}
+  else{te.textContent='\u2192'+tr.d+'\u00b0 RIGHT';te.className='wb-trend hdr';}
   // Leg chip
   const lc=G('legChip'),tm=activeMark();
-  if(tac&&tm){const d=distToMark();lc.textContent=`TO ${tm.label} \u00b7 ${(d/1852).toFixed(2)}nm \u00b7 ${tac.leg.toUpperCase()}`;lc.style.display='block';}
+  if(tac&&tm){const d=distToMark();lc.textContent='TO '+tm.label+' · '+(d/1852).toFixed(2)+'nm · '+tac.leg.toUpperCase();lc.style.display='block';}
   else lc.style.display='none';
   // XTE
   const x=computeXTE(),xteM=x!=null?Math.round(Math.abs(x)):null;
@@ -2285,7 +2285,7 @@ function updateRaceUI(){
   if(d<200&&tm2){
     ma.classList.add('vis');
     G('maDistV').textContent=Math.round(d)+'m';
-    G('maLblV').textContent=`MARK ${tm2.label} \u00b7 LEAVE TO ${tm2.rounding.toUpperCase()}`;
+    G('maLblV').textContent='MARK '+tm2.label+' · LEAVE TO '+tm2.rounding.toUpperCase();
   }else ma.classList.remove('vis');
 }
 
@@ -2321,7 +2321,7 @@ function drawLineChart(){
       x.beginPath();x.moveTo(ax,ay);x.lineTo(ax+Math.cos(wr)*20,ay+Math.sin(wr)*20);x.stroke();
     }
     x.fillStyle='rgba(245,166,35,0.35)';x.font='9px var(--mono)';x.textAlign='left';x.textBaseline='top';
-    x.fillText(`W ${Math.round(WIND.twd)}°`,6,4);
+    x.fillText('W '+Math.round(WIND.twd)+'\u00b0',6,4);
   }
   // Line A-B
   const A=lp(CRS.pinA.lat,CRS.pinA.lon),B=lp(CRS.pinB.lat,CRS.pinB.lon);
@@ -2335,7 +2335,7 @@ function drawLineChart(){
     x.strokeStyle='rgba(0,0,0,0.4)';x.lineWidth=1;x.stroke();
     x.fillStyle='#000';x.font='bold 9px var(--mono)';x.textAlign='center';x.textBaseline='middle';x.fillText(lbl,pt.x,pt.y+0.5);
     if(isFav){x.strokeStyle='rgba(61,220,132,0.9)';x.lineWidth=3;x.beginPath();x.arc(pt.x,pt.y,14,0,2*Math.PI);x.stroke();
-      x.fillStyle='rgba(61,220,132,0.8)';x.font='bold 9px var(--mono)';x.textAlign='center';x.textBaseline='top';x.fillText(`FAV +${Math.round(sm.bias)}m`,pt.x,pt.y+16);}
+      x.fillStyle='rgba(61,220,132,0.8)';x.font='bold 9px var(--mono)';x.textAlign='center';x.textBaseline='top';x.fillText('FAV +'+Math.round(sm.bias)+'m',pt.x,pt.y+16);}
   });
   // Boat
   if(sm&&NAV.lat!=null){
@@ -2490,7 +2490,7 @@ function renderChart(){
       const pp2=pp(pt.lat,pt.lon),r2=sr(9);
       ctxM.fillStyle=col;ctxM.strokeStyle=col==='#00d4aa'?'#03080f':'rgba(0,0,0,0.7)';ctxM.lineWidth=2;
       ctxM.beginPath();ctxM.arc(pp2.x,pp2.y,r2,0,2*Math.PI);ctxM.fill();ctxM.stroke();
-      ctxM.fillStyle='#000';ctxM.font=`bold ${Math.max(8,Math.round(r2))}px var(--mono)`;
+      ctxM.fillStyle='#000';ctxM.font='bold '+Math.max(8,Math.round(r2))+'px var(--mono)';
       ctxM.textAlign='center';ctxM.textBaseline='middle';
       ctxM.fillText(pt.type==='tack'?'T':'G',pp2.x,pp2.y+0.5);
     });
@@ -2536,7 +2536,7 @@ function renderChart(){
     if(isAct){ctxM.strokeStyle='rgba(0,212,170,0.45)';ctxM.lineWidth=2;ctxM.beginPath();ctxM.arc(wp.x,wp.y,sr(16),0,2*Math.PI);ctxM.stroke();}
     if(w.rounding!=='none'){
       ctxM.fillStyle=w.rounding==='port'?'rgba(232,64,64,0.7)':'rgba(61,220,132,0.7)';
-      ctxM.font=`${Math.max(10,Math.round(sr(11)))}px sans-serif`;
+      ctxM.font=Math.max(10,Math.round(sr(11)))+'px sans-serif';
       ctxM.textAlign='center';ctxM.textBaseline='middle';
       ctxM.fillText(w.rounding==='port'?'\u21ba':'\u21bb',wp.x+sr(12),wp.y-sr(12));
     }
@@ -2569,7 +2569,7 @@ function drawBuoy(x,y,shape,col,lbl){
   if(shape==='circle'){ctxM.beginPath();ctxM.arc(x,y,r,0,2*Math.PI);ctxM.fill();ctxM.stroke();}
   else if(shape==='square'){ctxM.beginPath();ctxM.rect(x-r,y-r,r*2,r*2);ctxM.fill();ctxM.stroke();}
   else{const s=r*1.2;ctxM.beginPath();ctxM.moveTo(x,y-s);ctxM.lineTo(x+s,y);ctxM.lineTo(x,y+s);ctxM.lineTo(x-s,y);ctxM.closePath();ctxM.fill();ctxM.stroke();}
-  ctxM.fillStyle='#000';ctxM.font=`bold ${Math.max(7,Math.round(r))}px var(--mono)`;ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(lbl,x,y+0.5);
+  ctxM.fillStyle='#000';ctxM.font='bold '+Math.max(7,Math.round(r))+'px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(lbl,x,y+0.5);
 }
 function drawBoat(x,y,hdgRad){
   const sc2=Math.max(1,Math.sqrt(VIEW.scale)*0.8);
@@ -2583,7 +2583,7 @@ function drawBoat(x,y,hdgRad){
 // ── MATH ──────────────────────────────────────────────────
 function normA(a){return((a%360)+360)%360}
 function angDiff(a,b){let d=normA(b-a);return d>180?d-360:d}
-function fmtT(s){if(!isFinite(s))return'--:--';const sg=s<0?'-':'';s=Math.abs(Math.round(s));return`${sg}${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
+function fmtT(s){if(!isFinite(s))return'--:--';const sg=s<0?'-':'';s=Math.abs(Math.round(s));returnsg+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function haversine(a,b,c,d){const R=6371000,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.PI/180,xx=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(xx),Math.sqrt(1-xx))}
 function brng(a,b,c,d){const dn=(d-b)*Math.PI/180,y=Math.sin(dn)*Math.cos(c*Math.PI/180),x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dn);return(Math.atan2(y,x)*180/Math.PI+360)%360}
 function midLL(a,b){return{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}}
@@ -2629,7 +2629,7 @@ function pill(id,s){G(id).className='pill'+(s?' '+s:'')}
 function toast(msg){const t=G('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
 function openModal(id){if(id==='mWind')renderWsrcList();G(id).classList.add('open')}
 function closeModal(id){G(id).classList.remove('open')}
-function mTab(mid,tab){document.querySelectorAll(`#${mid} .tp`).forEach(p=>p.classList.remove('on'));document.querySelectorAll(`#${mid} .mtab`).forEach(t=>t.classList.remove('on'));G(`${mid}-${tab}`).classList.add('on');document.querySelectorAll(`#${mid} .mtab`).forEach(t=>{if(t.getAttribute('onclick')?.includes(`'${tab}'`))t.classList.add('on');});}
+function mTab(mid,tab){document.querySelectorAll('#'+mid+' .tp').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#'+mid+' .mtab').forEach(t=>t.classList.remove('on'));G(mid+'-'+tab).classList.add('on');document.querySelectorAll('#'+mid+' .mtab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+ tab +"'"))t.classList.add('on');});}
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')}));
 
 // ── INIT ──────────────────────────────────────────────────
