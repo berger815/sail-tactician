@@ -929,9 +929,7 @@ function adjPlan(field,delta){
   if(field==='twd')PLAN_STATE.twd=((PLAN_STATE.twd+delta)+360)%360;
   else if(field==='tws')PLAN_STATE.tws=Math.max(1,Math.min(40,PLAN_STATE.tws+delta));
   else if(field==='pen')PLAN_STATE.pen=Math.max(0,Math.min(120,PLAN_STATE.pen+delta));
-  G('planTWD').textContent=Math.round(PLAN_STATE.twd)+'°';
-  G('planTWS').textContent=PLAN_STATE.tws+'kt';
-  G('planPEN').textContent=PLAN_STATE.pen+'s';
+  updatePlanControls();
   runPlan();
 }
 
@@ -939,9 +937,7 @@ function syncPlanWind(){
   if(WIND.twd!==null)PLAN_STATE.twd=Math.round(WIND.twd);
   if(WIND.tws!==null)PLAN_STATE.tws=Math.round(WIND.tws);
   PLAN_STATE.pen=(CRS.tackDur||20)+(CRS.rebuildDur||30);
-  G('planTWD').textContent=Math.round(PLAN_STATE.twd)+'°';
-  G('planTWS').textContent=PLAN_STATE.tws+'kt';
-  G('planPEN').textContent=PLAN_STATE.pen+'s';
+  updatePlanControls();
   runPlan();
   toast('Plan synced to live wind');
 }
@@ -1388,18 +1384,26 @@ function advanceMark(){
   dirty=true;saveState();refreshOptPath();
 }
 function saveCourse(){
-  const v=id=>{const n=parseFloat(G(id).value);return isNaN(n)?null:n;};
+  const v=id=>{const el=G(id);const n=el?parseFloat(el.value):NaN;return Number.isNaN(n)?null:n;};
   const aL=v('cALat'),aO=v('cALon'),bL=v('cBLat'),bO=v('cBLon');
-  if(!aL||!bL){toast('Need both start pins');return;}
+  if([aL,aO,bL,bO].some(x=>x===null)){toast('Need both start pins');return;}
   CRS.pinA={lat:aL,lon:aO};CRS.pinB={lat:bL,lon:bO};
   CRS.tackDur=parseInt(G('cTackDur').value)||20;
   CRS.minLogSOG=parseFloat(G('cMinSOG').value)||0.3;
   const fm=G('finMode').value;
-  if(fm==='custom'){const fa=v('cFALat'),fo=v('cFALon'),fb=v('cFBLat'),fbo=v('cFBLon');if(fa&&fb){CRS.finA={lat:fa,lon:fo};CRS.finB={lat:fb,lon:fbo};}}
-  else{CRS.finA=null;CRS.finB=null;}
+  if(fm==='custom'){
+    const fa=v('cFALat'),fo=v('cFALon'),fb=v('cFBLat'),fbo=v('cFBLon');
+    if([fa,fo,fb,fbo].some(x=>x===null)){toast('Need both finish pins or reuse start line');return;}
+    CRS.finA={lat:fa,lon:fo};CRS.finB={lat:fb,lon:fbo};
+  }else{CRS.finA=null;CRS.finB=null;}
   if(CRS.wpts.length>0&&CRS.activeMark<0)CRS.activeMark=0;
   if(!NAV.lat){const m=midLL(CRS.pinA,CRS.pinB);NAV.lat=m.lat-0.005;NAV.lon=m.lon;}
+  PLAN_STATE.pen=CRS.tackDur||PLAN_STATE.pen;
+  if(WIND.twd!=null)PLAN_STATE.twd=Math.round(WIND.twd);
+  if(WIND.tws!=null)PLAN_STATE.tws=Math.round(WIND.tws);
+  updatePlanControls();populateCourseForm();
   closeModal('mCourse');toast('Course set');dirty=true;saveState();refreshOptPath();
+  if(appMode==='plan')setTimeout(runPlan,50);
 }
 function gpsToPin(w){if(NAV.lat===null){toast(sensorsOn?'Waiting for GPS fix…':'Tap Sensors first');return;}const id=w==='A'?['cALat','cALon']:['cBLat','cBLon'];G(id[0]).value=NAV.lat.toFixed(6);G(id[1]).value=NAV.lon.toFixed(6);toast('GPS → Pin '+w);}
 function clearLine(){CRS.pinA=null;CRS.pinB=null;toast('Line cleared');dirty=true;}
@@ -1409,13 +1413,31 @@ function clearWpts(){CRS.wpts=[];CRS.activeMark=-1;renderWptList();saveState();d
 function toggleRnd(i){const r=CRS.wpts[i].rounding;CRS.wpts[i].rounding=r==='port'?'stbd':r==='stbd'?'none':'port';renderWptList();saveState();}
 function deleteWpt(i){CRS.wpts.splice(i,1);if(CRS.activeMark>=CRS.wpts.length)CRS.activeMark=CRS.wpts.length-1;renderWptList();saveState();dirty=true;}
 function setActiveMark(i){CRS.activeMark=i;renderWptList();saveState();dirty=true;refreshOptPath();toast('Active mark → '+CRS.wpts[i].label);}
-function renderWptList(){const el=G('wptList');el.innerHTML='';
+function renderWptList(){const el=G('wptList');if(!el)return;el.innerHTML='';
 if(CRS.wpts.length>0){const hint=document.createElement('div');hint.style.cssText='font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em';hint.textContent='TAP ROW TO SET ACTIVE MARK';el.appendChild(hint);}
 CRS.wpts.forEach((w,i)=>{const d=document.createElement('div');d.className='wpt-item'+(i===CRS.activeMark?' cur':'');
 d.innerHTML='<span class="wpt-seq">'+(i+1)+'</span><span class="wpt-lab">'+w.label+'</span><span class="wpt-co">'+w.lat.toFixed(4)+', '+w.lon.toFixed(4)+'</span><button class="wpt-rnd '+w.rounding+'" onclick="event.stopPropagation();toggleRnd('+i+')">'+w.rounding.toUpperCase()+'</button><button class="wpt-del" onclick="event.stopPropagation();deleteWpt('+i+')">&#x2715;</button>';
 d.onclick=()=>setActiveMark(i);el.appendChild(d);});
 }
-function toggleFinCustom(){G('finCustom').style.display=G('finMode').value==='custom'?'block':'none';}
+function setFormVal(id,val,dec=6){const el=G(id);if(!el)return;el.value=(val===null||val===undefined||Number.isNaN(val))?'':Number(val).toFixed(dec);}
+function updatePlanControls(){
+  const pTWD=G('planTWD'),pTWS=G('planTWS'),pPEN=G('planPEN');
+  if(pTWD)pTWD.textContent=Math.round(PLAN_STATE.twd)+'°';
+  if(pTWS)pTWS.textContent=PLAN_STATE.tws+'kt';
+  if(pPEN)pPEN.textContent=PLAN_STATE.pen+'s';
+}
+function populateCourseForm(){
+  setFormVal('cALat',CRS.pinA?.lat);setFormVal('cALon',CRS.pinA?.lon);
+  setFormVal('cBLat',CRS.pinB?.lat);setFormVal('cBLon',CRS.pinB?.lon);
+  const td=G('cTackDur');if(td)td.value=CRS.tackDur||20;
+  const ms=G('cMinSOG');if(ms)ms.value=CRS.minLogSOG??0.3;
+  const hasFin=!!(CRS.finA&&CRS.finB);
+  const fm=G('finMode');if(fm)fm.value=hasFin?'custom':'start';
+  setFormVal('cFALat',CRS.finA?.lat);setFormVal('cFALon',CRS.finA?.lon);
+  setFormVal('cFBLat',CRS.finB?.lat);setFormVal('cFBLon',CRS.finB?.lon);
+  toggleFinCustom();renderWptList();
+}
+function toggleFinCustom(){const el=G('finCustom'),fm=G('finMode');if(el&&fm)el.style.display=fm.value==='custom'?'block':'none';}
 
 // ── DEMO ──────────────────────────────────────────────────
 function loadLR(){
@@ -1927,7 +1949,7 @@ function setMode(m){
     [100,300,600].forEach(t=>setTimeout(()=>{if(appMode==='race'){resizeCvs();dirty=true;}},t));
   }
   if(m==='plan'){
-    setTimeout(()=>{runPlan();},80);
+    setTimeout(()=>{updatePlanControls();runPlan();drawPlanMap(PLAN_STATE.scenarios);},80);
   }
   dirty=true;
 }
@@ -2631,7 +2653,12 @@ function saveEditMark(){
 function G(id){return document.getElementById(id)}
 function pill(id,s){G(id).className='pill'+(s?' '+s:'')}
 function toast(msg){const t=G('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600)}
-function openModal(id){if(id==='mWind')renderWsrcList();G(id).classList.add('open')}
+function openModal(id){
+  document.querySelectorAll('.modal-bg.open').forEach(bg=>{if(bg.id!==id)bg.classList.remove('open');});
+  if(id==='mWind')renderWsrcList();
+  if(id==='mCourse')populateCourseForm();
+  const m=G(id);if(m)m.classList.add('open');
+}
 function closeModal(id){G(id).classList.remove('open')}
 function mTab(mid,tab){document.querySelectorAll('#'+mid+' .tp').forEach(p=>p.classList.remove('on'));document.querySelectorAll('#'+mid+' .mtab').forEach(t=>t.classList.remove('on'));G(mid+'-'+tab).classList.add('on');document.querySelectorAll('#'+mid+' .mtab').forEach(t=>{if(t.getAttribute('onclick')?.includes("'"+ tab +"'"))t.classList.add('on');});}
 document.querySelectorAll('.modal-bg').forEach(bg=>bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')}));
