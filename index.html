@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 00:00</title>
+<title>TACTICIAN v06/15 00:17</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:00</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:17</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -346,7 +346,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
   <div class="mhandle"></div><div class="mh3">Boat Polar</div>
   <div class="frow" style="margin-bottom:8px"><label>Preset</label><select id="polarPreset" onchange="loadPolarPreset()"><option value="">— custom —</option><option value="compac35">Com-Pac 35 (default)</option><option value="j24">J/24</option><option value="laser">Laser / ILCA</option><option value="c40">Cruiser 40ft</option></select></div>
   <div style="font-family:var(--mono);font-size:8px;color:var(--muted);margin-bottom:7px">BSP knots · no spinnaker</div>
-  <table class="polar-tbl"><thead><tr><th>TWA</th><th>6kt</th><th>10kt</th><th>14kt</th><th>18kt</th><th>22kt</th></tr></thead><tbody id="polarBody"></tbody></table>
+  <table class="polar-tbl"><thead><tr><th>TWA</th><th>6kt</th><th>10kt</th><th>15kt</th><th>20kt</th></tr></thead><tbody id="polarBody"></tbody></table>
   <div class="mbtns"><button class="mbtn pri" onclick="savePolar()">Save</button><button class="mbtn can" onclick="closeModal('mPolar')">Cancel</button></div>
 </div></div>
 
@@ -442,7 +442,7 @@ const CRS={pinA:null,pinB:null,finA:null,finB:null,
 const RACE={on:false,epoch:null};
 const VIEW={scale:1,ox:0,oy:0,map:true,drag:false,
             lx:0,ly:0,pd:null,bs:1,box:0,boy:0,locked:false};
-const POLAR_TWS=[6,10,14,18,22];
+const POLAR_TWS=[6,10,15,20];
 let polarTable={},polarAngles=[];
 let dirty=true,tileCache={};
 let demoInt=null,demoT=0;
@@ -545,14 +545,14 @@ setInterval(()=>{if(WIND.fetchedAt&&WSRCS[windSrcIdx].id!=='manual'&&windSrcIdx!
 
 // ── POLARS ────────────────────────────────────────────────
 const PRESETS={
-  compac35:{rows:[[42,3.8,5.2,5.8,6.0,5.8],[52,4.2,5.7,6.3,6.6,6.4],[70,4.5,5.9,6.6,7.0,7.0],[90,4.3,5.7,6.5,7.1,7.2],[110,4.1,5.8,6.8,7.2,7.2],[135,3.8,5.4,6.6,7.1,7.1],[150,3.4,4.9,6.2,6.8,7.0]]},
+  compac35:{rows:[[45,3.7,5.0,5.8,6.1],[60,4.3,5.6,6.3,6.6],[75,4.8,6.0,6.7,6.9],[90,4.9,6.1,6.8,7.0],[120,4.6,5.9,6.6,6.8],[150,4.0,5.3,6.1,6.5],[180,3.6,4.8,5.6,6.0]]},
   j24:{rows:[[40,3.8,5.4,6.1,6.3,6.2],[52,4.1,5.8,6.5,6.7,6.6],[70,4.4,5.6,6.3,6.5,6.4],[90,4.2,5.4,6.1,6.3,6.2],[110,4.0,5.6,6.8,7.0,6.9],[135,3.6,5.2,6.5,6.7,6.6],[150,3.2,4.8,6.0,6.2,6.1]]},
   laser:{rows:[[40,3.0,4.2,4.8,4.6,4.4],[52,3.3,4.6,5.1,4.9,4.7],[70,3.5,4.4,4.9,4.7,4.5],[90,3.3,4.2,4.7,4.5,4.3],[110,3.1,4.4,5.2,5.0,4.8],[135,2.8,4.0,4.9,4.7,4.5],[150,2.5,3.7,4.5,4.3,4.1]]},
   c40:{rows:[[42,4.5,6.2,7.0,7.3,7.2],[52,4.9,6.6,7.4,7.7,7.6],[70,5.1,6.5,7.3,7.8,7.8],[90,4.9,6.4,7.2,7.8,7.9],[110,4.6,6.5,7.7,8.1,8.1],[135,4.2,6.0,7.5,8.0,8.0],[150,3.8,5.5,7.0,7.6,7.7]]}
 };
-function buildPolarDOM(rows){const tb=G('polarBody');tb.innerHTML='';rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px">${r[0]}&deg;</td>`;for(let i=1;i<=5;i++)tr.innerHTML+=`<td><input type="number" step="0.1" min="0" max="20" data-twa="${r[0]}" data-ti="${i-1}" value="${r[i]||''}"></td>`;tb.appendChild(tr);});}
-function loadPolarPreset(){const k=G('polarPreset').value;if(!k||!PRESETS[k])buildPolarDOM([42,52,70,90,110,135,150].map(a=>[a,'','','','','']));else buildPolarDOM(PRESETS[k].rows);}
-function commitPolar(){const tbl={};document.querySelectorAll('#polarBody input').forEach(i=>{const a=parseInt(i.dataset.twa),ti=parseInt(i.dataset.ti);if(!tbl[a])tbl[a]=[0,0,0,0,0];tbl[a][ti]=parseFloat(i.value)||0;});polarTable=tbl;polarAngles=POLAR_TWS.map((_,ti)=>{let best=-Infinity,ang=42;Object.entries(tbl).forEach(([a,s])=>{const aa=parseInt(a);if(aa>90)return;const v=s[ti]*Math.cos(aa*Math.PI/180);if(v>best){best=v;ang=aa;}});return ang;});saveState();}
+function buildPolarDOM(rows){const tb=G('polarBody');tb.innerHTML='';rows.forEach(r=>{const tr=document.createElement('tr');tr.innerHTML=`<td style="font-family:var(--mono);font-size:10px;color:var(--muted);padding:2px">${r[0]}&deg;</td>`;for(let i=1;i<=4;i++)tr.innerHTML+=`<td><input type="number" step="0.1" min="0" max="20" data-twa="${r[0]}" data-ti="${i-1}" value="${r[i]||''}"></td>`;tb.appendChild(tr);});}
+function loadPolarPreset(){const k=G('polarPreset').value;if(!k||!PRESETS[k])buildPolarDOM([45,60,75,90,120,150,180].map(a=>[a,'','','','']));else buildPolarDOM(PRESETS[k].rows);}
+function commitPolar(){const tbl={};document.querySelectorAll('#polarBody input').forEach(i=>{const a=parseInt(i.dataset.twa),ti=parseInt(i.dataset.ti);if(!tbl[a])tbl[a]=[0,0,0,0];tbl[a][ti]=parseFloat(i.value)||0;});polarTable=tbl;polarAngles=POLAR_TWS.map((_,ti)=>{let best=-Infinity,ang=45;Object.entries(tbl).forEach(([a,s])=>{const aa=parseInt(a);if(aa>90)return;const v=(s[ti]||0)*Math.cos(aa*Math.PI/180);if(v>best){best=v;ang=aa;}});return ang;});saveState();}
 function savePolar(){commitPolar();closeModal('mPolar');toast('Polar saved');}
 function pBSP(twa,tws){
   if(!Object.keys(polarTable).length)return NAV.sog||4;
@@ -560,8 +560,8 @@ function pBSP(twa,tws){
   const at=Math.abs(twa);
   let ti0=0,ti1=0,tf=0;
   if(tws<=POLAR_TWS[0]){ti0=0;ti1=0;tf=0;}
-  else if(tws>=POLAR_TWS[4]){ti0=4;ti1=4;tf=0;}
-  else{for(let i=0;i<4;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){ti0=i;ti1=i+1;tf=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);break;}}}
+  else if(tws>=POLAR_TWS[3]){ti0=3;ti1=3;tf=0;}
+  else{for(let i=0;i<3;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){ti0=i;ti1=i+1;tf=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);break;}}}
   let lo=angs[0],hi=angs[angs.length-1];
   for(let i=0;i<angs.length-1;i++){if(at>=angs[i]&&at<=angs[i+1]){lo=angs[i];hi=angs[i+1];break;}}
   const af=lo===hi?0:(at-lo)/(hi-lo);
@@ -571,8 +571,8 @@ function pBSP(twa,tws){
 function optAng(tws){
   if(!polarAngles.length||!tws)return 42;
   if(tws<=POLAR_TWS[0])return polarAngles[0];
-  if(tws>=POLAR_TWS[4])return polarAngles[4];
-  for(let i=0;i<4;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){const t=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);return polarAngles[i]*(1-t)+polarAngles[i+1]*t;}}
+  if(tws>=POLAR_TWS[3])return polarAngles[3];
+  for(let i=0;i<3;i++){if(tws>=POLAR_TWS[i]&&tws<POLAR_TWS[i+1]){const t=(tws-POLAR_TWS[i])/(POLAR_TWS[i+1]-POLAR_TWS[i]);return polarAngles[i]*(1-t)+polarAngles[i+1]*t;}}
   return 42;
 }
 function optDownwindAng(tws){
@@ -972,7 +972,7 @@ function onOriR(e){if(absOri)return;let r=null;if(e.webkitCompassHeading!=null)r
 function onGPS(p){
   const t=Date.now(),rawLat=p.coords.latitude,rawLon=p.coords.longitude;
   const lat=kfLat.update(rawLat),lon=kfLon.update(rawLon);
-  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);if(dt>=2&&dt<60){const rawSog=d/dt*3600*0.539957;if(rawSog<20)NAV.sog=kfS.update(rawSog);}NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
+  if(NAV.pLat!=null){const dt=(t-NAV.pT)/1000;if(dt>0.4){const d=haversine(NAV.pLat,NAV.pLon,lat,lon);if(dt>=2&&dt<60){const rawSog=d/dt*3600*0.539957;if(rawSog<20)NAV.sog=kfS.update(d<3?0:rawSog);}NAV.cog=brng(NAV.pLat,NAV.pLon,lat,lon);if(!NAV.hdg)NAV.hdg=NAV.cog;}}
   NAV.lat=lat;NAV.lon=lon;NAV.pLat=lat;NAV.pLon=lon;NAV.pT=t;
   NAV.track.push({lat,lon,t});if(NAV.track.length>300)NAV.track.shift();
   pill('pGPS','ok');dirty=true;refreshOptPath();
