@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 00:23</title>
+<title>TACTICIAN v06/15 00:37</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -149,7 +149,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .seq-btn{padding:12px 8px;border-radius:6px;border:1px solid var(--tealring);background:var(--deep);color:var(--teal);font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;text-align:center;touch-action:manipulation}
 .seq-btn.on{background:var(--tealfade);border-color:var(--teal)}
 .seq-sub{font-size:8px;font-weight:400;color:var(--muted);display:block;margin-top:2px}
-.wsrc-list{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.wsrc-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
 .wsrc{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:9px 10px;display:flex;align-items:center;gap:8px;cursor:pointer;touch-action:manipulation}
 .wsrc.on{border-color:var(--teal);background:var(--tealfade)}
 .wsrc-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:23</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:37</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -212,6 +212,20 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
       <div class="wtv steady" id="wtvEl">--</div>
       <div class="wtl" id="wtlEl">SHIFT</div>
       <div class="wtn" id="wtnEl"></div>
+    </div>
+  </div>
+  <div style="flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:5px 14px;background:var(--ink);border-bottom:1px solid var(--tealring)">
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--teal);font-variant-numeric:tabular-nums" id="sHDG">---</span>
+      <span style="font-family:var(--cond);font-size:11px;color:var(--muted);letter-spacing:0.1em">HDG&deg;</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums" id="sSOG">0.0</span>
+      <span style="font-family:var(--cond);font-size:11px;color:var(--muted);letter-spacing:0.1em">SOG kt</span>
+    </div>
+    <div style="display:flex;align-items:baseline;gap:6px">
+      <span style="font-family:var(--mono);font-size:28px;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums" id="sTWA">---</span>
+      <span style="font-family:var(--cond);font-size:11px;color:var(--muted);letter-spacing:0.1em">TWA&deg;</span>
     </div>
   </div>
   <div class="cts-pair">
@@ -332,7 +346,12 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <!-- WIND MODAL -->
 <div class="modal-bg" id="mWind"><div class="modal">
   <div class="mhandle"></div><div class="mh3">Wind Source</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <span style="font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.1em">WIND SOURCES</span>
+    <button class="mbtn sec" style="flex:none;padding:5px 10px;font-size:8px" onclick="searchNearbyBuoys()">FIND NEARBY</button>
+  </div>
   <div class="wsrc-list" id="wsrcList"></div>
+  <div id="buoySearchStatus" style="font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center;padding:4px 0;display:none"></div>
   <div class="fg2"><div class="frow"><label>Direction (deg)</label><input type="number" id="manTWD" placeholder="215" min="0" max="360" value="215"></div><div class="frow"><label>Speed (kt)</label><input type="number" id="manTWS" placeholder="12" min="0" max="60" value="12"></div></div>
   <div class="mbtns">
     <button class="mbtn pri" onclick="fetchSelWind()">Fetch Wind</button>
@@ -460,6 +479,104 @@ const WSRCS=[
   {id:'41047',name:'NOAA Buoy 41047',info:'NE Cape Fear · 45nm SE'},
   {id:'manual',name:'Manual Entry',info:'Enter direction and speed below'}
 ];
+// Dynamic buoy list — starts with defaults, updated by search
+let dynamicSrcs=[...[]]; // populated by searchNearbyBuoys
+
+async function searchNearbyBuoys(){
+  const statusEl=G('buoySearchStatus');
+  statusEl.style.display='block';
+  statusEl.style.color='var(--amber)';
+  statusEl.textContent='Searching NOAA stations…';
+  // Use boat position or course center
+  const la=NAV.lat||(CRS.pinA?CRS.pinA.lat:33.84);
+  const lo=NAV.lon||(CRS.pinA?CRS.pinA.lon:-78.61);
+  try{
+    // NOAA Tides and Currents metadata API — stations within radius
+    const url=`https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type=meteo&units=english`;
+    const resp=await fetch(url);
+    const data=await resp.json();
+    if(!data.stations){throw new Error('no stations');}
+    // Filter to wind-reporting stations within 150nm
+    const R=6371;
+    const nearby=data.stations.filter(s=>{
+      if(!s.lat||!s.lng)return false;
+      const dLat=(s.lat-la)*Math.PI/180,dLon=(s.lng-lo)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(la*Math.PI/180)*Math.cos(s.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+      s._dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*0.539957; // nm
+      return s._dist<150;
+    }).sort((a,b)=>a._dist-b._dist).slice(0,8);
+    if(!nearby.length){statusEl.style.color='var(--red)';statusEl.textContent='No stations found within 150nm';return;}
+    // Build dynamic source list — keep Open-Meteo and Manual, replace buoys
+    const buoySrcs=nearby.map(s=>({
+      id:s.id,
+      name:s.name||s.id,
+      info:`NOAA · ${s._dist.toFixed(0)}nm away`,
+      lat:s.lat,lon:s.lng
+    }));
+    // Rebuild WSRCS: OpenMeteo + found buoys + Manual
+    WSRCS.length=0;
+    WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
+    buoySrcs.forEach(b=>WSRCS.push(b));
+    WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
+    windSrcIdx=0;
+    saveState();
+    renderWsrcList();
+    statusEl.style.color='var(--green)';
+    statusEl.textContent=`Found ${buoySrcs.length} stations nearby`;
+  }catch(e){
+    // Fallback: try NDBC buoy list instead
+    try{
+      await searchNDBCFallback(la,lo,statusEl);
+    }catch(e2){
+      statusEl.style.color='var(--red)';
+      statusEl.textContent='Search failed — check connection';
+    }
+  }
+}
+
+async function searchNDBCFallback(la,lo,statusEl){
+  // Use a curated list of NDBC buoys for the SE US coast
+  // Filter by proximity to provided coordinates
+  const seCoast=[
+    {id:'41002',name:'South Hatteras',lat:31.759,lon:-74.936},
+    {id:'41004',name:'EDISTO',lat:32.501,lon:-79.099},
+    {id:'41008',name:'GRAYS REEF',lat:31.402,lon:-80.869},
+    {id:'41009',name:'CANAVERAL 20NM E',lat:28.519,lon:-80.166},
+    {id:'41010',name:'CANAVERAL 120NM E',lat:28.878,lon:-78.485},
+    {id:'41012',name:'ST AUGUSTINE',lat:30.041,lon:-80.533},
+    {id:'41013',name:'FRYING PAN SHOALS',lat:33.436,lon:-77.743},
+    {id:'41025',name:'DIAMOND SHOALS',lat:35.006,lon:-75.402},
+    {id:'41035',name:'OFFSHORE WILMINGTON',lat:34.487,lon:-77.281},
+    {id:'41036',name:'OFFSHORE CHARLESTON',lat:32.887,lon:-76.949},
+    {id:'41047',name:'NE CAPE FEAR',lat:34.281,lon:-77.282},
+    {id:'41048',name:'WEST BERMUDA',lat:31.845,lon:-69.592},
+    {id:'BFTN7',name:'BEAUFORT NC',lat:34.718,lon:-76.671},
+    {id:'CLKN7',name:'CAPE LOOKOUT',lat:34.622,lon:-76.526},
+    {id:'MROS1',name:'MORRIS ISLAND SC',lat:32.673,lon:-79.913},
+    {id:'NFBM6',name:'NAPLES FL',lat:26.132,lon:-81.808},
+    {id:'SAUF1',name:'ST AUGUSTINE FL',lat:29.857,lon:-81.265},
+    {id:'SAPN7',name:'WRIGHTSVILLE BCH NC',lat:34.213,lon:-77.792},
+    {id:'JNOS1',name:'NORTH INLET SC',lat:33.351,lon:-79.183},
+    {id:'41029',name:'CAPERS',lat:32.813,lon:-79.634},
+  ];
+  const R=6371;
+  const nearby=seCoast.map(s=>{
+    const dLat=(s.lat-la)*Math.PI/180,dLon=(s.lon-lo)*Math.PI/180;
+    const a=Math.sin(dLat/2)**2+Math.cos(la*Math.PI/180)*Math.cos(s.lat*Math.PI/180)*Math.sin(dLon/2)**2;
+    s._dist=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a))*0.539957;
+    return s;
+  }).filter(s=>s._dist<200).sort((a,b)=>a._dist-b._dist).slice(0,8);
+  if(!nearby.length){throw new Error('none nearby');}
+  WSRCS.length=0;
+  WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
+  nearby.forEach(s=>WSRCS.push({id:s.id,name:s.name,info:`NDBC · ${s._dist.toFixed(0)}nm away`}));
+  WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
+  windSrcIdx=0;
+  renderWsrcList();
+  statusEl.style.color='var(--green)';
+  statusEl.textContent=`Found ${nearby.length} NDBC stations nearby`;
+}
+
 function renderWsrcList(){
   const el=G('wsrcList');el.innerHTML='';
   WSRCS.forEach((s,i)=>{
@@ -534,6 +651,7 @@ function setManualWind(){
   windSrcIdx=4;  // lock to manual, stop auto-refresh
   setWind(twd,tws,'Manual');closeModal('mWind');
   renderWsrcList();  // show Manual as selected
+  setTimeout(refreshOptPath,50);  // recompute path with new wind
 }
 function windAge(){
   if(!WIND.fetchedAt)return'';
@@ -542,6 +660,7 @@ function windAge(){
 }
 function isWindStale(){return WIND.fetchedAt&&(Date.now()-WIND.fetchedAt)>10*60*1000;}
 setInterval(()=>{if(WIND.fetchedAt&&WSRCS[windSrcIdx].id!=='manual'&&windSrcIdx!==4)fetchSelWind();},5*60*1000);
+setInterval(()=>{refreshOptPath();dirty=true;},10*1000); // recompute A* every 10s
 
 // ── POLARS ────────────────────────────────────────────────
 const PRESETS={
@@ -980,7 +1099,7 @@ function onGPS(p){
 
 // ── LOCALSTORAGE ──────────────────────────────────────────
 const LS='tactician_v5';
-function saveState(){try{localStorage.setItem(LS,JSON.stringify({pinA:CRS.pinA,pinB:CRS.pinB,finA:CRS.finA,finB:CRS.finB,wpts:CRS.wpts,activeMark:CRS.activeMark,tackDur:CRS.tackDur,twd:WIND.twd,tws:WIND.tws,polar:polarTable,polarAngles,windSrcIdx}));}catch(e){}}
+function saveState(){try{const srcs=WSRCS.filter(s=>s.id!=='openmeteo'&&s.id!=='manual');localStorage.setItem(LS,JSON.stringify({pinA:CRS.pinA,pinB:CRS.pinB,finA:CRS.finA,finB:CRS.finB,wpts:CRS.wpts,activeMark:CRS.activeMark,tackDur:CRS.tackDur,twd:WIND.twd,tws:WIND.tws,polar:polarTable,polarAngles,windSrcIdx,dynSrcs:srcs}));}catch(e){}}
 function loadState(){
   try{
     const raw=localStorage.getItem(LS);if(!raw)return;const p=JSON.parse(raw);
@@ -991,6 +1110,12 @@ function loadState(){
     if(p.twd!=null)WIND.twd=p.twd;if(p.tws!=null)WIND.tws=p.tws;
     if(p.polar){polarTable=p.polar;const angs=Object.keys(p.polar).map(Number).sort((a,b)=>a-b);buildPolarDOM(angs.map(a=>[a,...p.polar[a]]));}
     if(p.polarAngles)polarAngles=p.polarAngles;
+    if(p.dynSrcs&&p.dynSrcs.length){
+      WSRCS.length=0;
+      WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
+      p.dynSrcs.forEach(s=>WSRCS.push(s));
+      WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
+    }
     if(p.windSrcIdx!=null)windSrcIdx=p.windSrcIdx;
     renderWptList();dirty=true;toast('Session restored');
   }catch(e){}
@@ -1120,6 +1245,10 @@ function updateStartUI(){
   }else if(m&&m.isOver){G('tsCOMMIT').textContent='OCS!';G('tsCOMMIT').className='tsv crit';}
   else{G('tsCOMMIT').textContent='--:--';G('tsCOMMIT').className='tsv';}
   // Wind row
+  // HDG strip
+  G('sHDG').textContent=NAV.hdg!=null?Math.round(NAV.hdg)+'°':'---';
+  G('sSOG').textContent=NAV.sog.toFixed(1);
+  G('sTWA').textContent=(WIND.twd!=null&&NAV.hdg!=null)?Math.round(Math.abs(angDiff(WIND.twd,NAV.hdg)))+'°':'---';
   G('wrDir').textContent=WIND.twd!=null?Math.round(WIND.twd)+'°':'---';
   G('wrSpd').textContent=WIND.tws!=null?WIND.tws.toFixed(1)+'kt':'--kt';
   const age=windAge();const stale=isWindStale();
