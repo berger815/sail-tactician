@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 13:36</title>
+<title>TACTICIAN v06/15 13:53</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -221,7 +221,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 13:36</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 13:53</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -1030,12 +1030,53 @@ function drawPlanMap(scenarios){
   ctxM.fillStyle='rgba(3,8,15,0.3)';ctxM.fillRect(0,0,W,H);
   const pp2=(lat,lon)=>({x:(lon-b.w)/(b.e-b.w)*W,y:(1-(lat-b.s)/(b.n-b.s))*H});
 
-  // Wind arrows at top
+  // ── WIND DISPLAY ──────────────────────────────────────
   if(PLAN_STATE.twd!=null){
-    const wr=(PLAN_STATE.twd-90)*Math.PI/180;
-    ctxM.strokeStyle='rgba(245,166,35,0.25)';ctxM.lineWidth=1;
-    for(let i=0;i<5;i++){const ax=W*0.1+i*(W*0.2),ay=22;ctxM.beginPath();ctxM.moveTo(ax,ay);ctxM.lineTo(ax+Math.cos(wr)*16,ay+Math.sin(wr)*16);ctxM.stroke();}
-    ctxM.fillStyle='rgba(245,166,35,0.5)';ctxM.font='8px var(--mono)';ctxM.textAlign='left';ctxM.textBaseline='top';ctxM.fillText('W '+Math.round(PLAN_STATE.twd)+'° / '+PLAN_STATE.tws+'kt',4,4);
+    const twd=PLAN_STATE.twd,tws=PLAN_STATE.tws;
+    // Wind axis line across full chart (upwind/downwind axis)
+    const axisRad=(twd-90)*Math.PI/180;
+    const midX=W/2,midY=H/2;
+    const axLen=Math.max(W,H)*1.5;
+    ctxM.save();
+    ctxM.strokeStyle='rgba(245,166,35,0.08)';ctxM.lineWidth=1.5;ctxM.setLineDash([4,8]);
+    ctxM.beginPath();
+    ctxM.moveTo(midX-Math.cos(axisRad)*axLen,midY-Math.sin(axisRad)*axLen);
+    ctxM.lineTo(midX+Math.cos(axisRad)*axLen,midY+Math.sin(axisRad)*axLen);
+    ctxM.stroke();ctxM.setLineDash([]);ctxM.restore();
+    // Wind flow arrows across chart — FROM source direction
+    const flowRad=(twd+90)*Math.PI/180; // direction wind blows TOWARD
+    ctxM.save();
+    ctxM.strokeStyle='rgba(245,166,35,0.22)';ctxM.lineWidth=1.2;
+    for(let i=0;i<4;i++){
+      const ax=W*0.15+i*(W*0.23),ay=H*0.18;
+      const ex=ax+Math.cos(flowRad)*20,ey=ay+Math.sin(flowRad)*20;
+      ctxM.beginPath();ctxM.moveTo(ax,ay);ctxM.lineTo(ex,ey);ctxM.stroke();
+      // Arrowhead
+      const aR=flowRad+Math.PI/2;
+      ctxM.beginPath();ctxM.moveTo(ex,ey);ctxM.lineTo(ex-Math.cos(aR-0.4)*6,ey-Math.sin(aR-0.4)*6);ctxM.lineTo(ex-Math.cos(aR+0.4)*6,ey-Math.sin(aR+0.4)*6);ctxM.closePath();ctxM.fillStyle='rgba(245,166,35,0.3)';ctxM.fill();
+    }
+    ctxM.restore();
+    // Wind badge top-left
+    const barbs=Math.min(Math.round(tws/5),5);
+    ctxM.save();
+    ctxM.fillStyle='rgba(3,8,15,0.75)';ctxM.beginPath();ctxM.roundRect(4,4,88,32,4);ctxM.fill();
+    ctxM.strokeStyle='rgba(245,166,35,0.4)';ctxM.lineWidth=1;ctxM.beginPath();ctxM.roundRect(4,4,88,32,4);ctxM.stroke();
+    // Wind vane arrow (FROM source)
+    const cx2=20,cy2=20,vr2=(twd-90)*Math.PI/180;
+    const sx2=cx2+Math.cos(vr2)*10,sy2=cy2+Math.sin(vr2)*10;
+    const ex2=cx2-Math.cos(vr2)*10,ey2=cy2-Math.sin(vr2)*10;
+    ctxM.strokeStyle='#f5a623';ctxM.lineWidth=2;ctxM.beginPath();ctxM.moveTo(sx2,sy2);ctxM.lineTo(ex2,ey2);ctxM.stroke();
+    ctxM.fillStyle='#f5a623';ctxM.beginPath();ctxM.arc(ex2,ey2,3,0,2*Math.PI);ctxM.fill();
+    // Barbs
+    for(let b=0;b<barbs;b++){
+      const bt=0.3+b*0.15,bx=sx2+(ex2-sx2)*bt,by=sy2+(ey2-sy2)*bt;
+      const br=vr2-Math.PI/2;
+      ctxM.strokeStyle='rgba(245,166,35,0.6)';ctxM.lineWidth=1.5;
+      ctxM.beginPath();ctxM.moveTo(bx,by);ctxM.lineTo(bx+Math.cos(br)*5,by+Math.sin(br)*5);ctxM.stroke();
+    }
+    ctxM.fillStyle='#f5a623';ctxM.font='bold 9px var(--mono)';ctxM.textAlign='left';ctxM.textBaseline='middle';
+    ctxM.fillText(Math.round(twd)+'° / '+tws+'kt',32,20);
+    ctxM.restore();
   }
 
   // Scenario paths
@@ -1078,11 +1119,30 @@ function drawPlanMap(scenarios){
     });
   }
 
-  // Start line
+  // Start line with pin recommendation
+  const bestScen=scenarios&&scenarios.length?scenarios.reduce((a,b)=>a.totalTime<b.totalTime?a:b):null;
   if(CRS.pinA&&CRS.pinB){
     const a=pp2(CRS.pinA.lat,CRS.pinA.lon),bpt=pp2(CRS.pinB.lat,CRS.pinB.lon);
     ctxM.strokeStyle='rgba(245,166,35,0.8)';ctxM.lineWidth=2.5;ctxM.beginPath();ctxM.moveTo(a.x,a.y);ctxM.lineTo(bpt.x,bpt.y);ctxM.stroke();
-    [[a,'A'],[bpt,'B']].forEach(([p,lbl])=>{ctxM.fillStyle='#f5a623';ctxM.beginPath();ctxM.arc(p.x,p.y,7,0,2*Math.PI);ctxM.fill();ctxM.fillStyle='#000';ctxM.font='bold 7px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(lbl,p.x,p.y);});
+    const recStart=bestScen?bestScen.startPin:null;
+    [[a,'A',CRS.pinA],[bpt,'B',CRS.pinB]].forEach(([p,lbl,pin])=>{
+      const isRec=recStart==='Pin '+lbl;
+      ctxM.fillStyle=isRec?'#3ddc84':'#f5a623';
+      ctxM.beginPath();ctxM.arc(p.x,p.y,isRec?9:7,0,2*Math.PI);ctxM.fill();
+      if(isRec){ctxM.strokeStyle='rgba(61,220,132,0.6)';ctxM.lineWidth=2;ctxM.beginPath();ctxM.arc(p.x,p.y,13,0,2*Math.PI);ctxM.stroke();}
+      ctxM.fillStyle='#000';ctxM.font='bold 7px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(lbl,p.x,p.y);
+      if(isRec){ctxM.fillStyle='rgba(61,220,132,0.9)';ctxM.font='7px var(--mono)';ctxM.textBaseline='top';ctxM.fillText('START',p.x,p.y+15);}
+    });
+  }
+  // Alt start path — dotted line from other pin
+  if(bestScen&&bestScen.altStart&&CRS.pinA&&CRS.pinB){
+    const altPin=bestScen.altStart.pin==='Pin A'?CRS.pinA:CRS.pinB;
+    const firstMark=CRS.wpts[0];
+    if(firstMark){
+      const ap=pp2(altPin.lat,altPin.lon),mp=pp2(firstMark.lat,firstMark.lon);
+      ctxM.strokeStyle='rgba(255,255,255,0.15)';ctxM.lineWidth=1;ctxM.setLineDash([2,5]);
+      ctxM.beginPath();ctxM.moveTo(ap.x,ap.y);ctxM.lineTo(mp.x,mp.y);ctxM.stroke();ctxM.setLineDash([]);
+    }
   }
   // Marks
   CRS.wpts.forEach(w=>{const p=pp2(w.lat,w.lon);ctxM.fillStyle='#00d4aa';ctxM.beginPath();ctxM.arc(p.x,p.y,7,0,2*Math.PI);ctxM.fill();ctxM.fillStyle='#000';ctxM.font='bold 7px var(--mono)';ctxM.textAlign='center';ctxM.textBaseline='middle';ctxM.fillText(w.label,p.x,p.y);});
@@ -1451,31 +1511,37 @@ function planLeg(fromLat,fromLon,toLat,toLon,wind,tws,firstTack){
   return{time_s:999,tacks:0,gybes:0,cts1:Math.round(mb),cts2:null,leg:'unknown',vmg:0,dist_nm};
 }
 
-function planCourse(firstTack,wind,tws){
-  // Walk the full course leg by leg
-  if(!CRS.pinA||!CRS.pinB||!CRS.wpts.length)return null;
-  const mid=midLL(CRS.pinA,CRS.pinB);
-  const pts=[{lat:mid.lat,lon:mid.lon,label:'Start'}];
+function planFromPin(pinPt,pinLabel,firstTack,wind,tws){
+  // Walk full course from a specific start pin
+  if(!CRS.wpts.length)return null;
+  const pts=[{lat:pinPt.lat,lon:pinPt.lon,label:pinLabel}];
   CRS.wpts.forEach(w=>pts.push({lat:w.lat,lon:w.lon,label:'M'+w.label}));
+  const mid=midLL(CRS.pinA,CRS.pinB);
   const fin=CRS.finA?midLL(CRS.finA,CRS.finB):mid;
   pts.push({lat:fin.lat,lon:fin.lon,label:'Finish'});
-
   let totalTime=0,totalTacks=0,totalGybes=0,totalDist=0;
-  const legs=[];
-  let curTack=firstTack;
-
+  const legs=[];let curTack=firstTack;
   for(let i=0;i<pts.length-1;i++){
     const leg=planLeg(pts[i].lat,pts[i].lon,pts[i+1].lat,pts[i+1].lon,wind,tws,curTack);
     leg.from=pts[i].label;leg.to=pts[i+1].label;
-    legs.push(leg);
-    totalTime+=leg.time_s;
-    totalTacks+=leg.tacks;
-    totalGybes+=leg.gybes;
-    totalDist+=leg.dist_nm;
-    // After upwind tack, flip for next leg's starting tack preference
+    legs.push(leg);totalTime+=leg.time_s;totalTacks+=leg.tacks;totalGybes+=leg.gybes;totalDist+=leg.dist_nm;
     if(leg.leg==='upwind')curTack=curTack==='port'?'stbd':'port';
   }
-  return{totalTime,totalTacks,totalGybes,totalDist,legs,firstTack,wind,tws};
+  return{totalTime,totalTacks,totalGybes,totalDist,legs,firstTack,startPin:pinLabel,wind,tws};
+}
+
+function planCourse(firstTack,wind,tws){
+  if(!CRS.pinA||!CRS.pinB||!CRS.wpts.length)return null;
+  // Try starting from both pins — pick fastest
+  const fromA=planFromPin(CRS.pinA,'Pin A',firstTack,wind,tws);
+  const fromB=planFromPin(CRS.pinB,'Pin B',firstTack,wind,tws);
+  if(!fromA||!fromB)return fromA||fromB;
+  // Best start = fastest total time
+  const best=fromA.totalTime<=fromB.totalTime?fromA:fromB;
+  const other=fromA.totalTime<=fromB.totalTime?fromB:fromA;
+  // Attach start comparison data
+  best.altStart={pin:other.startPin,timeDelta:other.totalTime-best.totalTime};
+  return best;
 }
 
 function planSplit(wind,tws){
@@ -1558,14 +1624,21 @@ function runPlan(){
 
   // Best scenario leg breakdown
   const best=scenarios.find(s=>s.totalTime===bestTime);
-  html+='<div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em;margin-bottom:5px">'+names[scenarios.indexOf(best)]+' — LEG DETAIL</div>';
+  html+='<div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em;margin-bottom:5px">'+names[scenarios.indexOf(best)]+' — '+best.startPin+' (fastest start)</div>';
+  if(best.altStart){
+    const delta=best.altStart.timeDelta;
+    html+='<div style="font-family:var(--mono);font-size:8px;background:var(--tealfade);border:1px solid var(--tealring);border-radius:4px;padding:5px 8px;margin-bottom:6px;display:flex;justify-content:space-between">';
+    html+='<span style="color:var(--green)">'+best.startPin+' START ✓</span>';
+    html+='<span style="color:var(--muted)">vs '+best.altStart.pin+': +'+fmtT(delta)+' slower</span>';
+    html+='</div>';
+  }
   html+='<div class="plan-legs">';
   html+='<div class="plan-leg"><span class="pl-name">LEG</span><span class="pl-val" style="color:var(--muted)">CTS</span><span class="pl-val" style="color:var(--muted)">VMG</span><span class="pl-val" style="color:var(--muted)">TIME</span></div>';
   best.legs.forEach(l=>{
     const cls=l.leg==='upwind'?'up':l.leg==='downwind'?'dw':'rc';
     const cts=l.cts2?l.cts1+'°→'+l.cts2+'°':l.cts1+'°';
     html+='<div class="plan-leg">';
-    html+='<span class="pl-name">'+l.from+'\u2192'+l.to+'</span>';
+    html+='<span class="pl-name">'+l.from+'→'+l.to+'</span>';
     html+='<span class="pl-val '+cls+'">'+cts+'</span>';
     html+='<span class="pl-val '+cls+'">'+l.vmg.toFixed(1)+'kt</span>';
     html+='<span class="pl-val">'+fmtT(l.time_s)+'</span>';
@@ -2423,7 +2496,8 @@ function renderChart(){
     ctxM.fillStyle='rgba(0,212,170,0.18)';
     NAV.track.filter((_,i)=>i%8===0).forEach(pt=>{const pp2=pp(pt.lat,pt.lon);ctxM.beginPath();ctxM.arc(pp2.x,pp2.y,sr(1.5),0,2*Math.PI);ctxM.fill();});
   }
-  // Start line
+  // Start line with pin recommendation
+  const bestScen=scenarios&&scenarios.length?scenarios.reduce((a,b)=>a.totalTime<b.totalTime?a:b):null;
   if(CRS.pinA&&CRS.pinB){
     const a=pp(CRS.pinA.lat,CRS.pinA.lon),bpt=pp(CRS.pinB.lat,CRS.pinB.lon);
     ctxM.strokeStyle='rgba(245,166,35,0.7)';ctxM.lineWidth=2.5;
