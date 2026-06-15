@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 01:21</title>
+<title>TACTICIAN v06/15 03:47</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -162,6 +162,22 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .edit-box{background:var(--hull);border:1px solid var(--tealring);border-radius:10px;padding:18px 16px;width:100%;max-width:340px}
 .edit-box h4{font-family:var(--mono);font-size:10px;letter-spacing:0.2em;color:var(--teal);text-transform:uppercase;margin-bottom:14px}
 .edit-btns{display:flex;gap:6px;margin-top:12px}
+.telem-chart{width:100%;height:120px;display:block;margin-bottom:8px}
+.telem-table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:9px}
+.telem-table th{color:var(--muted);padding:3px 4px;text-align:right;border-bottom:1px solid var(--tealring);letter-spacing:0.06em;font-size:8px}
+.telem-table th:first-child{text-align:left}
+.telem-table td{padding:3px 4px;text-align:right;border-bottom:1px solid rgba(0,212,170,0.05);color:var(--white)}
+.telem-table td:first-child{text-align:left;color:var(--muted)}
+.telem-table tr:hover td{background:var(--tealfade)}
+.telem-table tr.hi td{color:var(--green)}.telem-table tr.warn td{color:var(--amber)}.telem-table tr.crit td{color:var(--red)}
+.telem-wrap{max-height:260px;overflow-y:auto;-webkit-overflow-scrolling:touch;margin-bottom:8px}
+.telem-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.tstat{background:var(--deep);border:1px solid var(--tealring);border-radius:5px;padding:7px 8px;text-align:center}
+.tstat-v{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--teal)}
+.tstat-l{font-family:var(--cond);font-size:9px;color:var(--muted);letter-spacing:0.08em}
+.ysel{display:flex;gap:4px;margin-bottom:7px;flex-wrap:wrap}
+.ysel button{font-family:var(--mono);font-size:8px;padding:3px 8px;border-radius:3px;border:1px solid var(--tealring);color:var(--muted);background:transparent;cursor:pointer;touch-action:manipulation}
+.ysel button.on{background:var(--teal);color:var(--ink);border-color:var(--teal)}
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--hull);border:1px solid var(--tealring);border-radius:6px;padding:7px 16px;font-family:var(--mono);font-size:10px;color:var(--teal);opacity:0;pointer-events:none;transition:all 0.2s;z-index:999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -169,7 +185,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 01:21</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 03:47</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -278,8 +294,24 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
   </div>
 </div>
 
+<!-- SENSOR PANEL — slides up above toolbar -->
+<div id="sensorPanel" style="display:none;flex-direction:column;background:var(--hull);border-top:1px solid var(--tealring);padding:10px 12px;gap:8px;flex-shrink:0">
+  <div style="display:flex;gap:6px;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:6px">
+      <div class="pill" id="sp_GPS"><div class="pdot"></div>GPS</div>
+      <div class="pill" id="sp_HDG"><div class="pdot"></div>HDG</div>
+      <div class="pill" id="sp_WND"><div class="pdot"></div>WND</div>
+    </div>
+    <button class="mbtn sec" style="flex:none;padding:5px 10px;font-size:8px" onclick="toggleSensors()" id="sensOnBtn">SENSORS ON</button>
+  </div>
+  <div style="display:flex;gap:6px">
+    <button class="mbtn sec" style="flex:1;padding:8px 6px" id="calBtn" onclick="calibrateIMU()">CALIBRATE IMU</button>
+    <button class="mbtn sec" style="flex:1;padding:8px 6px" id="telemTogBtn" onclick="toggleTelem()">START LOG</button>
+  </div>
+  <div style="font-family:var(--mono);font-size:8px;color:var(--muted);text-align:center" id="imuCalStatus">IMU not calibrated</div>
+</div>
 <div class="toolbar">
-  <button class="tbtn" id="btnSensors" onclick="toggleSensors()">
+  <button class="tbtn" id="btnSensors" onclick="openSensorsPanel()">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4"/><path d="M17.7 6.3a8 8 0 0 1 0 11.4"/><path d="M3.5 3.5a14 14 0 0 0 0 17"/><path d="M20.5 3.5a14 14 0 0 1 0 17"/></svg>
     <span class="tbtn-lbl">Sensors</span>
   </button>
@@ -298,6 +330,10 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
   <button class="tbtn" id="btnTimer" onclick="openModal('mTimer')">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="M22 6l-3-3"/><line x1="12" y1="5" x2="12" y2="2"/></svg>
     <span class="tbtn-lbl">Start</span>
+  </button>
+  <button class="tbtn" id="btnTelem" onclick="openTelemModal()">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span class="tbtn-lbl">Log</span>
   </button>
 </div>
 </div>
@@ -407,6 +443,39 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 
 <div class="toast" id="toast"></div>
 
+<!-- TELEMETRY MODAL -->
+<div class="modal-bg" id="mTelem"><div class="modal">
+  <div class="mhandle"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+    <div class="mh3" style="margin:0">TELEMETRY LOG</div>
+    <div style="display:flex;gap:5px">
+      <button class="mbtn sec" style="padding:5px 9px;font-size:8px;flex:none" onclick="telemExportCSV()">CSV</button>
+      <button class="mbtn sec" style="padding:5px 9px;font-size:8px;flex:none" onclick="telemExportJSON()">JSON</button>
+      <button class="mbtn amb" style="padding:5px 9px;font-size:8px;flex:none" onclick="telemClear()">Clear</button>
+    </div>
+  </div>
+  <div class="telem-stat" id="telemStats">
+    <div class="tstat"><div class="tstat-v" id="tsCnt">0</div><div class="tstat-l">SAMPLES</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsAvgSOG">--</div><div class="tstat-l">AVG SOG</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsAvgEff">--%</div><div class="tstat-l">AVG EFF</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsMaxSOG">--</div><div class="tstat-l">MAX SOG</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsDist">--</div><div class="tstat-l">DIST nm</div></div>
+    <div class="tstat"><div class="tstat-v" id="tsElapsed">--</div><div class="tstat-l">ELAPSED</div></div>
+  </div>
+  <div class="ysel" id="telemYSel">
+    <button class="on" onclick="telemSetY('sog')">SOG</button>
+    <button onclick="telemSetY('vmg')">VMG</button>
+    <button onclick="telemSetY('twd')">TWD</button>
+    <button onclick="telemSetY('hdg')">HDG</button>
+    <button onclick="telemSetY('eff')">EFF%</button>
+  </div>
+  <canvas class="telem-chart" id="cvTelem"></canvas>
+  <div class="telem-wrap"><table class="telem-table">
+    <thead><tr><th>TIME</th><th>HDG</th><th>SOG</th><th>TWD</th><th>TWA</th><th>VMG</th><th>EFF%</th><th>LEG</th></tr></thead>
+    <tbody id="telemBody"></tbody>
+  </table></div>
+</div></div>
+
 <!-- EDIT MARK POPUP -->
 <div class="edit-popup" id="editPopup">
   <div class="edit-box">
@@ -466,6 +535,19 @@ let polarTable={},polarAngles=[];
 let dirty=true,tileCache={};
 let demoInt=null,demoT=0;
 let sensorsOn=false,gpsW=null,absOri=false;
+// IMU calibration reference
+const IMU_CAL={alpha:null,beta:null,gamma:null,calibrated:false};
+const IMU_CUR={alpha:null,beta:null,gamma:null,rollRate:null,pitchRate:null,peakG:0};
+let imuAccBuf=[];  // accumulate accel readings between samples
+
+// Telemetry
+const TELEM={
+  active:false,
+  startTime:null,
+  samples:[],
+  meta:{},
+  yAxis:'sog'
+};
 let seqSel=5,gunInt=null,rafId=null;
 let appMode='start';
 let optPath=[];
@@ -761,10 +843,8 @@ function tactics(){
     const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
     const bsp_s=pBSP(angDiff(WIND.twd,sH),tws);
     const bsp_p=pBSP(angDiff(WIND.twd,pH),tws);
-    // Real VMG = upwind component of speed (always positive on a correct tack)
     const vmg_s=bsp_s*Math.cos(opt*Math.PI/180);
     const vmg_p=bsp_p*Math.cos(opt*Math.PI/180);
-    // Pick tack that moves laterally toward the mark
     const lat_s=lateralToMark(sH,bsp_s,lb);
     const lat_p=lateralToMark(pH,bsp_p,lb);
     const best=lat_s>=lat_p?'stbd':'port';
@@ -1052,6 +1132,191 @@ function startDemo(){
   toast(anim?'Demo running':'Demo — fixed position');
 }
 
+// ── TELEMETRY ENGINE ─────────────────────────────────────
+function toggleTelem(){
+  if(TELEM.active){telemStop();G('telemTogBtn').textContent='START LOG';G('telemTogBtn').className='mbtn sec';}
+  else{telemStart();G('telemTogBtn').textContent='STOP LOG';G('telemTogBtn').className='mbtn amb';}
+}
+function openTelemModal(){
+  renderTelemModal();openModal('mTelem');
+}
+function telemStart(){
+  if(TELEM.active)return;
+  TELEM.active=true;
+  TELEM.startTime=Date.now();
+  TELEM.samples=[];
+  TELEM.meta={
+    startTime:new Date().toISOString(),
+    wind:{twd:WIND.twd,tws:WIND.tws},
+    course:{
+      pinA:CRS.pinA,pinB:CRS.pinB,
+      wpts:CRS.wpts.map(w=>({label:w.label,lat:w.lat,lon:w.lon,rounding:w.rounding})),
+      finA:CRS.finA,finB:CRS.finB
+    }
+  };
+  G('btnTelem').classList.add('on');
+  toast('Telemetry recording');
+}
+function telemStop(){
+  TELEM.active=false;
+  G('btnTelem').classList.remove('on');
+}
+function telemClear(){
+  if(TELEM.samples.length>0&&!confirm('Clear all '+TELEM.samples.length+' samples?'))return;
+  TELEM.samples=[];TELEM.startTime=null;TELEM.active=false;
+  G('btnTelem').classList.remove('on');
+  renderTelemModal();toast('Log cleared');
+}
+let _telemLast=0;
+function telemSample(){
+  if(!TELEM.active||NAV.lat===null)return;
+  if(NAV.sog<0.5)return; // only log while moving
+  const now=Date.now();
+  if(now-_telemLast<5000)return; // 5s interval
+  _telemLast=now;
+  const tac=tactics();
+  const bsp=WIND.twd!=null&&NAV.hdg!=null?pBSP(Math.abs(angDiff(WIND.twd,NAV.hdg)),WIND.tws||10):0;
+  const eff=bsp>0.1&&tac?Math.round(tac.bestVMG/bsp*100):null;
+  const avgG=imuAccBuf.length?imuAccBuf.reduce((a,b)=>a+b,0)/imuAccBuf.length:null;
+  const sample={
+    t:now,
+    elapsed:Math.round((now-TELEM.startTime)/1000),
+    lat:NAV.lat,lon:NAV.lon,
+    sog:parseFloat(NAV.sog.toFixed(2)),
+    cog:NAV.cog!=null?Math.round(NAV.cog):null,
+    hdg:NAV.hdg!=null?Math.round(NAV.hdg):null,
+    twd:WIND.twd!=null?Math.round(WIND.twd):null,
+    tws:WIND.tws!=null?parseFloat(WIND.tws.toFixed(1)):null,
+    twa:WIND.twd!=null&&NAV.hdg!=null?Math.round(angDiff(WIND.twd,NAV.hdg)):null,
+    bsp_polar:parseFloat(bsp.toFixed(2)),
+    vmg:tac?parseFloat(tac.bestVMG.toFixed(2)):null,
+    eff_pct:eff,
+    xte:parseFloat((computeXTE()||0).toFixed(1)),
+    mark:CRS.activeMark>=0&&CRS.wpts[CRS.activeMark]?CRS.wpts[CRS.activeMark].label:null,
+    leg:tac?tac.leg:null,
+    roll:imuRoll()!=null?parseFloat(imuRoll().toFixed(1)):null,
+    pitch:imuPitch()!=null?parseFloat(imuPitch().toFixed(1)):null,
+    roll_rate:IMU_CUR.rollRate!=null?parseFloat(IMU_CUR.rollRate.toFixed(2)):null,
+    pitch_rate:IMU_CUR.pitchRate!=null?parseFloat(IMU_CUR.pitchRate.toFixed(2)):null,
+    peak_g:parseFloat(IMU_CUR.peakG.toFixed(3))
+  };
+  TELEM.samples.push(sample);
+  IMU_CUR.peakG=0;imuAccBuf=[];  // reset per-sample accumulators
+  dirty=true;
+}
+setInterval(telemSample,1000); // check every second, logs every 5s
+
+function telemSetY(y){
+  TELEM.yAxis=y;
+  document.querySelectorAll('.ysel button').forEach(b=>b.classList.remove('on'));
+  event.target.classList.add('on');
+  renderTelemChart();
+}
+
+function telemStats(){
+  const s=TELEM.samples;
+  if(!s.length)return;
+  G('tsCnt').textContent=s.length;
+  const sogs=s.map(x=>x.sog).filter(Boolean);
+  G('tsAvgSOG').textContent=sogs.length?(sogs.reduce((a,b)=>a+b,0)/sogs.length).toFixed(1)+'kt':'--';
+  G('tsMaxSOG').textContent=sogs.length?Math.max(...sogs).toFixed(1)+'kt':'--';
+  const effs=s.map(x=>x.eff_pct).filter(x=>x!=null);
+  G('tsAvgEff').textContent=effs.length?Math.round(effs.reduce((a,b)=>a+b,0)/effs.length)+'%':'--%';
+  // Distance sailed
+  let dist=0;
+  for(let i=1;i<s.length;i++)dist+=haversine(s[i-1].lat,s[i-1].lon,s[i].lat,s[i].lon);
+  G('tsDist').textContent=(dist/1852).toFixed(2);
+  const elapsed=s.length?(s[s.length-1].elapsed):0;
+  G('tsElapsed').textContent=fmtT(elapsed);
+}
+
+function renderTelemChart(){
+  const cv=G('cvTelem'),s=TELEM.samples;
+  const W=cv.clientWidth||300,H=120;
+  cv.width=W*devicePixelRatio;cv.height=H*devicePixelRatio;
+  cv.style.width=W+'px';cv.style.height=H+'px';
+  const x=cv.getContext('2d');x.scale(devicePixelRatio,devicePixelRatio);
+  x.fillStyle='#050d18';x.fillRect(0,0,W,H);
+  if(!s.length){x.fillStyle='rgba(0,212,170,0.2)';x.font='9px var(--mono)';x.textAlign='center';x.textBaseline='middle';x.fillText('NO DATA YET',W/2,H/2);return;}
+  const key=TELEM.yAxis;
+  const vals=s.map(p=>p[key]).filter(v=>v!=null);
+  if(!vals.length)return;
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  const range=mx-mn||1;
+  const sc=v=>(H-8)-(v-mn)/range*(H-16)+4;
+  // Grid line at zero or midpoint
+  x.strokeStyle='rgba(0,212,170,0.08)';x.lineWidth=1;x.beginPath();x.moveTo(0,sc((mn+mx)/2));x.lineTo(W,sc((mn+mx)/2));x.stroke();
+  // Color by efficiency
+  const pts=s.filter(p=>p[key]!=null);
+  if(pts.length<2)return;
+  for(let i=1;i<pts.length;i++){
+    const eff=pts[i].eff_pct;
+    const col=eff==null?'#3a5570':eff>=90?'#3ddc84':eff>=70?'#f5a623':'#e84040';
+    const px0=(i-1)/(pts.length-1)*W,px1=i/(pts.length-1)*W;
+    x.strokeStyle=col;x.lineWidth=2.5;x.beginPath();
+    x.moveTo(px0,sc(pts[i-1][key]));x.lineTo(px1,sc(pts[i][key]));x.stroke();
+  }
+  // Min/max labels
+  x.fillStyle='rgba(0,212,170,0.5)';x.font='8px var(--mono)';
+  x.textAlign='left';x.textBaseline='top';x.fillText(mx.toFixed(1),2,2);
+  x.textBaseline='bottom';x.fillText(mn.toFixed(1),2,H-2);
+  x.textAlign='right';x.fillStyle='rgba(255,255,255,0.2)';
+  x.textBaseline='top';x.fillText(key.toUpperCase(),W-2,2);
+}
+
+function renderTelemTable(){
+  const tb=G('telemBody');tb.innerHTML='';
+  const s=[...TELEM.samples].reverse().slice(0,100); // show last 100
+  s.forEach(p=>{
+    const tr=document.createElement('tr');
+    const eff=p.eff_pct;
+    tr.className=eff==null?'':(eff>=90?'hi':eff>=70?'warn':'crit');
+    const t=new Date(p.t).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+    tr.innerHTML=`<td>${t}</td><td>${p.hdg??'--'}</td><td>${p.sog??'--'}</td><td>${p.twd??'--'}</td><td>${p.twa??'--'}</td><td>${p.vmg??'--'}</td><td>${eff!=null?eff+'%':'--'}</td><td>${p.leg??'--'}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function renderTelemModal(){
+  telemStats();renderTelemChart();renderTelemTable();
+}
+
+function telemExportCSV(){
+  if(!TELEM.samples.length){toast('No data to export');return;}
+  const meta=TELEM.meta;
+  const hdrs=['time','elapsed_s','lat','lon','sog','cog','hdg','twd','tws','twa','bsp_polar','vmg','eff_pct','xte','mark','leg','roll','pitch','roll_rate','pitch_rate','peak_g'];
+  const rows=TELEM.samples.map(s=>[
+    new Date(s.t).toISOString(),s.elapsed,s.lat,s.lon,s.sog,s.cog,s.hdg,
+    s.twd,s.tws,s.twa,s.bsp_polar,s.vmg,s.eff_pct,s.xte,s.mark,s.leg,
+    s.roll,s.pitch,s.roll_rate,s.pitch_rate,s.peak_g
+  ].join(','));
+  // Add course info as comments at top
+  const wpts=(meta.course?.wpts||[]).map(w=>`# WPT ${w.label}: ${w.lat},${w.lon} ${w.rounding}`).join('
+');
+  const csv=`# TACTICIAN SESSION ${meta.startTime||''}
+# Wind: ${meta.wind?.twd??'--'}° @ ${meta.wind?.tws??'--'}kt
+${wpts}
+${hdrs.join(',')}
+${rows.join('
+')}`;
+  dlFile('tactician_'+Date.now()+'.csv',csv,'text/csv');
+  toast('CSV exported');
+}
+
+function telemExportJSON(){
+  if(!TELEM.samples.length){toast('No data to export');return;}
+  const out=JSON.stringify({meta:TELEM.meta,samples:TELEM.samples},null,2);
+  dlFile('tactician_'+Date.now()+'.json',out,'application/json');
+  toast('JSON exported');
+}
+
+function dlFile(name,data,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([data],{type}));
+  a.download=name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},1000);
+}
+
 // ── MODE ──────────────────────────────────────────────────
 function setMode(m){
   appMode=m;
@@ -1086,6 +1351,12 @@ G('btnSync').onclick=()=>{if(!RACE.on||!RACE.epoch)return;const rem=RACE.epoch-D
 
 // ── SENSORS ───────────────────────────────────────────────
 async function toggleSensors(){if(sensorsOn)stopSensors();else await startSensors();}
+function openSensorsPanel(){
+  // Toggle a small sensors panel instead of just toggling sensors
+  const panel=G('sensorPanel');
+  if(panel.style.display==='flex'){panel.style.display='none';return;}
+  panel.style.display='flex';
+}
 async function startSensors(){
   G('btnSensors').classList.add('on');
   if('geolocation'in navigator)gpsW=navigator.geolocation.watchPosition(onGPS,()=>pill('pGPS','warn'),{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
@@ -1099,9 +1370,46 @@ async function startSensors(){
   sensorsOn=true;toast('Sensors on');
 }
 function stopSensors(){if(gpsW!=null)navigator.geolocation.clearWatch(gpsW);window.removeEventListener('deviceorientationabsolute',onOriA,true);window.removeEventListener('deviceorientation',onOriR,true);absOri=false;sensorsOn=false;G('btnSensors').classList.remove('on');['pGPS','pHDG'].forEach(p=>pill(p,''));kfH.reset();kfS.reset();kfLat.reset();kfLon.reset();_hdgBuf.length=0;toast('Sensors off');}
-function listenOri(){window.addEventListener('deviceorientationabsolute',onOriA,true);window.addEventListener('deviceorientation',onOriR,true);}
-function onOriA(e){if(e.alpha==null)return;absOri=true;NAV.hdg=kfH.update(smoothHdg((360-e.alpha+360)%360));pill('pHDG','ok');dirty=true;}
-function onOriR(e){if(absOri)return;let r=null;if(e.webkitCompassHeading!=null)r=e.webkitCompassHeading;else if(e.alpha!=null)r=(360-e.alpha+360)%360;if(r!=null){NAV.hdg=kfH.update(smoothHdg(r));pill('pHDG','ok');dirty=true;}}
+function listenOri(){
+  window.addEventListener('deviceorientationabsolute',onOriA,true);
+  window.addEventListener('deviceorientation',onOriR,true);
+  // DeviceMotion for roll/pitch rates and acceleration
+  if(window.DeviceMotionEvent){
+    if(typeof DeviceMotionEvent.requestPermission==='function'){
+      DeviceMotionEvent.requestPermission().then(r=>{if(r==='granted')window.addEventListener('devicemotion',onMotion,true);}).catch(()=>{});
+    }else{
+      window.addEventListener('devicemotion',onMotion,true);
+    }
+  }
+}
+function onMotion(e){
+  const rr=e.rotationRate,ag=e.accelerationIncludingGravity;
+  if(rr){IMU_CUR.rollRate=rr.gamma??0;IMU_CUR.pitchRate=rr.beta??0;}
+  if(ag){const g=Math.hypot(ag.x??0,ag.y??0,ag.z??0)/9.81;if(g>IMU_CUR.peakG)IMU_CUR.peakG=g;imuAccBuf.push(g);}
+}
+function calibrateIMU(){
+  if(!IMU_CUR.alpha&&NAV.hdg===null){toast('Need heading first — tap Sensors');return;}
+  // Use current device orientation as zero reference
+  IMU_CAL.alpha=IMU_CUR.alpha??0;
+  IMU_CAL.beta=IMU_CUR.beta??0;
+  IMU_CAL.gamma=IMU_CUR.gamma??0;
+  IMU_CAL.calibrated=true;
+  G('calBtn').style.background='var(--green)';
+  G('calBtn').style.color='var(--ink)';
+  G('calBtn').textContent='IMU CAL ✓';
+  toast('IMU calibrated — mount reference set');
+  saveState();
+}
+function imuRoll(){if(!IMU_CAL.calibrated)return null;return(IMU_CUR.gamma??0)-IMU_CAL.gamma;}
+function imuPitch(){if(!IMU_CAL.calibrated)return null;return(IMU_CUR.beta??0)-IMU_CAL.beta;}
+function onOriA(e){if(e.alpha==null)return;absOri=true;
+  IMU_CUR.alpha=e.alpha;IMU_CUR.beta=e.beta;IMU_CUR.gamma=e.gamma;
+  NAV.hdg=kfH.update(smoothHdg((360-e.alpha+360)%360));pill('pHDG','ok');dirty=true;}
+function onOriR(e){if(absOri)return;
+  IMU_CUR.alpha=e.alpha;IMU_CUR.beta=e.beta;IMU_CUR.gamma=e.gamma;
+  let r=null;if(e.webkitCompassHeading!=null)r=e.webkitCompassHeading;
+  else if(e.alpha!=null)r=(360-e.alpha+360)%360;
+  if(r!=null){NAV.hdg=kfH.update(smoothHdg(r));pill('pHDG','ok');dirty=true;}}
 function onGPS(p){
   const t=Date.now(),rawLat=p.coords.latitude,rawLon=p.coords.longitude;
   const lat=kfLat.update(rawLat),lon=kfLon.update(rawLon);
@@ -1113,7 +1421,7 @@ function onGPS(p){
 
 // ── LOCALSTORAGE ──────────────────────────────────────────
 const LS='tactician_v5';
-function saveState(){try{const srcs=WSRCS.filter(s=>s.id!=='openmeteo'&&s.id!=='manual');localStorage.setItem(LS,JSON.stringify({pinA:CRS.pinA,pinB:CRS.pinB,finA:CRS.finA,finB:CRS.finB,wpts:CRS.wpts,activeMark:CRS.activeMark,tackDur:CRS.tackDur,twd:WIND.twd,tws:WIND.tws,polar:polarTable,polarAngles,windSrcIdx,dynSrcs:srcs}));}catch(e){}}
+function saveState(){try{const srcs=WSRCS.filter(s=>s.id!=='openmeteo'&&s.id!=='manual');localStorage.setItem(LS,JSON.stringify({pinA:CRS.pinA,pinB:CRS.pinB,finA:CRS.finA,finB:CRS.finB,wpts:CRS.wpts,activeMark:CRS.activeMark,tackDur:CRS.tackDur,twd:WIND.twd,tws:WIND.tws,polar:polarTable,polarAngles,windSrcIdx,dynSrcs:srcs,imuCal:IMU_CAL}));}catch(e){}}
 function loadState(){
   try{
     const raw=localStorage.getItem(LS);if(!raw)return;const p=JSON.parse(raw);
@@ -1131,6 +1439,8 @@ function loadState(){
       WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
     }
     if(p.windSrcIdx!=null)windSrcIdx=p.windSrcIdx;
+    if(p.imuCal&&p.imuCal.calibrated){Object.assign(IMU_CAL,p.imuCal);
+      setTimeout(()=>{const cb=G('calBtn');if(cb){cb.style.background='var(--green)';cb.style.color='var(--ink)';cb.textContent='IMU CAL ✓';}},500);}
     renderWptList();dirty=true;toast('Session restored');
   }catch(e){}
 }
@@ -1229,9 +1539,33 @@ function rafLoop(){
   if(dirty){dirty=false;renderFrame();}
   requestAnimationFrame(rafLoop);
 }
+function updateSensorPanel(){
+  // Keep sensor panel pills in sync
+  ['GPS','HDG','WND'].forEach(k=>{
+    const src=G('p'+k),dst=G('sp_'+k);
+    if(dst&&src)dst.className=src.className;
+  });
+  // IMU cal status
+  const cs=G('imuCalStatus');
+  if(cs){
+    if(IMU_CAL.calibrated){cs.textContent='IMU calibrated ✓  roll:'+( imuRoll()!=null?imuRoll().toFixed(1)+'°':'--')+' pitch:'+(imuPitch()!=null?imuPitch().toFixed(1)+'°':'--');cs.style.color='var(--green)';}
+    else{cs.textContent='IMU not calibrated — lock mount then tap Calibrate';cs.style.color='var(--muted)';}
+  }
+  // Sensors on/off button
+  const sb=G('sensOnBtn');
+  if(sb){sb.textContent=sensorsOn?'SENSORS OFF':'SENSORS ON';sb.className=sensorsOn?'mbtn amb':'mbtn sec';}
+  // Telem log button
+  const tb=G('telemTogBtn');
+  if(tb){
+    tb.textContent=TELEM.active?'STOP LOG ■':'START LOG ▶';
+    tb.className=TELEM.active?'mbtn amb':'mbtn sec';
+    G('btnTelem').classList.toggle('on',TELEM.active);
+  }
+}
 function renderFrame(){
   updateStartUI();
   updateRaceUI();
+  updateSensorPanel();
   if(appMode==='race')renderChart();
   if(appMode==='start'){drawLineChart();drawShiftGraph();}
   drawWindRose();
@@ -1300,11 +1634,11 @@ function updateRaceUI(){
   else{
     hn.textContent=Math.round(tac.bestHdg)+'°';
     hn.className='hero-num '+tac.best;
-    let sub='';
-    if(tac.leg==='upwind')sub=`${tac.best==='stbd'?'\u25ba STBD':'\u25c4 PORT'} TACK \u00b7 VMG ${tac.bestVMG.toFixed(1)}kt`;
-    else if(tac.leg==='downwind')sub=`${tac.best==='stbd'?'\u25ba STBD':'\u25c4 PORT'} GYBE \u00b7 VMG ${tac.bestVMG.toFixed(1)}kt`;
-    else sub=`REACH \u00b7 ${tac.note||''}`;
-    const shift=tac.shift&&tac.shift!=='STEADY'?` \u00b7 ${tac.shift}`:'';
+        let sub='';
+    if(tac.leg==='upwind')sub=(tac.best==='stbd'?'\u25ba STBD':'\u25c4 PORT')+' TACK \u00b7 VMG '+tac.bestVMG.toFixed(1)+'kt';
+    else if(tac.leg==='downwind')sub=(tac.best==='stbd'?'\u25ba STBD':'\u25c4 PORT')+' GYBE \u00b7 VMG '+tac.bestVMG.toFixed(1)+'kt';
+    else sub='REACH \u00b7 '+(tac.note||'');
+    const shift=tac.shift&&tac.shift!=='STEADY'?' \u00b7 '+tac.shift:'';
     hs.textContent=sub+shift;
     hs.className='hero-sub '+(tac.shift&&tac.shift.includes('LIFTED')?'lift':tac.shift&&tac.shift.includes('HEADED')?'hdr':tac.best);
   }
@@ -1542,6 +1876,16 @@ function renderChart(){
       ctxM.fillStyle='#000';ctxM.font=`bold ${Math.max(8,Math.round(r2))}px var(--mono)`;
       ctxM.textAlign='center';ctxM.textBaseline='middle';
       ctxM.fillText(pt.type==='tack'?'T':'G',pp2.x,pp2.y+0.5);
+    });
+  }
+  // Telemetry colored dots (performance trail)
+  if(TELEM.samples.length>1){
+    TELEM.samples.forEach((s,i)=>{
+      if(!s.lat)return;
+      const pp2=pp(s.lat,s.lon);
+      const eff=s.eff_pct;
+      const col=eff==null?'rgba(58,85,112,0.6)':eff>=90?'rgba(61,220,132,0.8)':eff>=70?'rgba(245,166,35,0.8)':'rgba(232,64,64,0.8)';
+      ctxM.fillStyle=col;ctxM.beginPath();ctxM.arc(pp2.x,pp2.y,sr(3.5),0,2*Math.PI);ctxM.fill();
     });
   }
   // Breadcrumbs
