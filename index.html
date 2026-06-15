@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 16:07</title>
+<title>TACTICIAN v06/15 16:15</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -40,7 +40,8 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .gun-btns{display:flex;gap:5px}
 .gun-btn{font-family:var(--mono);font-size:8px;padding:4px 9px;border-radius:3px;border:1px solid var(--tealring);color:var(--teal);background:transparent;cursor:pointer;touch-action:manipulation}
 .mode-start{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
-.mode-start.gone,.mode-race.gone{display:none}
+.mode-start.gone,.mode-race.gone,.mode-plan.gone{display:none}
+.mode-plan{display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0}
 .line-chart{flex-shrink:0;position:relative;background:var(--deep);border-bottom:1px solid var(--tealring);height:130px}
 #cvLC{display:block;width:100%;height:100%}
 .lc-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--mono);font-size:9px;color:rgba(0,212,170,0.4);letter-spacing:0.1em;pointer-events:none;text-align:center;line-height:1.6}
@@ -221,7 +222,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 16:07</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 16:15</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -331,7 +332,55 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 </div>
 
 <!-- SENSOR PANEL — slides up above toolbar -->
-<div id="sensorPanel" style="display:none;flex-direction:column;background:var(--hull);border-top:1px solid var(--tealring);padding:10px 12px;gap:8px;flex-shrink:0">
+<div id="sensorPanel
+
+<!-- PLAN MODE -->
+<div class="mode-plan gone" id="modePlan">
+  <!-- Conditions bar -->
+  <div style="flex-shrink:0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:6px 10px;background:var(--hull);border-bottom:1px solid var(--tealring)">
+    <div class="pcond">
+      <div class="pcond-lbl">TWD</div>
+      <div class="pcond-row">
+        <button class="pcond-btn" onclick="adjPlan('twd',-5)">&#9664;</button>
+        <div class="pcond-val" id="planTWD">215&#176;</div>
+        <button class="pcond-btn" onclick="adjPlan('twd',5)">&#9654;</button>
+      </div>
+    </div>
+    <div class="pcond">
+      <div class="pcond-lbl">TWS</div>
+      <div class="pcond-row">
+        <button class="pcond-btn" onclick="adjPlan('tws',-1)">&#9664;</button>
+        <div class="pcond-val" id="planTWS">12kt</div>
+        <button class="pcond-btn" onclick="adjPlan('tws',1)">&#9654;</button>
+      </div>
+    </div>
+    <div class="pcond">
+      <div class="pcond-lbl">TACK PEN</div>
+      <div class="pcond-row">
+        <button class="pcond-btn" onclick="adjPlan('pen',-5)">&#9664;</button>
+        <div class="pcond-val" id="planPEN">50s</div>
+        <button class="pcond-btn" onclick="adjPlan('pen',5)">&#9654;</button>
+      </div>
+    </div>
+  </div>
+  <button class="mbtn sec" style="flex-shrink:0;margin:4px 10px;padding:5px" onclick="syncPlanWind()">&#8593; USE LIVE WIND</button>
+  <!-- Plan map — takes remaining space -->
+  <div class="plan-map" id="planMapWrap" style="flex:1;min-height:180px">
+    <canvas id="cvPlanTiles"></canvas>
+    <canvas id="cvPlanMain"></canvas>
+  </div>
+  <!-- Scrollable results below map -->
+  <div style="flex-shrink:0;overflow-y:auto;max-height:38vh;-webkit-overflow-scrolling:touch;padding:8px 10px">
+    <div id="planContent">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:10px">Set course then tap PLAN</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;margin-bottom:4px">
+      <span style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">SAVED</span>
+      <button class="mbtn sec" style="padding:3px 8px;font-size:8px;flex:none" onclick="savePlanScenario()">SAVE</button>
+    </div>
+    <div class="psave-list" id="planSaveList"></div>
+  </div>
+</div>" style="display:none;flex-direction:column;background:var(--hull);border-top:1px solid var(--tealring);padding:10px 12px;gap:8px;flex-shrink:0">
   <div style="display:flex;gap:6px;align-items:center;justify-content:space-between">
     <div style="display:flex;gap:6px">
       <div class="pill" id="sp_GPS"><div class="pdot"></div>GPS</div>
@@ -381,7 +430,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
     <button class="mtab on" onclick="mTab('mCourse','line')">Start Line</button>
     <button class="mtab" onclick="mTab('mCourse','marks')">RC Marks</button>
     <button class="mtab" onclick="mTab('mCourse','finish')">Finish</button>
-    <button class="mtab" onclick="mTab('mCourse','plan');runPlan()">Plan</button>
+
   </div>
   <div class="tp on" id="mCourse-line">
     <div class="fg2"><div class="frow"><label>Pin A Lat</label><input type="number" id="cALat" step="0.0001" placeholder="33.8632" value="33.8422"></div><div class="frow"><label>Pin A Lon</label><input type="number" id="cALon" step="0.0001" placeholder="-78.9821" value="-78.6103"></div></div>
@@ -404,53 +453,6 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
       <button class="mbtn sec" onclick="gpsToWpt()">GPS&#8594;Mark</button>
       <button class="mbtn can" onclick="clearWpts()">Clear All</button>
     </div>
-  </div>
-  <div class="tp" id="mCourse-plan">
-    <!-- Plan conditions inputs -->
-    <div class="plan-cond">
-      <div class="pcond">
-        <div class="pcond-lbl">TWD</div>
-        <div class="pcond-row">
-          <button class="pcond-btn" onclick="adjPlan('twd',-5)">&#9664;</button>
-          <div class="pcond-val" id="planTWD">215&#176;</div>
-          <button class="pcond-btn" onclick="adjPlan('twd',5)">&#9654;</button>
-        </div>
-      </div>
-      <div class="pcond">
-        <div class="pcond-lbl">TWS</div>
-        <div class="pcond-row">
-          <button class="pcond-btn" onclick="adjPlan('tws',-1)">&#9664;</button>
-          <div class="pcond-val" id="planTWS">12kt</div>
-          <button class="pcond-btn" onclick="adjPlan('tws',1)">&#9654;</button>
-        </div>
-      </div>
-      <div class="pcond">
-        <div class="pcond-lbl">TACK PEN</div>
-        <div class="pcond-row">
-          <button class="pcond-btn" onclick="adjPlan('pen',-5)">&#9664;</button>
-          <div class="pcond-val" id="planPEN">50s</div>
-          <button class="pcond-btn" onclick="adjPlan('pen',5)">&#9654;</button>
-        </div>
-      </div>
-    </div>
-    <button class="mbtn sec" style="width:100%;margin-bottom:8px;padding:6px" onclick="syncPlanWind()">&#8593; USE LIVE WIND</button>
-    <!-- Map -->
-    <div class="plan-map" id="planMapWrap">
-      <canvas id="cvPlanTiles"></canvas>
-      <canvas id="cvPlanMain"></canvas>
-    </div>
-    <!-- Scenario cards + detail -->
-    <div id="planContent" style="min-height:60px">
-      <div style="font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:10px">
-        Set course then tap Plan tab.
-      </div>
-    </div>
-    <!-- Saved scenarios -->
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;margin-bottom:4px">
-      <span style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">SAVED SCENARIOS</span>
-      <button class="mbtn sec" style="padding:3px 8px;font-size:8px;flex:none" onclick="savePlanScenario()">SAVE CURRENT</button>
-    </div>
-    <div class="psave-list" id="planSaveList"></div>
   </div>
   <div class="tp" id="mCourse-finish">
     <div class="frow"><label>Finish Gate</label><select id="finMode" onchange="toggleFinCustom()"><option value="start">Reuse start line</option><option value="custom">Custom gate</option></select></div>
@@ -1570,11 +1572,12 @@ function runPlan(){
     return;
   }
   // Sync plan controls display
-  G('planTWD').textContent=Math.round(PLAN_STATE.twd)+'°';
-  G('planTWS').textContent=PLAN_STATE.tws+'kt';
-  G('planPEN').textContent=PLAN_STATE.pen+'s';
+  const pTWD=G('planTWD'),pTWS=G('planTWS'),pPEN=G('planPEN');
+  if(pTWD)pTWD.textContent=Math.round(PLAN_STATE.twd)+'°';
+  if(pTWS)pTWS.textContent=PLAN_STATE.tws+'kt';
+  if(pPEN)pPEN.textContent=PLAN_STATE.pen+'s';
   const tws=PLAN_STATE.tws;
-  // Override tack duration with plan penalty
+  // Use plan penalty directly — no need to override CRS.tackDur
   const _origTackDur=CRS.tackDur;
   CRS.tackDur=PLAN_STATE.pen;
   try{
@@ -1599,11 +1602,11 @@ function runPlan(){
   }).filter(Boolean);
 
   // Favored end — safe without GPS
-  // Use plan wind for fav end calculation - always restore
-  const _savedTWD=WIND.twd;
-  let sm=null;
-  try{WIND.twd=PLAN_STATE.twd;sm=startMetrics();}catch(e){}
-  finally{WIND.twd=_savedTWD;}
+  // Compute fav end using plan wind temporarily
+  const _savedTWD2=WIND.twd,_savedTWS2=WIND.tws;
+  WIND.twd=PLAN_STATE.twd;WIND.tws=PLAN_STATE.tws;
+  let sm=null;try{sm=startMetrics();}catch(e){}
+  WIND.twd=_savedTWD2;WIND.tws=_savedTWS2;
 
   // Build HTML
   let html='';
@@ -1682,7 +1685,8 @@ function runPlan(){
   },50);
   }catch(err){
     CRS.tackDur=_origTackDur;
-    el.innerHTML='<div style="font-family:var(--mono);font-size:9px;color:var(--red);padding:10px">Plan error: '+err.message+'</div>';
+    const el2=G('planContent');
+    if(el2)el2.innerHTML='<div style="font-family:var(--mono);font-size:9px;color:var(--red);padding:10px">Plan error: '+err.message+'</div>';
   }
 }
 
@@ -1913,17 +1917,16 @@ function setMode(m){
   appMode=m;
   G('modeStart').classList.toggle('gone',m!=='start');
   G('modeRace').classList.toggle('gone',m!=='race');
+  G('modePlan').classList.toggle('gone',m!=='plan');
   G('mBtnS').classList.toggle('on',m==='start');
   G('mBtnR').classList.toggle('on',m==='race');
+  const pb=G('mBtnP');if(pb)pb.classList.toggle('on',m==='plan');
   if(m==='race'){
-    // Double-RAF waits for browser layout after display:none removal
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      resizeCvs();dirty=true;
-    }));
-    // Belt and suspenders — retry a few times
-    [100,300,600].forEach(t=>setTimeout(()=>{
-      if(appMode==='race'){resizeCvs();dirty=true;}
-    },t));
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{resizeCvs();dirty=true;}));
+    [100,300,600].forEach(t=>setTimeout(()=>{if(appMode==='race'){resizeCvs();dirty=true;}},t));
+  }
+  if(m==='plan'){
+    setTimeout(()=>{runPlan();},80);
   }
   dirty=true;
 }
@@ -2583,7 +2586,7 @@ function drawBoat(x,y,hdgRad){
 // ── MATH ──────────────────────────────────────────────────
 function normA(a){return((a%360)+360)%360}
 function angDiff(a,b){let d=normA(b-a);return d>180?d-360:d}
-function fmtT(s){if(!isFinite(s))return'--:--';const sg=s<0?'-':'';s=Math.abs(Math.round(s));returnsg+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
+function fmtT(s){if(!isFinite(s))return'--:--';const sg=s<0?'-':'';s=Math.abs(Math.round(s));return sg+Math.floor(s/60)+':'+String(s%60).padStart(2,'0')}
 function haversine(a,b,c,d){const R=6371000,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.PI/180,xx=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(xx),Math.sqrt(1-xx))}
 function brng(a,b,c,d){const dn=(d-b)*Math.PI/180,y=Math.sin(dn)*Math.cos(c*Math.PI/180),x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dn);return(Math.atan2(y,x)*180/Math.PI+360)%360}
 function midLL(a,b){return{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}}
