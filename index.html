@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 13:08</title>
+<title>TACTICIAN v06/15 13:13</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -207,7 +207,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 13:08</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 13:13</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -860,22 +860,19 @@ function legBearing(){
 }
 
 // ── TACTICS ──────────────────────────────────────────────
+// Global utility — used by tactics() and planLeg()
+function lateralToMark(hdg,bsp,markBrng){
+  const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
+  const px=Math.cos(markBrng*Math.PI/180),py=-Math.sin(markBrng*Math.PI/180);
+  return vx*px+vy*py;
+}
 function tactics(){
   const tgt=activeMark();if(!tgt||WIND.twd===null||NAV.lat===null)return null;
   const mb=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);  // live bearing for display
   const lb=legBearing()??mb;                         // stable bearing for leg type
   const leg=classifyLeg(lb),tws=WIND.tws||10,opt=optAng(tws);
 
-  // Lateral component toward mark: positive means moving toward mark's side
-  // Uses perpendicular to rhumb line (90deg clockwise from mark direction)
-  function lateralToMark(hdg,bsp,markBrng){
-    const vx=bsp*Math.sin(hdg*Math.PI/180),vy=bsp*Math.cos(hdg*Math.PI/180);
-    const px=Math.cos(markBrng*Math.PI/180),py=-Math.sin(markBrng*Math.PI/180);
-    return vx*px+vy*py;
-  }
-
   if(leg==='upwind'){
-    const sH=normA(WIND.twd-opt),pH=normA(WIND.twd+opt);
     const bsp_s=pBSP(angDiff(WIND.twd,sH),tws);
     const bsp_p=pBSP(angDiff(WIND.twd,pH),tws);
     const vmg_s=bsp_s*Math.cos(opt*Math.PI/180);
