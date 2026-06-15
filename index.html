@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 14:43</title>
+<title>TACTICIAN v06/15 15:53</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -221,7 +221,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 14:43</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 15:53</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -1915,7 +1915,16 @@ function setMode(m){
   G('modeRace').classList.toggle('gone',m!=='race');
   G('mBtnS').classList.toggle('on',m==='start');
   G('mBtnR').classList.toggle('on',m==='race');
-  if(m==='race'){setTimeout(()=>{resizeCvs();dirty=true;},50);}
+  if(m==='race'){
+    // Double-RAF waits for browser layout after display:none removal
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      resizeCvs();dirty=true;
+    }));
+    // Belt and suspenders — retry a few times
+    [100,300,600].forEach(t=>setTimeout(()=>{
+      if(appMode==='race'){resizeCvs();dirty=true;}
+    },t));
+  }
   dirty=true;
 }
 
@@ -2052,6 +2061,10 @@ function resizeCvs(){
   dirty=true;
 }
 new ResizeObserver(resizeCvs).observe(G('chartWrap'));resizeCvs();
+// Also resize when chart becomes visible (mode switch from hidden)
+new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){resizeCvs();dirty=true;}});
+},{threshold:0.1}).observe(G('chartWrap'));
 
 const TILE='https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 function ll2tile(lat,lon,z){const n=2**z,x=Math.floor((lon+180)/360*n),lr=lat*Math.PI/180,y=Math.floor((1-Math.log(Math.tan(lr)+1/Math.cos(lr))/Math.PI)/2*n);return{x,y,z};}
