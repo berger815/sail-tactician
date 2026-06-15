@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>TACTICIAN v06/15 00:37</title>
+<title>TACTICIAN v06/15 00:51</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap');
 :root{
@@ -169,7 +169,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:37</div>
+  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">06/15 00:51</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
@@ -518,11 +518,12 @@ async function searchNearbyBuoys(){
     WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
     buoySrcs.forEach(b=>WSRCS.push(b));
     WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
-    windSrcIdx=0;
+    // Don't reset to 0 if user has manual wind locked
+    if(!WSRCS[windSrcIdx]||WSRCS[windSrcIdx].id!=='manual')windSrcIdx=0;
     saveState();
     renderWsrcList();
     statusEl.style.color='var(--green)';
-    statusEl.textContent=`Found ${buoySrcs.length} stations nearby`;
+    statusEl.textContent='Found '+buoySrcs.length+' stations nearby';
   }catch(e){
     // Fallback: try NDBC buoy list instead
     try{
@@ -571,10 +572,10 @@ async function searchNDBCFallback(la,lo,statusEl){
   WSRCS.push({id:'openmeteo',name:'Open-Meteo',info:'NWP model · updates every fetch'});
   nearby.forEach(s=>WSRCS.push({id:s.id,name:s.name,info:`NDBC · ${s._dist.toFixed(0)}nm away`}));
   WSRCS.push({id:'manual',name:'Manual Entry',info:'Enter direction and speed below'});
-  windSrcIdx=0;
+  if(!WSRCS[windSrcIdx]||WSRCS[windSrcIdx].id!=='manual')windSrcIdx=0;
   renderWsrcList();
   statusEl.style.color='var(--green)';
-  statusEl.textContent=`Found ${nearby.length} NDBC stations nearby`;
+  statusEl.textContent='Found '+nearby.length+' NDBC stations nearby';
 }
 
 function renderWsrcList(){
@@ -648,7 +649,9 @@ function setWind(twd,tws,src){
 function setManualWind(){
   const twd=parseFloat(G('manTWD').value),tws=parseFloat(G('manTWS').value);
   if(isNaN(twd)||isNaN(tws)){toast('Enter direction and speed');return;}
-  windSrcIdx=4;  // lock to manual, stop auto-refresh
+  // Find manual entry index dynamically (position may shift after buoy search)
+  const manIdx=WSRCS.findIndex(s=>s.id==='manual');
+  windSrcIdx=manIdx>=0?manIdx:WSRCS.length-1;  // lock to manual
   setWind(twd,tws,'Manual');closeModal('mWind');
   renderWsrcList();  // show Manual as selected
   setTimeout(refreshOptPath,50);  // recompute path with new wind
@@ -659,7 +662,7 @@ function windAge(){
   if(m<1)return'just now';if(m===1)return'1 min ago';return`${m} min ago`;
 }
 function isWindStale(){return WIND.fetchedAt&&(Date.now()-WIND.fetchedAt)>10*60*1000;}
-setInterval(()=>{if(WIND.fetchedAt&&WSRCS[windSrcIdx].id!=='manual'&&windSrcIdx!==4)fetchSelWind();},5*60*1000);
+setInterval(()=>{const cur=WSRCS[windSrcIdx];if(WIND.fetchedAt&&cur&&cur.id!=='manual')fetchSelWind();},5*60*1000);
 setInterval(()=>{refreshOptPath();dirty=true;},10*1000); // recompute A* every 10s
 
 // ── POLARS ────────────────────────────────────────────────
@@ -842,7 +845,14 @@ function computeOptPath(fLat,fLon,toLat,toLon){
       {lat:toLat,lon:toLon,type:'mark'}
     ]});
   });
-  if(!paths.length)return[{lat:fLat,lon:fLon,type:'start'},{lat:toLat,lon:toLon,type:'mark'}];
+  // Always include straight-line option — gybe/tack only wins if actually faster
+  const dStraight=haversine(fLat,fLon,toLat,toLon);
+  const vStraight=pBSP(Math.abs(angDiff(WIND.twd,mb)),tws);
+  const tStraight=dStraight/(vStraight*0.514444);
+  paths.push({time:tStraight,path:[
+    {lat:fLat,lon:fLon,type:'start'},
+    {lat:toLat,lon:toLon,type:'mark'}
+  ]});
   paths.sort((a,b)=>a.time-b.time);
   return paths[0].path;
 }
