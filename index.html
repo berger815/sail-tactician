@@ -48,7 +48,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .ts{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 6px;border-right:1px solid var(--tealring);gap:2px}
 .ts:last-child{border-right:none}
 .tsv{font-family:var(--mono);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:var(--white)}
-.tsv.hi{color:var(--teal)}.tsv.ok{color:var(--green)}.tsv.warn{color:var(--amber)}.tsv.crit{color:var(--red)}
+.tsv.hi{color:var(--teal)}.tsv.ok{color:var(--green)}.tsv.warn{color:var(--amber)}.tsv.crit{color:var(--red)}.tsv.proj{opacity:0.65;font-style:italic}
 .tsl{font-family:var(--cond);font-size:10px;letter-spacing:0.12em;color:var(--muted);text-transform:uppercase}
 .tss{font-family:var(--cond);font-size:10px;color:var(--muted);text-align:center}
 .wind-row{flex-shrink:0;display:grid;grid-template-columns:84px 1fr 70px;gap:10px;align-items:center;background:var(--hull);border-bottom:1px solid var(--tealring);padding:6px 12px}
@@ -506,7 +506,7 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 
   <!-- Sea State (display only — see scoping notes) -->
   <div class="plan-section">
-    <div class="plan-hdr">Sea State <span style="font-size:8px;color:var(--muted)">(NDBC SNSN7 · Sunset Beach)</span></div>
+    <div class="plan-hdr">Sea State <span style="font-size:8px;color:var(--muted)">(NDBC SSBN7 · Sunset Beach)</span></div>
     <button class="mbtn sec" style="font-size:8px;padding:6px 10px;margin-bottom:6px" onclick="fetchSeaState()">Fetch Sea State</button>
     <div style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-bottom:4px" id="seaStatus">No sea state yet</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--teal)" id="seaReadout"></div>
@@ -838,7 +838,7 @@ const _hdgBuf=[];function smoothHdg(raw){_hdgBuf.push(raw);if(_hdgBuf.length>5)_
 class EMAPos{constructor(alpha=0.25){this.a=alpha;this.x=null}
 update(z){if(this.x===null){this.x=z;return z}this.x=this.x*(1-this.a)+z*this.a;return this.x}
 reset(){this.x=null}}
-const kfH=new K1D(0.05,8),kfS=new KLin(0.02,2),kfW=new K1D(0.02,6);
+const kfH=new K1D(0.05,8),kfS=new KLin(0.15,0.6),kfW=new K1D(0.02,6);
 const kfLat=new EMAPos(0.15),kfLon=new EMAPos(0.15);
 
 // ── STATE ─────────────────────────────────────────────────
@@ -846,7 +846,7 @@ const NAV={lat:null,lon:null,hdg:null,sog:0,cog:null,
            pLat:null,pLon:null,pT:null,track:[]};
 const WIND={twd:null,tws:null,hist:[],fetchedAt:null,forecast:null};
 // Sea state — display-only conditions awareness (wave height/period/direction,
-// water temp) from SNSN7 at Sunset Beach. Deliberately NOT consumed by
+// water temp) from SSBN7 at Sunset Beach. Deliberately NOT consumed by
 // planWindAt() or any speed/routing math — see scoping discussion: actually
 // correcting boat speed for waves needs an empirical correction curve that
 // doesn't exist yet, so this stays purely informational until that exists.
@@ -1425,14 +1425,16 @@ async function fetchNDBC(id,name){
   }
 }
 // ── SEA STATE (display only, PLAN section) ──────────────────
-// SNSN7 (8659897, Sunset Beach NC) reports wave height/period/direction
+// SSBN7 (Sunset Beach Nearshore Waves) reports wave height/period/direction
 // and water temp — same NDBC latest_obs format as fetchNDBC, different
 // fields. Not wired into routing or speed math; see SEASTATE comment above.
+// Note: SNSN7 (a separate CO-OPS station at this location) was tried first
+// but has had no recent reports in years — SSBN7 is the live wave source.
 async function fetchSeaState(){
   const statusEl=G('seaStatus');
   if(statusEl){statusEl.textContent='Fetching…';statusEl.style.color='var(--amber)';}
   try{
-    const txt=await(await fetch('https://www.ndbc.noaa.gov/data/latest_obs/SNSN7.txt')).text();
+    const txt=await(await fetch('https://www.ndbc.noaa.gov/data/latest_obs/SSBN7.txt')).text();
     let wvht=null,dpd=null,mwd=null,wtmp=null;
     txt.split('\n').forEach(l=>{
       const p=l.trim().split(/\s+/);
@@ -1455,7 +1457,7 @@ function renderSeaState(){
   if(!statusEl||!readEl)return;
   if(SEASTATE.fetchedAt==null){statusEl.textContent='No sea state yet';statusEl.style.color='var(--amber)';readEl.textContent='';return;}
   const ageMin=(Date.now()-SEASTATE.fetchedAt)/60000,stale=ageMin>60;
-  statusEl.textContent=(stale?'STALE · ':'')+'Fetched '+Math.round(ageMin)+'m ago';
+  statusEl.textContent=(stale?'STALE · ':'')+'Fetched '+Math.round(ageMin)+'m ago · SSBN7';
   statusEl.style.color=stale?'var(--amber)':'var(--green)';
   const parts=[];
   if(SEASTATE.wvht!=null)parts.push((SEASTATE.wvht*3.28084).toFixed(1)+'ft');
@@ -2509,7 +2511,20 @@ function startMetrics(){
     const u={x:dV.x/distM,y:dV.y/distM};
     closingMS=v.x*u.x+v.y*u.y;
   }
-  const ttl=closingMS>0.1?distM/closingMS:Infinity;
+  let ttl=closingMS>0.1?distM/closingMS:Infinity;
+  let ttlProjected=false;
+  if(!isFinite(ttl)&&distM>0.5){
+    // Not currently closing the line — estimate time-to-line if you
+    // turned and sailed straight at it right now, using polar speed for
+    // that bearing if available. Keeps TTL usable through the whole
+    // countdown rather than going blank during pre-start maneuvering.
+    const brgToLine=((Math.atan2(dV.x,dV.y)*180/Math.PI)+360)%360;
+    let spd=NAV.sog||0;
+    if(Object.keys(polarTable).length&&WIND.twd!==null){
+      spd=Math.max(0.5,pBSP(angDiff(WIND.twd,brgToLine),WIND.tws||10));
+    }
+    if(spd>0.3){ttl=distM/(spd*0.514444);ttlProjected=true;}
+  }
   const gunRem=RACE.on&&RACE.epoch?Math.max(0,(RACE.epoch-Date.now())/1000):Infinity;
   const burn=isFinite(gunRem)&&isFinite(ttl)?gunRem-ttl:Infinity;
   let approachSpd=NAV.sog||4,distToFav=distM;
@@ -2528,7 +2543,7 @@ function startMetrics(){
     approachHdg=brng(NAV.lat,NAV.lon,favEnd.lat,favEnd.lon);
     approachTack=angDiff(WIND.twd,approachHdg)>0?'PORT':'STBD';
   }
-  return{distM,ttl,burn,gunRem,closingMS,fav,bias,favEnd,
+  return{distM,ttl,ttlProjected,burn,gunRem,closingMS,fav,bias,favEnd,
          pctAlong:tRaw*100,side,approachSpd,commitIn,isOver,
          approachHdg,approachTack};
 }
@@ -2996,7 +3011,7 @@ function onGPS(p){
 // ── APP VERSION / STORAGE ──────────────────────────────────
 // Housekeeping note: keep the active engine intact, but stop version drift.
 // LS remains the current save key; legacy keys are read-only migration fallbacks.
-const APP_VERSION='08.9';
+const APP_VERSION='08.11';
 const APP_ENGINE='v08.8-route-select';
 // Route override state: null = auto, object = user-selected candidate
 let ROUTE_OVERRIDE = null;
@@ -3252,7 +3267,7 @@ function updateStartUI(){
   if(appMode!=='start')return;
   const m=startMetrics();
   // TTL
-  if(m&&isFinite(m.ttl)){G('tsTTL').textContent=fmtT(m.ttl);G('tsTTL').className='tsv hi';}
+  if(m&&isFinite(m.ttl)){G('tsTTL').textContent=(m.ttlProjected?'~':'')+fmtT(m.ttl);G('tsTTL').className='tsv hi'+(m.ttlProjected?' proj':'');}
   else{G('tsTTL').textContent='--:--';G('tsTTL').className='tsv hi';}
   // BURN
   if(m&&isFinite(m.burn)){
