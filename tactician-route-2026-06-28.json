@@ -1,0 +1,170 @@
+{
+  "app": "TACTICIAN",
+  "version": "07 REF CORE",
+  "savedAt": "2026-06-28T00:32:35.667Z",
+  "course": {
+    "pinA": {
+      "lat": 33.841242,
+      "lon": -78.555952
+    },
+    "pinB": {
+      "lat": 33.841212,
+      "lon": -78.557815
+    },
+    "finA": null,
+    "finB": null,
+    "wpts": [
+      {
+        "label": "1",
+        "lat": 33.81699208541878,
+        "lon": -78.56281057686749,
+        "rounding": "port"
+      },
+      {
+        "label": "2",
+        "lat": 33.82485251550841,
+        "lon": -78.52305908545624,
+        "rounding": "port"
+      }
+    ],
+    "activeMark": 0,
+    "tackDur": 20
+  },
+  "wind": {
+    "twd": 196,
+    "tws": 18,
+    "fetchedAt": 1782606752483
+  },
+  "polar": {
+    "table": {
+      "0": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "15": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "30": [
+        1.2,
+        1.6,
+        1.8,
+        1.9,
+        2
+      ],
+      "45": [
+        3.5,
+        4.8,
+        5.7,
+        6.2,
+        6.5
+      ],
+      "60": [
+        4,
+        5.3,
+        6.1,
+        6.5,
+        6.8
+      ],
+      "75": [
+        4.4,
+        5.7,
+        6.4,
+        6.7,
+        6.9
+      ],
+      "90": [
+        4.6,
+        5.8,
+        6.5,
+        6.8,
+        7
+      ],
+      "120": [
+        4.5,
+        5.7,
+        6.4,
+        6.7,
+        6.9
+      ],
+      "150": [
+        4,
+        5.1,
+        5.8,
+        6.2,
+        6.3
+      ],
+      "180": [
+        3.8,
+        4.8,
+        5.4,
+        5.8,
+        6
+      ]
+    },
+    "angles": [
+      45,
+      45,
+      45,
+      45,
+      45
+    ]
+  },
+  "nav": {
+    "lat": 33.84076408631528,
+    "lon": -78.60780298779893,
+    "hdg": 208.4106746517424,
+    "sog": 0,
+    "cog": 136.8312879116579
+  },
+  "settings": {
+    "windSrcIdx": 4,
+    "dynSrcs": [
+      {
+        "id": "41004",
+        "name": "NOAA Buoy 41004",
+        "info": "SE of Charleston · 40nm offshore"
+      },
+      {
+        "id": "41013",
+        "name": "NOAA Buoy 41013",
+        "info": "Frying Pan Shoals · 30nm SW"
+      },
+      {
+        "id": "41047",
+        "name": "NOAA Buoy 41047",
+        "info": "NE Cape Fear · 45nm SE"
+      }
+    ],
+    "imuCal": {
+      "alpha": 358.5542538196452,
+      "beta": 46.813515094611546,
+      "gamma": -3.331941363829839,
+      "calibrated": true
+    },
+    "mode": "race",
+    "plan": {
+      "startMode": "optimized",
+      "start": null,
+      "optStart": {
+        "lat": 33.8412135,
+        "lon": -78.55772185000001,
+        "frac": 0.95,
+        "label": "Optimized 95% A→B"
+      },
+      "startOpt": {
+        "segments": 21,
+        "avoidPct": 5
+      },
+      "windMode": "fixed",
+      "oscPhase": "mid",
+      "zones": []
+    }
+  }
+}
