@@ -18,6 +18,7 @@ describe('legacy geometry integration', () => {
   it('publishes the tested core as a classic browser global', () => {
     expect(browserCore).toBeTruthy();
     expect(browserCore.normalizeAngle(-1)).toBe(359);
+    expect(browserCore.legacyStartMetrics).toBeTypeOf('function');
   });
 
   it('preserves the legacy signed angle convention', () => {
