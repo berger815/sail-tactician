@@ -22,48 +22,6 @@ reset(){this.x=null}}
 const kfH=new K1D(0.05,8),kfS=new KLin(0.02,2),kfW=new K1D(0.02,6);
 const kfLat=new EMAPos(0.15),kfLon=new EMAPos(0.15);
 
-// ── STATE ─────────────────────────────────────────────────
-const NAV={lat:null,lon:null,hdg:null,sog:0,cog:null,gpsAcc:null,gpsAlt:null,gpsSpeedRaw:null,gpsHeadingRaw:null,
-           pLat:null,pLon:null,pT:null,track:[]};
-const WIND={twd:null,tws:null,hist:[],fetchedAt:null};
-const CRS={pinA:null,pinB:null,finA:null,finB:null,
-           wpts:[],activeMark:-1,tackDur:20};
-const RACE={on:false,epoch:null,started:false};
-const VIEW={scale:1,ox:0,oy:0,map:true,dev:false,drag:false,
-            lx:0,ly:0,pd:null,bs:1,box:0,boy:0,locked:false};
-const POLAR_TWS=[6,10,15,20,25];
-let polarTable={},polarAngles=[];
-let dirty=true,tileCache={};
-let demoInt=null,demoT=0;
-let sensorsOn=false,gpsW=null,absOri=false;
-// IMU calibration reference
-const IMU_CAL={alpha:null,beta:null,gamma:null,calibrated:false};
-const IMU_CUR={alpha:null,beta:null,gamma:null,rollRate:null,pitchRate:null,peakG:0};
-let imuAccBuf=[];  // accumulate accel readings between samples
-const IMU_ACC_MAX=240;  // v08.58: ~4s at 60Hz; drained every 1s when logging, capped here otherwise
-
-// Telemetry
-// v08.58 LEAK FIX: hard cap on the live telemetry ring buffer.
-const TELEM_MAX_SAMPLES=3600;        // ~1hr at 1 sample/sec; raise for longer races
-const TELEM_TRAIL_MAX=600;           // max performance-trail dots drawn per frame
-const TELEM={
-  active:false,
-  startTime:null,
-  samples:[],
-  meta:{},
-  yAxis:'sog',
-  logMode:'dev',
-  lastSample:null,
-  stats:{},
-  _lastLogAt:0,
-  _lastEvent:{}
-};
-let seqSel=5,gunInt=null,rafId=null;
-let appMode='start';
-let optPath=[];
-let routePortfolio={recommended:null,alternatives:[],all:[],diag:null};
-let windSrcIdx=0;
-
 // ── HARDENING / ERROR GUARDS ─────────────────────────────
 // These wrappers preserve behavior while preventing one bad render/path calculation
 // from killing the whole UI loop on mobile Safari.
