@@ -6,8 +6,9 @@ export default defineConfig({
     sourcemap: true,
     lib: {
       entry: 'src/index.js',
-      formats: ['es'],
-      fileName: 'tactician-core',
+      name: 'TacticianCore',
+      formats: ['es', 'iife'],
+      fileName: (format) => format === 'iife' ? 'tactician-core.iife.js' : 'tactician-core.js',
     },
   },
   test: {
