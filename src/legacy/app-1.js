@@ -1162,35 +1162,14 @@ function startPostInstructionFromTarget(tgt){
 function startMetrics(){
   const tgt=startTargetPoint();
   if(!tgt||NAV.lat===null||NAV.lon===null)return null;
-  const distM=haversine(NAV.lat,NAV.lon,tgt.lat,tgt.lon);
   const brgToStart=brng(NAV.lat,NAV.lon,tgt.lat,tgt.lon);
-  const hdg=NAV.hdg??NAV.cog;
-  const sogMS=(NAV.sog||0)*0.514444;
-  let closingMS=0;
-  if(distM>0.5&&hdg!==null){
-    const diff=angDiff(hdg,brgToStart);
-    closingMS=Math.cos(diff*Math.PI/180)*sogMS;
-  }
-  // At very low speed, use a polar/assumed approach speed so testing on land still works.
-  let approachSpd=NAV.sog||0;
-  if(approachSpd<0.8 && WIND.twd!==null)approachSpd=Math.max(2.0,pBSP(angDiff(WIND.twd,brgToStart),WIND.tws||10)||3.5);
-  if(approachSpd<0.8)approachSpd=3.5;
-  const effectiveMS=Math.max(0.15,closingMS>0.15?closingMS:approachSpd*0.514444);
-  const ttl=distM/effectiveMS;
-  const gunRem=RACE.on&&RACE.epoch?Math.max(0,(RACE.epoch-Date.now())/1000):Infinity;
-  const burn=isFinite(gunRem)&&isFinite(ttl)?gunRem-ttl:Infinity;
+  const polarSpd=WIND.twd!==null?pBSP(angDiff(WIND.twd,brgToStart),WIND.tws||10):null;
+  const metrics=TacticianCore.legacyStartMetrics({
+    navigation:NAV,wind:WIND,course:CRS,race:RACE,target:tgt,polarSpeedKnots:polarSpd,nowMs:Date.now()
+  });
+  if(!metrics)return null;
   const post=startPostInstructionFromTarget(tgt);
-  let fav=null,bias=0;
-  if(CRS.pinA&&CRS.pinB&&WIND.twd!==null){
-    const B=ll2xy(CRS.pinA,CRS.pinB);
-    const up={x:Math.sin(WIND.twd*Math.PI/180),y:Math.cos(WIND.twd*Math.PI/180)};
-    const mid={x:B.x/2,y:B.y/2};
-    const aP=-mid.x*up.x-mid.y*up.y,bP=(B.x-mid.x)*up.x+(B.y-mid.y)*up.y;
-    fav=aP>=bP?'A':'B';bias=Math.abs(aP-bP);
-  }
-  const steerErr=hdg!=null?angDiff(hdg,brgToStart):null;
-  return {target:tgt,distM,ttl,burn,gunRem,brgToStart,closingMS,approachSpd,post,fav,bias,steerErr,
-          approachHdg:brgToStart,approachTack:(WIND.twd!==null?(angDiff(WIND.twd,brgToStart)>0?'PORT':'STBD'):null)};
+  return {...metrics,post};
 }
 // ── WIND ANALYSIS ─────────────────────────────────────────
 function shiftDeg(){
