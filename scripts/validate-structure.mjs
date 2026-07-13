@@ -23,6 +23,7 @@ const checks = [
   ['plan mode retained', legacy.includes('function runPlanAnalysis')],
   ['initialization retained', legacy.includes('requestAnimationFrame(rafLoop)')],
   ['legacy geometry delegates to core', legacy.includes('TacticianCore.distanceMeters') && legacy.includes('TacticianCore.angleDifference')],
+  ['legacy start metrics delegate to core', legacy.includes('TacticianCore.legacyStartMetrics')],
 ];
 
 const failures = checks.filter(([, passed]) => !passed).map(([name]) => name);
