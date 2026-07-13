@@ -21,11 +21,12 @@ DOM elements, canvas contexts, storage, timers, or global application state.
 
 1. Preserve the working application while moving inline CSS and JavaScript into `src/styles/legacy.css` and ordered `src/legacy/app-*.js` files.
 2. Validate the extracted angles, geodesy, polars, start-line, and confidence modules.
-3. Add legacy adapters that convert `NAV`, `WIND`, `CRS`, and `RACE` globals to explicit inputs.
-4. Replace one legacy function at a time with an imported module and compare outputs in demo/replay mode.
-5. Extract browser services, then canvas renderers, then modal and screen markup.
-6. Delete each legacy implementation as soon as its replacement passes characterization tests.
-7. Finish with one authoritative implementation per behavior and a thin `index.html` shell.
+3. Load a generated browser core and delegate legacy angle/geodesy helpers to the tested source modules.
+4. Add legacy adapters that convert `NAV`, `WIND`, `CRS`, and `RACE` globals to explicit inputs.
+5. Replace one legacy function at a time with an imported module and compare outputs in demo/replay mode.
+6. Extract browser services, then canvas renderers, then modal and screen markup.
+7. Delete each legacy implementation as soon as its replacement passes characterization tests.
+8. Finish with one authoritative implementation per behavior and a thin `index.html` shell.
 
 ## Definition of done for the complete refactor
 

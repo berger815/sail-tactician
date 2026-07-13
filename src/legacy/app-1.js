@@ -2603,21 +2603,18 @@ function drawBoat(x,y,hdgRad){
 }
 
 // ── MATH ──────────────────────────────────────────────────
-function normA(a){return((a%360)+360)%360}
-function angDiff(a,b){let d=normA(b-a);return d>180?d-360:d}
+function normA(a){return TacticianCore.normalizeAngle(a)}
+// Preserve the legacy argument convention: signed turn from a to b.
+function angDiff(a,b){return TacticianCore.angleDifference(b,a)}
 function fmtT(s){if(!isFinite(s))return'--:--';const sg=s<0?'-':'';s=Math.abs(Math.round(s));return`${sg}${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
-function haversine(a,b,c,d){const R=6371000,dl=(c-a)*Math.PI/180,dn=(d-b)*Math.PI/180,xx=Math.sin(dl/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dn/2)**2;return R*2*Math.atan2(Math.sqrt(xx),Math.sqrt(1-xx))}
-function brng(a,b,c,d){const dn=(d-b)*Math.PI/180,y=Math.sin(dn)*Math.cos(c*Math.PI/180),x=Math.cos(a*Math.PI/180)*Math.sin(c*Math.PI/180)-Math.sin(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.cos(dn);return(Math.atan2(y,x)*180/Math.PI+360)%360}
-function midLL(a,b){return{lat:(a.lat+b.lat)/2,lon:(a.lon+b.lon)/2}}
+function haversine(a,b,c,d){return TacticianCore.distanceMeters({lat:a,lon:b},{lat:c,lon:d})}
+function brng(a,b,c,d){return TacticianCore.bearingDegrees({lat:a,lon:b},{lat:c,lon:d})}
+function midLL(a,b){return TacticianCore.midpoint(a,b)}
 // ll2xy: midpoint-corrected equirectangular projection. Uses (ref+pt)/2 latitude
 // for cosine scaling, significantly reducing east-west error on legs >0.5nm.
 function ll2xy(ref,pt){
-  const R=6371000;
-  const midLat=((ref.lat+pt.lat)/2)*Math.PI/180;
-  return{
-    x:(pt.lon-ref.lon)*Math.PI/180*R*Math.cos(midLat),
-    y:(pt.lat-ref.lat)*Math.PI/180*R
-  };
+  const local=TacticianCore.localMeters(ref,pt);
+  return local?{x:local.east,y:local.north}:null;
 }
 
 // ── EDIT MARK ────────────────────────────────────────────

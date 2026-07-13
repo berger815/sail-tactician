@@ -6,6 +6,7 @@ const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 describe('application shell', () => {
   it('loads extracted assets', () => {
     expect(html).toContain('<link rel="stylesheet" href="./src/styles/legacy.css">');
+    expect(html).toContain('<script defer src="./src/generated/tactician-core.js"></script>');
     expect(html).toContain('<script defer src="./src/legacy/app-1.js"></script>');
     expect(html).toContain('<script defer src="./src/legacy/app-2.js"></script>');
     expect(html).toContain('<script defer src="./src/legacy/app-3.js"></script>');
