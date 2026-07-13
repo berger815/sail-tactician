@@ -18,6 +18,7 @@ npm run build
 - `src/styles/legacy.css`: behavior-preserving extraction of existing styles
 - `src/legacy/app-*.js`: ordered, behavior-preserving extraction of the original script blocks
 - `src/core`: pure, tested sailing calculations
+- `src/generated/tactician-core.js`: checked browser bundle consumed by the legacy runtime
 - `src/services` and `src/state`: browser boundaries and application state
 
 The next change should add parity adapters between the legacy runtime and `src/core`; do
