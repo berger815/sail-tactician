@@ -12,6 +12,8 @@ const legacy = legacyBlocks.join('\n');
 
 const checks = [
   ['stylesheet reference', html.includes('./src/styles/legacy.css')],
+  ['install manifest reference', html.includes('./manifest.webmanifest')],
+  ['offline service registration', html.includes('./src/services/pwa.js')],
   ['browser core reference', html.includes('./src/generated/tactician-core.js')],
   ['runtime state reference', html.includes('./src/legacy/runtime-state.js')],
   ['legacy script 1 reference', html.includes('./src/legacy/app-1.js')],

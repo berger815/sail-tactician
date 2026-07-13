@@ -1,0 +1,14 @@
+{
+  "name": "Tactician · Sailboat Racing",
+  "short_name": "Tactician",
+  "description": "Race-day start timing and tactical guidance for sailboat racers.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#07131f",
+  "theme_color": "#07131f",
+  "icons": [
+    { "src": "./icons/tactician.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
