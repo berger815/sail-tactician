@@ -3,15 +3,18 @@
   --ink:#03080f;--deep:#050d18;--hull:#081828;--plate:#0b1e35;
   --glass:rgba(3,8,15,0.93);--teal:#00d4aa;--tealfade:rgba(0,212,170,0.08);
   --tealring:rgba(0,212,170,0.18);--amber:#f5a623;--red:#e84040;
-  --green:#3ddc84;--blue:#4a9eff;--white:#cce0f0;--muted:#3a5570;
+  --green:#3ddc84;--blue:#4a9eff;--white:#dcebf5;--muted:#6f879e;
   --mono:"Space Mono",monospace;--cond:"Barlow Condensed",sans-serif;
-  --sb:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);--safe-right:env(safe-area-inset-right,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);--safe-left:env(safe-area-inset-left,0px);
+  --sb:var(--safe-bottom);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;user-select:none}
 html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:var(--white);font-family:var(--cond)}
 .app{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
 .hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:4px 12px;background:var(--ink);border-bottom:1px solid var(--tealring);gap:6px;min-height:36px}
 .logo{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:0.3em;color:var(--teal);flex-shrink:0}
+.build-label{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em}
 .pills{display:flex;gap:3px}
 .pill{font-family:var(--mono);font-size:8px;padding:2px 6px;border-radius:20px;border:1px solid var(--muted);color:var(--muted);display:flex;align-items:center;gap:3px}
 .pill.ok{border-color:var(--green);color:var(--green)}.pill.warn{border-color:var(--amber);color:var(--amber)}
@@ -345,6 +348,51 @@ html,body{height:100%;height:100dvh;overflow:hidden;background:var(--ink);color:
 .race-leg-mini{display:flex;gap:4px;margin-top:2px;overflow:hidden}
 .race-leg-mini button{font-family:var(--mono);font-size:7px;padding:2px 6px;border-radius:3px;border:1px solid var(--tealring);background:transparent;color:var(--muted);white-space:nowrap}
 .race-leg-mini button.on{border-color:var(--teal);color:var(--teal);background:var(--tealfade)}
+
+/* ── Mobile race-day usability ─────────────────────────── */
+button,input,select{font:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.hdr{padding-top:calc(4px + var(--safe-top));padding-right:calc(12px + var(--safe-right));padding-left:calc(12px + var(--safe-left))}
+.toolbar{padding-right:var(--safe-right);padding-left:var(--safe-left)}
+.modal{padding-right:calc(14px + var(--safe-right));padding-bottom:calc(24px + var(--safe-bottom));padding-left:calc(14px + var(--safe-left))}
+.toast{bottom:calc(76px + var(--safe-bottom));max-width:calc(100vw - 24px);white-space:normal;text-align:center}
+.tbtn{min-height:52px}
+.gun-btn,.mtab,.brief-share-btn,.wpt-rnd,.wpt-del,.ysel button,.map-btn,.dev-btn,.race-leg-mini button,.wpt-copy,.zone-del{min-height:40px;min-width:40px}
+.mbtn,.seq-btn,.wsrc,.ma-btn,.plan-analyze-btn,.wmode-btn,.osc-phase-btn,.plan-start-btn,.frow input,.frow select{min-height:44px}
+
+@media (max-width:520px){
+  .hdr{flex-wrap:wrap;justify-content:flex-start;gap:5px 8px;min-height:76px}
+  .build-label{display:none}
+  .pills{margin-left:auto}
+  .mode-tog{order:3;flex:1 0 100%;width:100%}
+  .mtog{flex:1;min-height:38px;padding:6px 8px;font-size:10px}
+  .lc-hint{width:90%;font-size:10px;color:rgba(0,212,170,.68)}
+  .tbtn-lbl{font-size:10px}
+  .tbtn svg{width:21px;height:21px}
+}
+
+@media (max-width:360px){
+  .hdr{padding-right:8px;padding-left:8px}
+  .pill{font-size:7px;padding:2px 5px}
+  .tsv{font-size:26px}
+  .cts-hdg{font-size:44px}
+  .hero-num{font-size:62px}
+  .wind-row{grid-template-columns:72px 1fr 62px;padding-right:8px;padding-left:8px;gap:6px}
+}
+
+@media (max-height:700px){
+  .line-chart{min-height:150px}
+  .cts-pair{min-height:94px}
+  .cts-hdg{font-size:42px}
+  .wind-row{padding-top:4px;padding-bottom:4px}
+  .hero-cts{padding-top:6px;padding-bottom:5px}
+  .hero-num{font-size:58px}
+  .model-panel{max-height:76px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
 
 /* v08.54 telemetry/data tab rewrite: no canvas, no table, no continuous heavy render */
 .data-actions{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;margin-bottom:8px}
