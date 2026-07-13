@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run test && npm run build"
+    "check:structure": "node --input-type=commonjs --check < src/legacy/app-1.js && node --input-type=commonjs --check < src/legacy/app-2.js && node --input-type=commonjs --check < src/legacy/app-3.js && node scripts/validate-structure.mjs",
+    "check": "npm run check:structure && npm run test && npm run build"
   },
   "devDependencies": {
     "vite": "^7.0.0",
