@@ -7,9 +7,14 @@ describe('application shell', () => {
   it('loads extracted assets', () => {
     expect(html).toContain('<link rel="stylesheet" href="./src/styles/legacy.css">');
     expect(html).toContain('<script defer src="./src/generated/tactician-core.js"></script>');
+    expect(html).toContain('<script defer src="./src/legacy/runtime-state.js"></script>');
     expect(html).toContain('<script defer src="./src/legacy/app-1.js"></script>');
     expect(html).toContain('<script defer src="./src/legacy/app-2.js"></script>');
     expect(html).toContain('<script defer src="./src/legacy/app-3.js"></script>');
+  });
+
+  it('loads runtime state before application behavior', () => {
+    expect(html.indexOf('./src/legacy/runtime-state.js')).toBeLessThan(html.indexOf('./src/legacy/app-1.js'));
   });
 
   it('contains no inline style or script blocks', () => {
