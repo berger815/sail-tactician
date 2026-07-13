@@ -1,6 +1,8 @@
 # Sail Tactician — modular foundation
 
-Incremental architecture package for the working Tactician prototype.
+Incremental architecture for the working Tactician prototype. The application shell now
+loads extracted legacy CSS and JavaScript while the tested core is migrated one behavior
+at a time.
 
 ## Run
 
@@ -10,12 +12,13 @@ npm test
 npm run build
 ```
 
-## Integrate with the repository
+## Current structure
 
-Copy these files into a branch created from `main`. Leave the current `index.html` in place
-for the first commit. The next commit should add adapter-based parity checks between the
-legacy functions and `src/core`; do not redesign the user interface until parity is stable.
+- `index.html`: product markup and external asset references
+- `src/styles/legacy.css`: behavior-preserving extraction of existing styles
+- `src/legacy/app-*.js`: ordered, behavior-preserving extraction of the original script blocks
+- `src/core`: pure, tested sailing calculations
+- `src/services` and `src/state`: browser boundaries and application state
 
-The first extraction includes angle handling, geodesy, polar interpolation, start-line
-analysis, timing guidance, recommendation confidence, a minimal state store, and a wrapped
-GPS service.
+The next change should add parity adapters between the legacy runtime and `src/core`; do
+not redesign the user interface until those comparisons are stable.
