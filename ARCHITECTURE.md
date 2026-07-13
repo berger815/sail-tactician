@@ -19,7 +19,7 @@ DOM elements, canvas contexts, storage, timers, or global application state.
 
 ## Migration order
 
-1. Keep the existing `index.html` as the behavioral reference.
+1. Preserve the working application while moving inline CSS and JavaScript into `src/styles/legacy.css` and ordered `src/legacy/app-*.js` files.
 2. Validate the extracted angles, geodesy, polars, start-line, and confidence modules.
 3. Add legacy adapters that convert `NAV`, `WIND`, `CRS`, and `RACE` globals to explicit inputs.
 4. Replace one legacy function at a time with an imported module and compare outputs in demo/replay mode.
