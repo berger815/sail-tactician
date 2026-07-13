@@ -11,6 +11,7 @@ const legacy = legacyBlocks.join('\n');
 
 const checks = [
   ['stylesheet reference', html.includes('./src/styles/legacy.css')],
+  ['browser core reference', html.includes('./src/generated/tactician-core.js')],
   ['legacy script 1 reference', html.includes('./src/legacy/app-1.js')],
   ['legacy script 2 reference', html.includes('./src/legacy/app-2.js')],
   ['legacy script 3 reference', html.includes('./src/legacy/app-3.js')],
@@ -21,6 +22,7 @@ const checks = [
   ['race mode retained', legacy.includes('function updateRaceUI')],
   ['plan mode retained', legacy.includes('function runPlanAnalysis')],
   ['initialization retained', legacy.includes('requestAnimationFrame(rafLoop)')],
+  ['legacy geometry delegates to core', legacy.includes('TacticianCore.distanceMeters') && legacy.includes('TacticianCore.angleDifference')],
 ];
 
 const failures = checks.filter(([, passed]) => !passed).map(([name]) => name);
