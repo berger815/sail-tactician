@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-title" content="Tactician">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#07131f">
+<meta name="color-scheme" content="dark">
 <meta name="description" content="Race-day start timing and tactical guidance for sailboat racers.">
 <title>Tactician · Sailboat Racing</title>
 
@@ -18,16 +19,16 @@
 <body>
 <div class="app">
 <div class="hdr">
-  <div class="logo">TACTICIAN</div><div style="font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:0.1em">v08.58 · RACE RECORDER</div>
+  <div class="logo">TACTICIAN</div><div class="build-label">RACE DAY</div>
   <div class="pills">
     <div class="pill" id="pGPS"><div class="pdot"></div>GPS</div>
     <div class="pill" id="pHDG"><div class="pdot"></div>HDG</div>
     <div class="pill" id="pWND"><div class="pdot"></div>WND</div>
   </div>
   <div class="mode-tog">
+    <button class="mtog" id="mBtnP" onclick="setMode('plan')">PREP</button>
     <button class="mtog on" id="mBtnS" onclick="setMode('start')">START</button>
     <button class="mtog" id="mBtnR" onclick="setMode('race')">RACE</button>
-    <button class="mtog" id="mBtnP" onclick="setMode('plan')">PLAN</button>
   </div>
 </div>
 <div class="gun-bar" id="gunBar">
@@ -43,7 +44,7 @@
 <div class="mode-start" id="modeStart">
   <div class="line-chart">
     <canvas id="cvLC"></canvas>
-    <div class="lc-hint" id="lcHint">COURSE &#8594; SET START LINE PINS</div>
+    <div class="lc-hint" id="lcHint">1 SET PINS · 2 SET WIND · 3 START TIMER</div>
   </div>
   <div class="time-strip">
     <div class="ts"><div class="tsv hi" id="tsTTL">--:--</div><div class="tsl">TTL</div><div class="tss">time to line</div></div>
